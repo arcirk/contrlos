@@ -203,8 +203,8 @@ void TableWidget::moveUp() {
     else
         m_toolBar->setButtonEnabled("table_move_up_item", false);
 
-    if(model->use_database())
-        model->updateRowPosition();
+//    if(model->use_database())
+//        model->updateRowPosition();
 
     emit rowMove();
 }
@@ -231,8 +231,8 @@ void TableWidget::moveDown() {
     else
         m_toolBar->setButtonEnabled("table_move_up_item", false);
 
-    if(model->use_database())
-        model->updateRowPosition();
+//    if(model->use_database())
+//        model->updateRowPosition();
 
     emit rowMove();
 }

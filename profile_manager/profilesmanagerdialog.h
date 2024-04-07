@@ -10,6 +10,12 @@
 #include <QSqlDatabase>
 #include "../global/certuser/certuser.h"
 
+#include <QSystemTrayIcon>
+#include <QAction>
+#include <QMenu>
+#include <QCloseEvent>
+#include <QProcess>
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class ProfilesManagerDialog;
@@ -25,11 +31,25 @@ namespace arcirk::profile_manager{
         explicit ProfilesManagerDialog(QWidget *parent = nullptr);
         ~ProfilesManagerDialog() override;
 
+        void accept() override;
+
+    protected:
+        void closeEvent(QCloseEvent *event) override;
+
     private:
         Ui::ProfilesManagerDialog *ui;
         //QStatusBar * m_status_bar;
         std::shared_ptr<ProfilesConf> m_conf;
         std::shared_ptr<CertUser> m_current_user;
+
+        //tray menu
+        QSystemTrayIcon *trayIcon;
+        QMenu           *trayIconMenu;
+        QAction         *quitAction;
+        QAction         *showAction;
+        QAction         *checkIpAction;
+        QAction         *openFirefox;
+        QAction         *installCertAction;
 
         //pages
         ProfilesPage* m_profile_page;
@@ -37,9 +57,25 @@ namespace arcirk::profile_manager{
         QSqlDatabase m_database;
 
         void read_data();
+        void createTrayActions();
+        void createTrayIcon();
+        void createDynamicMenu();
 
     private slots:
         void onOkClicked();
+
+    //tray
+        void onTrayTriggered();
+        void onTrayMstscConnectToSessionTriggered();
+        void onAppExit();
+        void onWindowShow();
+        void trayMessageClicked();
+        void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
+        void trayShowMessage(const QString& msg, int isError = false);
+        void onInstallCertificate();
+        void openMozillaFirefox();
+        void onCheckIP();
+
     };
 }
 

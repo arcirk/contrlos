@@ -56,6 +56,10 @@ ProfilesManagerDialog::ProfilesManagerDialog(QWidget *parent)
 
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &ProfilesManagerDialog::onOkClicked);
 
+    createTrayActions();
+    createTrayIcon();
+    trayIcon->show();
+
 }
 
 ProfilesManagerDialog::~ProfilesManagerDialog()
@@ -106,5 +110,168 @@ void ProfilesManagerDialog::onOkClicked() {
     }
 
     return QDialog::accept();
+}
+
+void ProfilesManagerDialog::createTrayActions() {
+
+    qDebug() << __FUNCTION__;
+    quitAction = new QAction(tr("&Выйти"), this);
+    connect(quitAction, &QAction::triggered, this, &ProfilesManagerDialog::onAppExit);
+    showAction = new QAction(tr("&Открыть менеджер профилей"), this);
+    showAction->setIcon(QIcon(":/img/mpl.png"));
+    connect(showAction, &QAction::triggered, this, &ProfilesManagerDialog::onWindowShow);
+    checkIpAction = new QAction(tr("&Проверить IP адрес"), this);
+    connect(checkIpAction, &QAction::triggered, this, &ProfilesManagerDialog::onCheckIP);
+    openFirefox = new QAction(tr("&Открыть Firefox с выбором профиля"), this);
+    connect(openFirefox, &QAction::triggered, this, &ProfilesManagerDialog::openMozillaFirefox);
+    installCertAction = new QAction(tr("&Установить сертификат"), this);
+    connect(installCertAction, &QAction::triggered, this, &ProfilesManagerDialog::onInstallCertificate);
+
+    trayIconMenu = new QMenu(this);
+}
+
+void ProfilesManagerDialog::onTrayTriggered() {
+
+}
+
+void ProfilesManagerDialog::onTrayMstscConnectToSessionTriggered() {
+
+}
+
+void ProfilesManagerDialog::onAppExit() {
+
+}
+
+void ProfilesManagerDialog::onWindowShow() {
+
+}
+
+void ProfilesManagerDialog::trayMessageClicked() {
+
+}
+
+void ProfilesManagerDialog::trayIconActivated(QSystemTrayIcon::ActivationReason reason) {
+
+}
+
+void ProfilesManagerDialog::trayShowMessage(const QString &msg, int isError) {
+
+}
+
+void ProfilesManagerDialog::onInstallCertificate() {
+
+}
+
+void ProfilesManagerDialog::openMozillaFirefox() {
+
+}
+
+void ProfilesManagerDialog::onCheckIP() {
+
+}
+
+void ProfilesManagerDialog::createTrayIcon() {
+
+    qDebug() << __FUNCTION__;
+    trayIcon = new QSystemTrayIcon(this);
+    trayIcon->setContextMenu(trayIconMenu);
+
+    QIcon icon = QIcon(":/img/mpl.ico");
+    trayIcon->setIcon(icon);
+    setWindowIcon(icon);
+
+    trayIcon->setToolTip("Менеджер профилей");
+
+    connect(trayIcon, &QSystemTrayIcon::messageClicked, this, &ProfilesManagerDialog::trayMessageClicked);
+    connect(trayIcon, &QSystemTrayIcon::activated, this, &ProfilesManagerDialog::trayIconActivated);
+
+}
+
+void ProfilesManagerDialog::createDynamicMenu() {
+
+    qDebug() << __FUNCTION__;
+    trayIconMenu->clear();
+    trayIconMenu->addAction(showAction);
+    trayIconMenu->addAction(checkIpAction);
+    trayIconMenu->addAction(openFirefox);
+    trayIconMenu->addAction(installCertAction);
+
+//    auto cache = current_user->cache();
+//    auto mstsc_param = cache.value("mstsc_param", json::object());
+//    auto mpl_ = arcirk::internal_structure<arcirk::client::mpl_options>("mpl_options", cache);
+//    //auto use_firefox = mpl_.use_firefox;
+//    auto firefox_path = mpl_.firefox_path;
+//    auto is_connect_to_users = mstsc_param.value("enable_mstsc_users_sess", false);
+//
+//    if(is_connect_to_users){
+//        trayIconMenu->addSeparator();
+//        auto action = new QAction("Подключиться к сеансу пользователя", this);
+//        action->setIcon(QIcon(":/img/mstscUsers.png"));
+//        trayIconMenu->addAction(action);
+//        connect(action, &QAction::triggered, this, &DialogMain::onTrayMstscConnectToSessionTriggered);
+//    }
+//
+//    if(!mstsc_param.empty()){
+//        auto is_enable = mstsc_param.value("enable_mstsc", false);
+//        auto detailed_records = mstsc_param.value("detailed_records", json::array());
+//        if(is_enable && detailed_records.size() > 0){
+//            trayIconMenu->addSeparator();
+//            for(auto itr = detailed_records.begin(); itr != detailed_records.end(); ++itr){
+//                auto object = *itr;
+//                auto mstsc = arcirk::secure_serialization<arcirk::client::mstsc_options>(object, __FUNCTION__);
+//                QString name = mstsc.name.c_str();
+//                auto action = new QAction(name, this);
+//                action->setProperty("data", object.dump().c_str());
+//                action->setProperty("type", "mstsc");
+//                action->setIcon(QIcon(":/img/mstsc.png"));
+//                trayIconMenu->addAction(action);
+//                connect(action, &QAction::triggered, this, &DialogMain::onTrayTriggered);
+//            }
+//        }
+//    }
+//
+//    if(mpl_.mpl_list.size() > 0){
+//        auto table_str = arcirk::byte_array_to_string(mpl_.mpl_list);
+//        auto table_j = json::parse(table_str);
+//        if(table_j.is_object()){
+//            auto mpl_list = table_j.value("rows", json::array());
+//            trayIconMenu->addSeparator();
+//            for (auto itr = mpl_list.begin(); itr != mpl_list.end(); ++itr) {
+//                auto object = *itr;
+//                auto mpl = secure_serialization<arcirk::client::mpl_item>(object);
+//                QString name = mpl.name.c_str();
+//                auto action = new QAction(name, this);
+//                action->setProperty("data", object.dump().c_str());
+//                action->setProperty("type", "link");
+//                action->setIcon(get_link_icon(mpl.url.c_str()));
+//                trayIconMenu->addAction(action);
+//                connect(action, &QAction::triggered, this, &DialogMain::onTrayTriggered);
+//            }
+//        }
+//    }
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(quitAction);
+}
+
+void ProfilesManagerDialog::accept() {
+    qDebug() << __FUNCTION__;
+
+  //write_cache();
+
+    //QDialog::accept();
+    QDialog::hide();
+}
+
+void ProfilesManagerDialog::closeEvent(QCloseEvent *event) {
+#ifdef Q_OS_MACOS
+    if (!event->spontaneous() || !isVisible()) {
+        return;
+    }
+#endif
+
+    if (trayIcon->isVisible()) {
+        hide();
+        event->ignore();
+    }
 }
 

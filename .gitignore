@@ -7,3 +7,5 @@
 /plugins/bankstatementsplugun/cmake-build-debug/
 /controls/.idea/
 /controls/cmake-build-debug/
+/cmake-build-debug/
+/.idea/
