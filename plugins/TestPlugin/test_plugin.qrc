@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>img/options.png</file>
+        <file>img/startTask.png</file>
+    </qresource>
+</RCC>

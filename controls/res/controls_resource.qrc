@@ -1,0 +1,31 @@
+<RCC>
+    <qresource prefix="/">
+        <file>img/!.png</file>
+        <file>img/addGroup.png</file>
+        <file>img/checkbox-checked.png</file>
+        <file>img/checkbox-unchecked.png</file>
+        <file>img/delete.png</file>
+        <file>img/deletionMarkItem.png</file>
+        <file>img/group.png</file>
+        <file>img/groupDeleted.png</file>
+        <file>img/groupOver.png</file>
+        <file>img/item.png</file>
+        <file>img/itemAdd.png</file>
+        <file>img/itemDelete.png</file>
+        <file>img/itemEdit.png</file>
+        <file>img/itemOver.png</file>
+        <file>img/link.png</file>
+        <file>img/movedown.png</file>
+        <file>img/moveup.png</file>
+        <file>img/options.png</file>
+        <file>img/save.png</file>
+        <file>img/services.png</file>
+        <file>img/sync.png</file>
+        <file>img/tbglacti_150.png</file>
+        <file>img/update.png</file>
+        <file>img/select_type.png</file>
+        <file>img/clear.ico</file>
+        <file>img/move_to.png</file>
+        <file>img/erase_type.png</file>
+    </qresource>
+</RCC>

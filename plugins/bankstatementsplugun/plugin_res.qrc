@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/org_from_pay.bsl</file>
+    </qresource>
+</RCC>

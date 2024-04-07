@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.5)
+
+project(ControlsProg LANGUAGES CXX)
+
+list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.5.2/msvc2019_64/lib/cmake")
+
+add_subdirectory("${PROJECT_SOURCE_DIR}/controls" "${PROJECT_SOURCE_DIR}/controls/cmake-build-debug")
+add_subdirectory("${PROJECT_SOURCE_DIR}/TestControls" "${PROJECT_SOURCE_DIR}/TestControls/cmake-build-debug")
+add_subdirectory("${PROJECT_SOURCE_DIR}/tree_model" "${PROJECT_SOURCE_DIR}/tree_model/cmake-build-debug")
+#add_subdirectory("${PROJECT_SOURCE_DIR}/plugins/bankstatementsplugun" "${PROJECT_SOURCE_DIR}/plugins/bankstatementsplugun/cmake-build-debug")
+#add_subdirectory("${PROJECT_SOURCE_DIR}/plugins/TestPlugin" "${PROJECT_SOURCE_DIR}/plugins/TestPlugin/cmake-build-debug")
+add_subdirectory("${PROJECT_SOURCE_DIR}/profile_manager" "${PROJECT_SOURCE_DIR}/profile_manager/cmake-build-debug")
+add_subdirectory("${PROJECT_SOURCE_DIR}/profile_manager/singleapplication" "${PROJECT_SOURCE_DIR}/profile_manager/singleapplication/cmake-build-debug")
