@@ -28,7 +28,8 @@ ProfilesPage::ProfilesPage(std::shared_ptr<ProfilesConf>& conf, QSqlDatabase& db
     ui->setupUi(this);
 
     m_tool_bar = new widgets::TableToolBar(this);
-    m_tool_bar->addButton("selectImage", QIcon("://res/img/link.png"));
+    m_tool_bar->addButton("selectImage", QIcon("://res/img/kontur/file-format-png-24-regular.svg"));
+    m_tool_bar->button("selectImage")->setToolTip("Установить картинку строки");
     m_table = new widgets::TableWidget(this);
     m_table->setTableToolBar(m_tool_bar);
 
@@ -96,16 +97,10 @@ void ProfilesPage::onToolbarItemClick(const QString &buttonName) {
         auto dlg = SetImageDialog(this);
         dlg.setUrl(object.url.c_str());
         if(dlg.exec()){
-            auto ba = dlg.favicon();
-            if(!ba.isEmpty()){
-                object.icon = ByteArray(ba.size());
-                std::copy(ba.begin(), ba.end(), object.icon.begin());
-                model->set_struct(index.row(), object);
-                QPixmap p;
-                p.loadFromData(ba);
-                model->setData(model->index(index.row(), 0), QIcon(p), Qt::DecorationRole);
-            }
+            auto qba = dlg.favicon();
+            set_row_icon(model->index(index.row(), 0), qba, object);
         }
+        update_database(object);
     }
 }
 
@@ -125,14 +120,7 @@ void ProfilesPage::onRowChanged(int row) {
 
         if(item.data()->subtype != subtypeByte){
             auto qba = get_favicon(object.url.c_str());
-            if(!qba.isEmpty()){
-                auto ba = qbyte_to_byte(qba);
-                object.icon = to_byte(to_binary(ba, subtypeByte));
-                model->set_struct(index.row(), object);
-                QPixmap p;
-                p.loadFromData(qba);
-                model->setData(index, QIcon(p), Qt::DecorationRole);
-            }
+            set_row_icon(index, qba, object);
         }
         update_database(object);
     }
@@ -259,7 +247,7 @@ void ProfilesPage::load_model() {
             else if(val.userType() == QMetaType::Int && item_json[column_name].is_number())
                 item_json[column_name] = val.toInt();
             else if(val.userType() == QMetaType::Int && item_json[column_name].is_boolean())
-                item_json[column_name] = val.toInt() > 0 ? true : false;
+                item_json[column_name] = val.toInt() > 0;
             else if(val.userType() == QMetaType::LongLong && item_json[column_name].is_number())
                 item_json[column_name] = val.toLongLong();
             else if(val.userType() == QMetaType::ULongLong && item_json[column_name].is_number())
@@ -349,6 +337,23 @@ void ProfilesPage::onRowMove() {
     reset_pos();
 }
 
-QString ProfilesPage::firefox_path() const {
+[[maybe_unused]] QString ProfilesPage::firefox_path() const {
     return ui->txtFirefoxPath->text();
+}
+
+void ProfilesPage::set_row_icon(const QModelIndex &index, const QByteArray &qba, profile_item& object) {
+    if(!qba.isEmpty()){
+        auto model = (ITable<profile_item>*)m_table->model();
+        auto ba = qbyte_to_byte(qba);
+        object.icon = to_byte(to_binary(ba, subtypeByte));
+        model->set_struct(index.row(), object);
+        QPixmap p;
+        p.loadFromData(qba);
+        model->setData(index, QIcon(p), Qt::DecorationRole);
+    }
+}
+
+QVector<arcirk::database::profile_item> ProfilesPage::profiles() const {
+    auto model = (ITable<profile_item>*)m_table->model();
+    return model->array();
 }

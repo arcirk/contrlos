@@ -1,5 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>res/img/link.png</file>
+        <file>res/img/kontur/diadoc-16.svg</file>
+        <file>res/img/kontur/file-format-png-24-regular.svg</file>
+        <file>res/img/briefcase.ico</file>
     </qresource>
 </RCC>

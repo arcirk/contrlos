@@ -25,6 +25,9 @@ namespace arcirk::widgets{
             QByteArray m_favicon;
 
             void get_url_icon();
+
+    private slots:
+        void selectFile();
     };
 }
 

@@ -48,6 +48,15 @@ namespace arcirk::widgets {
             return item->to_object();
         }
 
+        QVector<T> array(){
+            auto arr = to_array();
+            QVector<T> vec_projection{};
+            auto result = std::transform(arr.begin(), arr.end(),  std::back_inserter(vec_projection) ,
+                                         [](const json & s) ->T { return ( secure_serialization<T>(s) ) ; } ) ;
+            return vec_projection;
+        }
+
+
     };
 }
 #endif //CONTROLSPROG_ITABLE_HPP

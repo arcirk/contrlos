@@ -31,7 +31,9 @@ namespace arcirk::profile_manager {
 
             void set_firefox_path(const QString& path);
             void set_firefox_profiles(const ByteArray& ba);
-            QString firefox_path() const;
+
+            [[maybe_unused]] QString firefox_path() const;
+            [[nodiscard]] QVector<arcirk::database::profile_item> profiles() const;
 
         private:
             Ui::ProfilesPage *ui;
@@ -45,7 +47,7 @@ namespace arcirk::profile_manager {
             void update_database(const arcirk::database::profile_item& object);
             void load_model();
             void reset_pos();
-
+            void set_row_icon(const QModelIndex& index, const QByteArray& qba, arcirk::database::profile_item& object);
 
 
         private slots:

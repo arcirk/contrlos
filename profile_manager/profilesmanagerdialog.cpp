@@ -58,6 +58,7 @@ ProfilesManagerDialog::ProfilesManagerDialog(QWidget *parent)
 
     createTrayActions();
     createTrayIcon();
+    createDynamicMenu();
     trayIcon->show();
 
 }
@@ -109,7 +110,7 @@ void ProfilesManagerDialog::onOkClicked() {
         }
     }
 
-    return QDialog::accept();
+    return accept();
 }
 
 void ProfilesManagerDialog::createTrayActions() {
@@ -139,11 +140,13 @@ void ProfilesManagerDialog::onTrayMstscConnectToSessionTriggered() {
 }
 
 void ProfilesManagerDialog::onAppExit() {
-
+    qDebug() << __FUNCTION__;
+    QApplication::exit();
 }
 
 void ProfilesManagerDialog::onWindowShow() {
-
+    qDebug() << __FUNCTION__;
+    setVisible(true);
 }
 
 void ProfilesManagerDialog::trayMessageClicked() {
@@ -151,6 +154,12 @@ void ProfilesManagerDialog::trayMessageClicked() {
 }
 
 void ProfilesManagerDialog::trayIconActivated(QSystemTrayIcon::ActivationReason reason) {
+    qDebug() << __FUNCTION__ << reason;
+    if(reason == QSystemTrayIcon::DoubleClick){
+        setVisible(true);
+    }else if(reason == QSystemTrayIcon::Context){
+        qDebug() << "QSystemTrayIcon::Context";
+    }
 
 }
 
@@ -176,7 +185,7 @@ void ProfilesManagerDialog::createTrayIcon() {
     trayIcon = new QSystemTrayIcon(this);
     trayIcon->setContextMenu(trayIconMenu);
 
-    QIcon icon = QIcon(":/img/mpl.ico");
+    QIcon icon = QIcon("://res/img/briefcase.ico");
     trayIcon->setIcon(icon);
     setWindowIcon(icon);
 
@@ -230,25 +239,28 @@ void ProfilesManagerDialog::createDynamicMenu() {
 //        }
 //    }
 //
-//    if(mpl_.mpl_list.size() > 0){
+
+    auto mpl_list = m_profile_page->profiles();
+
+    if(mpl_list.size() > 0){
 //        auto table_str = arcirk::byte_array_to_string(mpl_.mpl_list);
 //        auto table_j = json::parse(table_str);
 //        if(table_j.is_object()){
 //            auto mpl_list = table_j.value("rows", json::array());
-//            trayIconMenu->addSeparator();
-//            for (auto itr = mpl_list.begin(); itr != mpl_list.end(); ++itr) {
+            trayIconMenu->addSeparator();
+            for (auto itr = mpl_list.begin(); itr != mpl_list.end(); ++itr) {
 //                auto object = *itr;
 //                auto mpl = secure_serialization<arcirk::client::mpl_item>(object);
-//                QString name = mpl.name.c_str();
-//                auto action = new QAction(name, this);
-//                action->setProperty("data", object.dump().c_str());
-//                action->setProperty("type", "link");
-//                action->setIcon(get_link_icon(mpl.url.c_str()));
-//                trayIconMenu->addAction(action);
-//                connect(action, &QAction::triggered, this, &DialogMain::onTrayTriggered);
-//            }
-//        }
-//    }
+                QString name = itr->name.c_str();
+                auto action = new QAction(name, this);
+                //action->setProperty("data", object.dump().c_str());
+                action->setProperty("type", "link");
+                //action->setIcon(get_link_icon(mpl.url.c_str()));
+                trayIconMenu->addAction(action);
+                connect(action, &QAction::triggered, this, &ProfilesManagerDialog::onTrayTriggered);
+            }
+ //       }
+    }
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
 }

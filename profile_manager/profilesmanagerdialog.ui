@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>ProfilesManagerDialog</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="profiles_manager.qrc">
+    <normaloff>:/res/img/briefcase.ico</normaloff>:/res/img/briefcase.ico</iconset>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="leftMargin">
     <number>3</number>
@@ -36,7 +40,7 @@
      </property>
      <widget class="QWidget" name="tabProfiles">
       <attribute name="title">
-       <string>Профили</string>
+       <string>HTTP Ссылки</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="0" column="0">
@@ -55,6 +59,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="profiles_manager.qrc"/>
+ </resources>
  <connections/>
 </ui>

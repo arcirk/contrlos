@@ -63,6 +63,7 @@ set(PROJECT_SOURCES
         ../global/sh/commandlineparser.h
         ../global/winreg/WinReg.cpp
         ../global/winreg/WinReg.hpp
+        pm.rc
         )
 
 qt_add_executable(ProfileManager

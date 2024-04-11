@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QPixmap>
 #include <QToolButton>
+#include <QFileDialog>
 
 using namespace arcirk::widgets;
 
@@ -21,6 +22,7 @@ SetImageDialog::SetImageDialog(QWidget *parent)  :
     setWindowTitle("Установить иконку");
 
     connect(ui->btnLoatFormHttp, &QToolButton::clicked, this, &SetImageDialog::get_url_icon);
+    connect(ui->btnLoadFromLocalhost, &QToolButton::clicked, this, &SetImageDialog::selectFile);
 }
 
 SetImageDialog::~SetImageDialog() {
@@ -81,4 +83,20 @@ void SetImageDialog::get_url_icon() {
 
 QByteArray SetImageDialog::favicon() const {
     return m_favicon;
+}
+
+void SetImageDialog::selectFile() {
+
+    auto result = QFileDialog::getOpenFileName(this, "Выбор фала картинки", "", "Файлы картинок (*.jpeg, *.png, *.svg)");
+    if(!result.isEmpty()){
+        auto file = QFile(result);
+        if(file.open(QIODevice::ReadOnly)){
+            ui->txtFileName->setText(result);
+            m_favicon = file.readAll();
+            QPixmap p;
+            p.loadFromData(m_favicon);
+            ui->lblImage->setPixmap(p);
+        }
+    }
+
 }
