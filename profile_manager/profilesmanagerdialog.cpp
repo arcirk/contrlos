@@ -51,6 +51,7 @@ ProfilesManagerDialog::ProfilesManagerDialog(QWidget *parent)
     m_current_user->read_user_info(this);
     m_profile_page = new ProfilesPage(m_conf, m_database, this);
     ui->verticalLayoutPF->addWidget(m_profile_page);
+    connect(m_profile_page, &ProfilesPage::reset, this, &ProfilesManagerDialog::onResetHttpList);
 
     read_data();
 
@@ -243,23 +244,26 @@ void ProfilesManagerDialog::createDynamicMenu() {
     auto mpl_list = m_profile_page->profiles();
 
     if(mpl_list.size() > 0){
-//        auto table_str = arcirk::byte_array_to_string(mpl_.mpl_list);
-//        auto table_j = json::parse(table_str);
-//        if(table_j.is_object()){
-//            auto mpl_list = table_j.value("rows", json::array());
-            trayIconMenu->addSeparator();
-            for (auto itr = mpl_list.begin(); itr != mpl_list.end(); ++itr) {
-//                auto object = *itr;
-//                auto mpl = secure_serialization<arcirk::client::mpl_item>(object);
-                QString name = itr->name.c_str();
-                auto action = new QAction(name, this);
-                //action->setProperty("data", object.dump().c_str());
-                action->setProperty("type", "link");
-                //action->setIcon(get_link_icon(mpl.url.c_str()));
-                trayIconMenu->addAction(action);
-                connect(action, &QAction::triggered, this, &ProfilesManagerDialog::onTrayTriggered);
+        trayIconMenu->addSeparator();
+        for (auto itr = mpl_list.begin(); itr != mpl_list.end(); ++itr) {
+
+            QString name = itr->name.c_str();
+            auto action = new QAction(name, this);
+            action->setProperty("url", itr->url.c_str());
+            action->setProperty("type", "link");
+            if(!itr->icon.empty()){
+                auto item_d = arcirk::widgets::item_data(itr->icon);
+                if(item_d.data()->subtype == subtypeByte){
+                    auto qba = QByteArray(reinterpret_cast<const char*>(item_d.data()->data.data()), item_d.data()->data.size());
+                    QPixmap p;
+                    p.loadFromData(qba);
+                    auto icon = QIcon(p);
+                    action->setIcon(QIcon(p));
+                }
             }
- //       }
+            trayIconMenu->addAction(action);
+            connect(action, &QAction::triggered, this, &ProfilesManagerDialog::onTrayTriggered);
+        }
     }
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
@@ -285,5 +289,9 @@ void ProfilesManagerDialog::closeEvent(QCloseEvent *event) {
         hide();
         event->ignore();
     }
+}
+
+void ProfilesManagerDialog::onResetHttpList() {
+    createDynamicMenu();
 }
 

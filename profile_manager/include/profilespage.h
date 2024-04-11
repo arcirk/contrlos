@@ -57,6 +57,9 @@ namespace arcirk::profile_manager {
             void onRowChanged(int row);
             void onRemoveTableItem(const json& object);
             void onRowMove();
+
+        signals:
+            void reset();
     };
 }
 

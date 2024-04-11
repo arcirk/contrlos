@@ -123,6 +123,7 @@ void ProfilesPage::onRowChanged(int row) {
             set_row_icon(index, qba, object);
         }
         update_database(object);
+        emit reset();
     }
 }
 
@@ -335,6 +336,7 @@ void ProfilesPage::reset_pos() {
 
 void ProfilesPage::onRowMove() {
     reset_pos();
+    emit reset();
 }
 
 [[maybe_unused]] QString ProfilesPage::firefox_path() const {

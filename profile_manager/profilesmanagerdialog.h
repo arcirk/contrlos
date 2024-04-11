@@ -61,6 +61,8 @@ namespace arcirk::profile_manager{
         void createTrayIcon();
         void createDynamicMenu();
 
+
+
     private slots:
         void onOkClicked();
 
@@ -76,6 +78,8 @@ namespace arcirk::profile_manager{
         void openMozillaFirefox();
         void onCheckIP();
 
+        //http links page
+        void onResetHttpList();
     };
 }
 
