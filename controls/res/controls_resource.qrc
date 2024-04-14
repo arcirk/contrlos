@@ -27,5 +27,6 @@
         <file>img/clear.ico</file>
         <file>img/move_to.png</file>
         <file>img/erase_type.png</file>
+        <file>img/element_pictograms.png</file>
     </qresource>
 </RCC>

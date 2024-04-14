@@ -123,4 +123,9 @@ void TableToolBar::onButtonClicked()
     if(btn)
         emit itemClicked(btn->property("itemName").toString());
 }
+
+void TableToolBar::setHierarchyState(bool state) {
+
+}
+
 #endif

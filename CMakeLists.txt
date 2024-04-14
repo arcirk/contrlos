@@ -10,4 +10,5 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/tree_model" "${PROJECT_SOURCE_DIR}/tree_
 #add_subdirectory("${PROJECT_SOURCE_DIR}/plugins/bankstatementsplugun" "${PROJECT_SOURCE_DIR}/plugins/bankstatementsplugun/cmake-build-debug")
 #add_subdirectory("${PROJECT_SOURCE_DIR}/plugins/TestPlugin" "${PROJECT_SOURCE_DIR}/plugins/TestPlugin/cmake-build-debug")
 add_subdirectory("${PROJECT_SOURCE_DIR}/profile_manager" "${PROJECT_SOURCE_DIR}/profile_manager/cmake-build-debug")
+add_subdirectory("${PROJECT_SOURCE_DIR}/query_builder" "${PROJECT_SOURCE_DIR}/query_builder/cmake-build-debug")
 add_subdirectory("${PROJECT_SOURCE_DIR}/profile_manager/singleapplication" "${PROJECT_SOURCE_DIR}/profile_manager/singleapplication/cmake-build-debug")

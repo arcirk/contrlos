@@ -48,6 +48,8 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/detail/md5.hpp>
+#include <boost/algorithm/hex.hpp>
 
 #include <alpaca/alpaca.h>
 
@@ -220,32 +222,6 @@ namespace arcirk{
         return result;
     }
 
-//    inline json array_from_binary(const json& value){
-//        if(value.is_binary()){
-//            auto data = value.get_binary();
-//            return data;
-////            try {
-////                if(!data.empty()){
-////                    auto str = std::string{data.begin(), data.end()};
-////                    if(str == "null")
-////                        return json::array();
-////                    if(json::accept(str)){
-////                        auto var = json::parse(str);
-////                        if(var.is_array())
-////                            return var;
-////                        else
-////                            return data;
-////                    }else
-////                        return data;
-////                }else
-////                    return json::array();
-////            }catch(...){
-////                return data;
-////            }
-//        }else
-//            return json::array();
-//    }
-
     inline void fill_object(const json& source, json& object){
         if(!source.is_object())
             return;
@@ -306,49 +282,6 @@ namespace arcirk{
             return T();
         }
 
-
-//        for (auto it = source.items().begin(); it != source.items().end(); ++it) {
-//            if(object.find(it.key()) != object.end()){
-//                if(it.value().type() == object[it.key()].type()){
-//                    object[it.key()] = it.value();
-//                }else{
-//                    if(object[it.key()].is_boolean()){
-//                        if(it.value().is_number()){
-//                            auto val = it.value().get<int>();
-//                            object[it.key()] = val == 0 ? false : true; // it.value();
-//                        }else
-//                            object[it.key()] = false;
-//                    }else{
-//                        if(it.value().is_number()){
-//                            object[it.key()] = it.value();
-//                        }else if(it.value().is_binary()){
-//                            std::cout << it.key() << std::endl;
-//                            if(object[it.key()].is_array())
-//                                object[it.key()] = it.value().get_binary();
-//                            else{
-//                                object[it.key()] = {};
-////                                auto ba = it.value().get_binary();
-////                                auto v = json::from_cbor(ba);
-////                                if(v.type() == object[it.key()].type()){
-////                                    object[it.key()] = v;
-////                                }
-//                            }
-//                        }else{
-//                            std::cerr << fun << " " << __FUNCTION__ << " Ошибка проверки по типу ключа: " << it.key().c_str() << std::endl;
-//                            std::cerr << it.value() << " " << type_string(it.value().type()) << " " << type_string(object[it.key()].type()) <<  std::endl;
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        try {
-//            auto r = pre::json::from_json<T>(object);
-//            return r;
-//        } catch (const std::exception &e) {
-//            std::cerr << e.what() << std::endl;
-//        }
-
     }
 
     template<typename T>
@@ -376,6 +309,40 @@ namespace arcirk{
             return - 1;
         else
             return (int)find;
+    }
+
+    inline std::string digest_to_string(const boost::uuids::detail::md5::digest_type &digest)
+    {
+        const auto charDigest = reinterpret_cast<const char *>(&digest);
+        std::string result;
+        boost::algorithm::hex(charDigest, charDigest + sizeof(boost::uuids::detail::md5::digest_type), std::back_inserter(result));
+        return result;
+    }
+
+    inline std::string  to_md5(const std::string& source){
+        using boost::uuids::detail::md5;
+        md5 hash;
+        md5::digest_type digest;
+
+        hash.process_bytes(source.data(), source.size());
+        hash.get_digest(digest);
+        return digest_to_string(digest);
+    }
+
+    inline boost::uuids::uuid md5_to_uuid(const std::string& md5_string){
+        using boost::uuids::detail::md5;
+        using namespace boost::uuids;
+        try {
+            std::string source = md5_string;
+            source = source.insert(8, "-");
+            source = source.insert(13, "-");
+            source = source.insert(18, "-");
+            source = source.insert(23, "-");
+            auto result = string_generator()(source);
+            return result;
+        } catch(...) {
+            return boost::uuids::nil_uuid();
+        }
     }
 
     namespace widgets {
@@ -432,128 +399,6 @@ namespace arcirk{
             {editorBoolean, "editorBoolean"}  ,
             {editorDataReference, "editorDataReference"}  ,
         });
-
-//        enum variant_type{
-//            vNull = 0,
-//            vJsonDump,
-//            vBinary
-//        };
-//
-//        struct variant_p{
-//            std::string representation; // представление
-//            int  type = 0;  // tree_editor_inner_role
-//            int role = 0; // variant_type
-//            std::string table; // имя таблицы в базе данных если ссылка в базе данных
-//            ByteArray data; // данные
-//            //BJson data; // данные
-//        };
-//
-//        inline variant_p variant_p_(){
-//            auto v = variant_p();
-//            v.representation = "";
-//            v.table = "";
-//            v.data = {};
-//            v.type = 0;
-//            v.role = 0;
-//            return v;
-//        }
-//
-//        inline ByteArray ref_to_byte(const std::string& uuid = "", const std::string& table = ""){
-//            json uuid_{};
-//            if(uuid.empty())
-//                uuid_ = boost::to_string(boost::uuids::random_generator()());
-//            else{
-//                auto u = uuids::string_to_uuid(uuid, true);
-//                uuid_ = boost::to_string(u);
-//            }
-//            auto m_raw = variant_p();
-//            m_raw.role = tree_editor_inner_role::widgetDataReference;
-//            m_raw.type = vJsonDump;
-//            m_raw.table = table;
-//            m_raw.data = string_to_byte_array(uuid_.dump());
-//            m_raw.representation = uuid_.get<std::string>();
-//            ByteArray bytes;
-//            //BJson bytes;
-//            alpaca::serialize(m_raw, bytes);
-//            return bytes;
-//            //return json::to_bson(pre::json::to_json(m_raw));
-//        }
-//
-//        inline variant_p variant_from_byte(const ByteArray& data){
-//            std::error_code ec;
-//            auto m_raw = alpaca::deserialize<variant_p>(data, ec);
-//            if (!ec) {
-//                return m_raw;
-//            }else
-//                return variant_p_();
-//        }
-
-//        inline ByteArray variant_to_byte(const variant_p& value){
-//            ByteArray bytes;
-//            alpaca::serialize(value, bytes);
-//            return bytes;
-//        }
-//
-//        inline ByteArray ref_init(const json& array){
-//            ByteArray m_ref;
-//            if(array.empty()){
-//                m_ref = ref_to_byte();
-//            }else{
-//                if(array.is_array()){
-//                    try {
-//                        m_ref = array.get<ByteArray>();
-//                        if (sizeof(m_ref.data())  != sizeof(variant_p*)) {
-//                            m_ref = ref_to_byte();
-//                        }
-//                    } catch (const std::exception &) {
-//                        m_ref = ref_to_byte();
-//                    }
-//                }else if(array.is_string()){
-//                    auto uuid = uuids::string_to_uuid(array.get<std::string>(), true);
-//                    m_ref = ref_to_byte(boost::to_string(uuid));
-//                }else
-//                    m_ref = ref_to_byte();
-//            }
-//            return m_ref;
-//        }
-
-//        inline variant_p get_variant_p(const json& value){
-//            auto m_raw = variant_p_();
-//            if(value.is_array()){
-//                try {
-//                    auto ba = value.get<ByteArray>();
-//                    if(sizeof(ba.data()) == sizeof(variant_p*)){
-//                        m_raw = variant_from_byte(ba);
-//                    }else{
-//                        m_raw.role = tree_editor_inner_role::widgetArray;
-//                        m_raw.type = vJsonDump;
-//                        m_raw.representation = "<array>";
-//                    }
-//                } catch (const std::exception &) {
-//                    m_raw.role = tree_editor_inner_role::widgetArray;
-//                    m_raw.type = vJsonDump;
-//                    m_raw.representation = "<array>";
-//                }
-//            }else if (value.is_string()) {
-//                auto val = value.get<std::string>();
-//                if (index_of(val, "\n") != -1)
-//                    m_raw.role = tree_editor_inner_role::widgetMultiText;
-//                else
-//                    m_raw.role = tree_editor_inner_role::widgetText;
-//                m_raw.representation = val;
-//            }else if(value.is_number()){
-//                m_raw.role = tree_editor_inner_role::widgetNumber;
-//                m_raw.representation = boost::to_string(value.get<int>());
-//            }else if(value.is_boolean()){
-//                m_raw.role = tree_editor_inner_role::widgetBoolean;
-//                m_raw.representation = boost::to_string(value.get<bool>());
-//            }
-//            m_raw.data = string_to_byte_array(value.dump());
-//
-//            return m_raw;
-//        }
-
-
 }
 
     namespace date{
@@ -1102,45 +947,6 @@ namespace arcirk::database {
     };
 
 }
-
-//BOOST_FUSION_ADAPT_STRUCT(
-//    arcirk::widgets::variant_p,
-//    (std::string, representation)
-//    (int, type)
-//    (int, role)
-//    (std::string, table)
-//    (arcirk::ByteArray, data)
-//)
-//
-//template<std::size_t...Is, class Tup>
-//inline arcirk::widgets::variant_p to_adapt_struct_aux(std::index_sequence<Is...>, Tup&& tup) {
-//  using std::get;
-//  return {get<Is>(std::forward<Tup>(tup))...};
-//}
-//
-//template<class T, class Tup>
-//inline T to_adapt_struct(Tup&& tup) {
-//  using t=std::remove_reference_t<Tup>;
-//  return to_adapt_struct_aux(
-//    std::make_index_sequence<std::tuple_size<T>{}>{},
-//    std::forward<Tup>(tup)
-//  );
-//}
-//
-//template<class T, std::size_t...is>
-//auto to_tuple_aux( std::index_sequence<is...>, T const& f ) {
-//    using boost::fusion::at_c;
-//    return std::make_tuple(at_c<is>(f)...);
-//}
-//
-//template<class T>
-//auto struct_to_tuple(T const& f){
-//    using t=std::remove_reference_t<T>;
-//    return to_tuple_aux(
-//            std::make_index_sequence<boost::fusion::result_of::size<T>::type::value>{},
-//            f
-//    );
-//}
 
 #endif
 

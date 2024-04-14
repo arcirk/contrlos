@@ -1,26 +1,22 @@
-//
-// Created by admin on 12.01.2024.
-//
+#ifndef CONTROLSPROG_TREEMODEL_H
+#define CONTROLSPROG_TREEMODEL_H
 
-#ifndef CONTROLSPROG_TABLEMODEL_H
-#define CONTROLSPROG_TABLEMODEL_H
 #include "../controls_global.h"
-#include "tableitem.h"
 #include <QAbstractItemModel>
 #include <QList>
 #include <QSize>
+#include "treeitem.h"
 
 namespace arcirk::widgets {
 
-    class CONTROLS_EXPORT TableModel : public QAbstractItemModel
+    class CONTROLS_EXPORT TreeModel : public QAbstractItemModel
     {
         Q_OBJECT
         public:
-            explicit TableModel(QObject *parent = nullptr);
-            explicit TableModel(const json& rootData, QObject *parent = nullptr);
+            explicit TreeModel(QObject *parent = nullptr);
+            explicit TreeModel(const json& rootData, QObject *parent = nullptr);
 
-            ~TableModel();
-
+            ~TreeModel();
             [[nodiscard]] int rowCount(const QModelIndex &parent = QModelIndex()) const override;
             [[nodiscard]] int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
@@ -32,16 +28,14 @@ namespace arcirk::widgets {
             bool setData(const QModelIndex &index, const QVariant &value,
                          int role = Qt::EditRole) override;
             [[nodiscard]] QModelIndex index(int row, int column,
-                                  const QModelIndex &parent = QModelIndex()) const override;
+                                            const QModelIndex &parent = QModelIndex()) const override;
             [[nodiscard]] QModelIndex parent(const QModelIndex &index) const override;
-
-
             [[nodiscard]] json to_json() const;
             void form_json(const json& table);
             [[nodiscard]] json to_array() const;
             [[nodiscard]] json to_array(const QString& column) const;
             [[nodiscard]] json row(const QModelIndex &index, bool lite = true) const;
-            QModelIndex add(const json& object);
+            QModelIndex add(const json& object, const QModelIndex &parent = QModelIndex());
             void set_object(const QModelIndex &index, const json& object);
             bool remove(const QModelIndex &index);
             bool move_up(const QModelIndex &index);
@@ -64,33 +58,38 @@ namespace arcirk::widgets {
             void set_columns_aliases(const QMap<QString, QString> &aliases);
             [[nodiscard]] QMap<QString, QString> columns_aliases() const;
 
-            [[nodiscard]] TableConf* get_conf() const {return m_conf.get();};
+            [[nodiscard]] TreeConf* get_conf() const {return m_conf.get();};
 
             [[nodiscard]] bool use_database() const;
             virtual void onRowChanged(const QModelIndex& index){ Q_UNUSED(index);};
             virtual void updateRowsPositions(){};
 
-        private:
-            TableItem* rootItem;
-            std::shared_ptr<TableConf> m_conf;
+            bool hierarchical_list();
 
-            [[nodiscard]] Qt::ItemFlags flags(const QModelIndex& index) const override;
+            [[nodiscard]] QModelIndex find(const QUuid& ref, const QModelIndex& parent = QModelIndex()) const;
+            [[nodiscard]] QModelIndex find(int column, const QVariant& source, const QModelIndex& parent = QModelIndex()) const;
+            [[nodiscard]] QList<QModelIndex> find_all(int column, const QVariant& source, const QModelIndex& parent = QModelIndex()) const;
 
+            bool is_group(const QModelIndex& index = QModelIndex());
+    private:
+        TreeItem* rootItem;
+        std::shared_ptr<TreeConf> m_conf;
 
-        protected:
-            bool is_use_database;
-            [[nodiscard]] TableItem * getItem(const QModelIndex &index) const;
-            bool insertColumns(int position, int columns,const QModelIndex &parent = QModelIndex()) override;
-            bool removeColumns(int position, int columns, const QModelIndex &parent = QModelIndex()) override;
-            bool insertRows(int position, int rows, const QModelIndex &parent = QModelIndex()) override;
-            bool removeRows(int position, int rows, const QModelIndex &parent = QModelIndex()) override;
-
-        signals:
+        [[nodiscard]] Qt::ItemFlags flags(const QModelIndex& index) const override;
 
 
+    protected:
+        bool is_use_database;
+        [[nodiscard]] TreeItem * getItem(const QModelIndex &index) const;
+        bool insertColumns(int position, int columns,const QModelIndex &parent = QModelIndex()) override;
+        bool removeColumns(int position, int columns, const QModelIndex &parent = QModelIndex()) override;
+        bool insertRows(int position, int rows, const QModelIndex &parent = QModelIndex()) override;
+        bool removeRows(int position, int rows, const QModelIndex &parent = QModelIndex()) override;
+
+    signals:
+        void hierarchicalListChanged(bool state);
+        void fetch(const QModelIndex &parent);
     };
 
-
 }
-
-#endif //CONTROLSPROG_TABLEMODEL_H
+#endif //CONTROLSPROG_TREEMODEL_H

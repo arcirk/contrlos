@@ -58,6 +58,10 @@ namespace arcirk {
         return json::binary(ba, subtype);
     }
 
+    inline BJson to_nil_uuid(){
+        return to_byte(to_binary(QUuid()));
+    }
+
     template<class T>
     inline T from_binary(const json& value){
         if(!value.is_binary())

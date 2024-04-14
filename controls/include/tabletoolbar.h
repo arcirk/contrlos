@@ -24,6 +24,8 @@ namespace arcirk::widgets {
         void addButton(const QString& name, const QIcon& ico, bool checkable = false, int position = -1);
         void insertSeparator(int position = -1);
 
+        void setHierarchyState(bool state);
+
     private:
         Ui::TableToolBar *ui;
         QMap<QString,QToolButton*> m_buttons;

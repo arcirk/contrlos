@@ -40,7 +40,6 @@ add_library(controls SHARED
           ../global/global.hpp
           ../global/variant/item_data.cpp
           ../global/variant/item_data.h
-#          ../global/variant_p.hpp
           include/pairmodel.h
           src/pairmodel.cpp
           res/controls_resource.qrc
@@ -65,6 +64,21 @@ add_library(controls SHARED
           ui/tablerowdialog.ui
             include/itabledatabasemodel.h
             src/itabledatabasemodel.cpp
+            include/treemodel.h
+        include/treeitem.h
+        include/treeconf.h
+        src/treeconf.cpp
+        src/treeitem.cpp
+        src/treemodel.cpp
+        include/treewidget.h
+        src/treewidget.cpp
+        include/treesortmodel.h
+        src/treesortmodel.cpp
+        include/treeitemdelegate.h
+        src/treeitemdelegate.cpp
+        include/treeitemswidget.h
+        src/treeitemswidget.cpp
+        ui/treeitemswidget.ui
         )
 
 target_link_libraries(controls PRIVATE
