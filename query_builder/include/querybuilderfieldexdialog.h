@@ -3,10 +3,10 @@
 
 
 #include <QDialog>
-#include <treewidget.h>
+#include <tablewidget.h>
 #include <QMenu>
 #include <QAction>
-#include <itree.hpp>
+#include <itable.hpp>
 #include "sql/metadata.hpp"
 //#include "sql/query_builder.hpp"
 
@@ -27,19 +27,19 @@ public:
     explicit QueryBuilderFieldExDialog(QWidget *parent = nullptr, const QUuid& m_package_uuid = {});
     ~QueryBuilderFieldExDialog();
 
-    //void set_database_structure(ITree<ibase_object_structure>* structure);
+    void set_database_structure(ITable<ibase_object_structure>* structure);
 
     ibase_object_structure getField();
     void setData(const ibase_object_structure& value);
 
 private:
     Ui::QueryBuilderFieldExDialog *ui;
-    //TreeViewWidget* treeView;
+    TableWidget* m_table;
     QMenu* mnu_index_type;
     QAction * m_compare;
     QAction * m_ext;
     QAction * m_check;
-    //ITree<ibase_object_structure>* m_structure;
+    ITable<ibase_object_structure>* m_structure;
     QStringList m_tables;
     QUuid m_package_uuid;
     ibase_object_structure m_field;

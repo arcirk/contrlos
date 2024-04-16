@@ -7,9 +7,9 @@
 #include <QRadioButton>
 #include <QUuid>
 #include "sql/metadata.hpp"
-#include <treewidget.h>
+#include <tablewidget.h>
 #include <tabletoolbar.h>
-#include <itree.hpp>
+#include <itable.hpp>
 #include <QLabel>
 
 using namespace arcirk::database;
@@ -43,17 +43,19 @@ class QueryBuilderAdditionallyWidget;
         QUuid m_package_uuid;
         int m_current_type;
         QMap<int, QRadioButton*> m_radio;
+        TableWidget* m_table;
+        TableWidget* m_table_indexes;
 //        TreeViewWidget* treeView;
 //        TreeViewWidget* treeViewIndexes;
-//        TableToolBar* m_toolBarField;
-//        TableToolBar* m_toolBarIndices;
+        TableToolBar* m_toolBarField;
+        TableToolBar* m_toolBarIndices;
         QLabel* lblTop;
         QLabel* lblBottom;
         ITree<ibase_object_structure>* m_structure;
 
         void form_control(QWidget* btn);
-       // ITreeIBaseModel* create_model(const QString& table_name);
-        void hide_columns(TreeViewWidget* tree);
+        ITableIBaseModel* create_model(const QString& table_name);
+        void hide_columns(TableWidget* tree);
         void onBtnAddField();
         void onBtnEditField();
 

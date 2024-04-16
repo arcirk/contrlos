@@ -9,6 +9,7 @@
 #include <QSqlRecord>
 #include "query_builder.hpp"
 #include <itree.hpp>
+#include <itable.hpp>
 
 BOOST_FUSION_DEFINE_STRUCT(
     (arcirk::database), ibase_object_structure,
@@ -183,7 +184,7 @@ namespace arcirk::database::metadata{
             m_struct.full_name = table.toStdString();
             m_struct.data_type = "";
             ref = boost::to_string(arcirk::md5_to_uuid(arcirk::to_md5(m_struct.name + m_struct.object_type)));
-            m_struct.ref =  to_byte(to_binary(QUuid::fromString(ref.c_str()));//
+            m_struct.ref =  to_byte(to_binary(QUuid::fromString(ref.c_str())));
             m_struct.parent = m_tables.ref;
             m_struct.is_group = 1;
             m_struct.object_type = "table";
@@ -259,6 +260,6 @@ namespace arcirk::database::metadata{
 
 }
 
-typedef ITree<arcirk::tree_model::ibase_object_structure> ITreeIBaseModel;
+typedef ITable<arcirk::database::ibase_object_structure> ITableIBaseModel;
 
 #endif //QUERY_BUILDER_METADATA_HPP

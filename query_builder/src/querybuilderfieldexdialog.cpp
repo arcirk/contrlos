@@ -37,48 +37,49 @@ QueryBuilderFieldExDialog::QueryBuilderFieldExDialog(QWidget *parent, const QUui
 
     ui->btnAdd->setMenu(mnu_index_type);
 
-//    treeView = new TreeViewWidget(this);
+    m_table = new TableWidget(this);
 //    treeView->enable_sort(false);
 //    treeView->set_drag_group(false);
-//
-//    auto model = new ITree<field_restrictions>(this);
+
+    auto model = new ITable<field_restrictions>(this);
 //    model->set_hierarchical_list(false);
 //    model->enable_drag_and_drop(false);
-//    //model->set_enable_rows_icons(false);
-//    model->set_column_aliases(QMap<QString, QString>{
-//        qMakePair("type", "Тип"),
-//        qMakePair("name", "Имя"),
-//        qMakePair("query", "Подробности")
-//    });
-//    model->set_columns_order(QList<QString>{
-//        "type", "name", "query"
-//    });
-//    treeView->setModel(model);
-//
-//    for (int i = 0; i < model->columnCount(); ++i) {
-//        if(model->columns_order().indexOf(model->column_name(i)) == -1)
-//            treeView->hideColumn(i);
-//    }
-//
-//    ui->verticalLayout->addWidget(treeView);
-//
-//    int i = sqlite_types_qt.indexOf("TEXT");
-//    ui->cmbDataType->setModel(new QStringListModel(sqlite_types_qt, this));
-//    ui->cmbDataType->setCurrentIndex(i);
-//
-//    connect(m_ext, &QAction::triggered, this, &QueryBuilderFieldExDialog::onMenuClicked);
-//    connect(m_check, &QAction::triggered, this, &QueryBuilderFieldExDialog::onMenuClicked);
-//    connect(m_compare, &QAction::triggered, this, &QueryBuilderFieldExDialog::onMenuClicked);
-//    connect(ui->btnDelete, &QToolButton::clicked, this, &QueryBuilderFieldExDialog::onBtnDeleteClicked);
-//    connect(ui->btnEdit, &QToolButton::clicked, this, &QueryBuilderFieldExDialog::onBtnEditClicked);
-//
-//    m_packade_uuid = packade_uuid;
-//
-//    m_field = ibase_object_structure();
-//    m_field.ref = generate_uuid().toStdString();
-//    m_field.package_ref = quuid_to_string(m_packade_uuid).toStdString();
-//    m_field.parent = NIL_STRING_UUID;
-//}
+    //model->set_enable_rows_icons(false);
+    auto aliases = AliasesMap({
+        qMakePair("type", "Тип"),
+        qMakePair("name", "Имя"),
+        qMakePair("query", "Подробности")
+    });
+    model->set_columns_aliases(aliases);
+    model->reorder_columns(QList<QString>{
+        "type", "name", "query"
+    });
+    m_table->setModel(model);
+
+    for (int i = 0; i < model->columnCount(); ++i) {
+        if(model->get_conf()->columns_order().indexOf(model->column_name(i)) == -1)
+            m_table->hideColumn(i);
+    }
+
+    ui->verticalLayout->addWidget(treeView);
+
+    int i = sqlite_types_qt.indexOf("TEXT");
+    ui->cmbDataType->setModel(new QStringListModel(sqlite_types_qt, this));
+    ui->cmbDataType->setCurrentIndex(i);
+
+    connect(m_ext, &QAction::triggered, this, &QueryBuilderFieldExDialog::onMenuClicked);
+    connect(m_check, &QAction::triggered, this, &QueryBuilderFieldExDialog::onMenuClicked);
+    connect(m_compare, &QAction::triggered, this, &QueryBuilderFieldExDialog::onMenuClicked);
+    connect(ui->btnDelete, &QToolButton::clicked, this, &QueryBuilderFieldExDialog::onBtnDeleteClicked);
+    connect(ui->btnEdit, &QToolButton::clicked, this, &QueryBuilderFieldExDialog::onBtnEditClicked);
+
+    m_packade_uuid = packade_uuid;
+
+    m_field = ibase_object_structure();
+    m_field.ref = generate_uuid().toStdString();
+    m_field.package_ref = quuid_to_string(m_packade_uuid).toStdString();
+    m_field.parent = NIL_STRING_UUID;
+}
 
 QueryBuilderFieldExDialog::~QueryBuilderFieldExDialog()
 {

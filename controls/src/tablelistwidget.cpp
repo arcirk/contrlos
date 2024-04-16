@@ -54,9 +54,6 @@ json TableListWidget::to_array() const {
 }
 
 json TableListWidget::default_value() const {
-//    auto m_raw = item_data("");
-//    m_raw.set_role(m_role);
-//    return m_raw.to_byte();// pre::json::to_json(m_raw);
     return to_byte(to_binary(""));
 }
 
