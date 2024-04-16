@@ -3,6 +3,7 @@
 //
 #include "../include/maindialog.h"
 #include "../ui/ui_maindialog.h"
+#include <QSplitter>
 
 MainDialog::MainDialog(QWidget *parent)
         : QDialog(parent)
@@ -10,11 +11,17 @@ MainDialog::MainDialog(QWidget *parent)
 {
     ui->setupUi(this);
 
-    m_databaseStructure = new TreeItemsWidget(this);
+    //m_databaseStructure = new TreeItemsWidget(this);
 
 }
 
 MainDialog::~MainDialog()
 {
     delete ui;
+}
+
+void MainDialog::init_form() {
+
+    m_tab = new QTabWidget(this);
+
 }

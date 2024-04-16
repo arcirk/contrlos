@@ -48,9 +48,10 @@ namespace arcirk::widgets {
             void set_read_only(bool value);
             bool read_only();
 
-            json empty_data();
+        [[maybe_unused]] [[maybe_unused]] json empty_data();
 
             void reorder_columns(const QList<QString>& names);
+            QList<QString> columns_order() const;
 
             void display_icons(bool value);
             [[nodiscard]] bool is_display_icons() const;
@@ -65,6 +66,7 @@ namespace arcirk::widgets {
             virtual void updateRowsPositions(){};
 
             bool hierarchical_list();
+            void set_hierarchical_list(bool value);
 
             [[nodiscard]] QModelIndex find(const QUuid& ref, const QModelIndex& parent = QModelIndex()) const;
             [[nodiscard]] QModelIndex find(int column, const QVariant& source, const QModelIndex& parent = QModelIndex()) const;
@@ -74,6 +76,7 @@ namespace arcirk::widgets {
     private:
         TreeItem* rootItem;
         std::shared_ptr<TreeConf> m_conf;
+        bool m_hierarchical_list;
 
         [[nodiscard]] Qt::ItemFlags flags(const QModelIndex& index) const override;
 

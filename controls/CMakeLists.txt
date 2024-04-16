@@ -79,7 +79,7 @@ add_library(controls SHARED
         include/treeitemswidget.h
         src/treeitemswidget.cpp
         ui/treeitemswidget.ui
-        )
+        include/itree.hpp)
 
 target_link_libraries(controls PRIVATE
     Qt${QT_VERSION_MAJOR}::Core

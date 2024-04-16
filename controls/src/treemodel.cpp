@@ -10,8 +10,9 @@ TreeModel::TreeModel(QObject *parent)
         : QAbstractItemModel{parent}
 {
     m_conf = std::make_shared<TreeConf>();
-    rootItem = new TreeItem(json::object({{"ref", ""}}), m_conf);
+    rootItem = new TreeItem(json::object({{"ref", ""}, {"parent", ""}, {"is_group", true}, {"row_state", 0}}), m_conf);
     is_use_database = false;
+    m_hierarchical_list = true;
 }
 
 int TreeModel::rowCount(const QModelIndex &parent) const
@@ -26,7 +27,7 @@ int TreeModel::columnCount(const QModelIndex &parent) const
 }
 
 QVariant TreeModel::data(const QModelIndex &index, int role) const {
-    if (!index.isValid()) return QVariant();
+    if (!index.isValid()) return {};
     if(role == Qt::SizeHintRole)
         return m_conf->size();
     TreeItem *item = getItem(index);
@@ -104,7 +105,7 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int rol
 
     if (orientation == Qt::Horizontal)
         if(role == Qt::SizeHintRole)
-            return QSize(22, 22);//m_conf->size();
+            return m_conf->size();
 
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole){;
         return m_conf->column_name(section, true);
@@ -263,7 +264,7 @@ TreeModel::TreeModel(const json &rootData, QObject *parent) : QAbstractItemModel
     auto column = header_item();
     column.name = "ref";
     column.default_type = editor_inner_role::editorText;
-    column.default_value = to_byte(arcirk::to_binary(QUuid::fromString(NIL_STRING_UUID)));//to_data(json{NIL_STRING_UUID}, subtypeUUID);
+    column.default_value = to_nil_uuid();
     columns += pre::json::to_json(column);
     for (auto itr = rootData.items().begin(); itr != rootData.items().end(); ++itr) {
         if(itr.key() == "ref")
@@ -363,7 +364,7 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const {
     return fl;
 }
 
-json TreeModel::empty_data() {
+[[maybe_unused]] json TreeModel::empty_data() {
     auto object = json::object();
     for(const auto& val : m_conf->columns()){
         auto var = item_data();
@@ -421,7 +422,7 @@ bool TreeModel::use_database() const {
 }
 
 bool TreeModel::hierarchical_list() {
-    return false;
+    return m_hierarchical_list;
 }
 
 QModelIndex TreeModel::find(const QUuid &ref, const QModelIndex &parent) const {
@@ -437,5 +438,18 @@ QList<QModelIndex> TreeModel::find_all(int column, const QVariant &source, const
 }
 
 bool TreeModel::is_group(const QModelIndex &index) {
-    return false;
+    auto item = getItem(index);
+    if(!item)
+        return false;
+    else
+        return item->is_group();
+}
+
+QList<QString> TreeModel::columns_order() const {
+    return m_conf->columns_order();
+}
+
+void TreeModel::set_hierarchical_list(bool value) {
+    m_hierarchical_list = value;
+    emit hierarchicalListChanged(value);
 }

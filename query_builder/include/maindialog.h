@@ -6,8 +6,10 @@
 #define QUERY_BUILDER_MAINDIALOG_H
 
 #include <QDialog>
-#include "treeitemswidget.h"
-using namespace arcirk::widgets;
+//#include "treeitemswidget.h"
+#include <QTabWidget>
+
+//using namespace arcirk::widgets;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -25,7 +27,10 @@ public:
 
 private:
     Ui::MainDialog *ui;
-    TreeItemsWidget* m_databaseStructure;
+    //TreeItemsWidget* m_databaseStructure;
+    QTabWidget * m_tab;
+
+    void init_form();
 
 };
 #endif //QUERY_BUILDER_MAINDIALOG_H

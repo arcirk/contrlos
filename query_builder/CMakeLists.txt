@@ -35,6 +35,15 @@ set(PROJECT_SOURCES
             ui/maindialog.ui
             include/sql/metadata.hpp
             include/sql/query_builder.hpp
+            include/querybuilderadditionallywidget.h
+            src/querybuilderadditionallywidget.cpp
+            ui/querybuilderadditionallywidget.ui
+        include/querybuilderfieldexdialog.h
+        include/querybuilderforeginkeydialog.h
+        src/querybuilderfieldexdialog.cpp
+        src/querybuilderforeginkeydialog.cpp
+        ui/querybuilderfieldexdialog.ui
+        ui/querybuilderforeginkeydialog.ui
         )
 
 qt_add_executable(QueryBuilder

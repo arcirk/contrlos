@@ -59,7 +59,7 @@ namespace arcirk {
     }
 
     inline BJson to_nil_uuid(){
-        return to_byte(to_binary(QUuid()));
+        return to_byte(to_binary(QUuid::fromString(NIL_STRING_UUID)));
     }
 
     template<class T>

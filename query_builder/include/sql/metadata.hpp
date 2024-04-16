@@ -8,6 +8,7 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include "query_builder.hpp"
+#include <itree.hpp>
 
 BOOST_FUSION_DEFINE_STRUCT(
     (arcirk::database), ibase_object_structure,
@@ -30,6 +31,7 @@ BOOST_FUSION_DEFINE_STRUCT(
     (int, size)
     (bool, is_group)
 )
+
 BOOST_FUSION_DEFINE_STRUCT(
     (arcirk::database), table_info_sqlite,
     (int, cid)
@@ -38,9 +40,40 @@ BOOST_FUSION_DEFINE_STRUCT(
     (int, notnull)
     (std::string, dflt_value)
     (int, bk)
-);
+)
+
+BOOST_FUSION_DEFINE_STRUCT(
+    (arcirk::query_builder_ui), query_builder_packet,
+    (int, line_num)
+    (std::string, name)
+    (BJson, ref)
+    (BJson, parent)
+    (int, type)
+    (bool, use_limit)
+    (int, row_limit)
+    (bool, use_distinct)
+    (int, is_group)
+)
 
 using namespace arcirk::database::builder;
+
+inline QStringList sqlite_types_qt = {
+    "INTEGER",
+    "BIGINT",
+    "DATE",
+    "DATETIME",
+    "DECIMAL",
+    "DOUBLE",
+    "INT",
+    "NONE",
+    "NUMERIC",
+    "REAL",
+    "STRING",
+    "TEXT",
+    "TIME",
+    "VARCHAR",
+    "CHAR"
+};
 
 namespace arcirk::database::metadata{
 
@@ -124,7 +157,7 @@ namespace arcirk::database::metadata{
         m_tables.full_name = "Таблицы";
         m_tables.object_type = "tablesRoot";
         std::string ref = boost::to_string(arcirk::md5_to_uuid(arcirk::to_md5(m_tables.name + m_tables.object_type)));
-        m_tables.ref = to_byte(to_binary(QUuid::fromString(ref.c_str()));
+        m_tables.ref = to_byte(to_binary(QUuid::fromString(ref.c_str())));
         m_tables.parent = m_parent;
         m_tables.is_group = 1;
         m_groups.push_back(pre::json::to_json(m_tables));
@@ -134,7 +167,7 @@ namespace arcirk::database::metadata{
         m_views.alias = "Представления";
         m_views.object_type = "viewsRoot";
         ref = boost::to_string(arcirk::md5_to_uuid(arcirk::to_md5(m_views.name + m_views.object_type)));
-        m_views.ref = to_byte(to_binary(QUuid::fromString(ref.c_str()));
+        m_views.ref = to_byte(to_binary(QUuid::fromString(ref.c_str())));
         m_views.parent = m_parent;
         m_views.is_group = 1;
         m_groups.push_back(pre::json::to_json(m_views));
@@ -172,7 +205,7 @@ namespace arcirk::database::metadata{
                 m_details.full_name = table.toStdString() + "." + itr.second.name;
                 m_details.query = table.toStdString() + "." + itr.second.name;
                 ref = boost::to_string(arcirk::md5_to_uuid(arcirk::to_md5(m_details.name + m_details.object_type)));
-                m_details.ref = to_byte(to_binary(QUuid::fromString(ref.c_str()));
+                m_details.ref = to_byte(to_binary(QUuid::fromString(ref.c_str())));
                 m_details.parent = m_struct.ref;
                 m_details.base_ref = m_details.ref; //arcirk::uuids::random_uuid());
                 m_details.base_parent = m_struct.ref;
@@ -194,7 +227,7 @@ namespace arcirk::database::metadata{
             m_struct.full_name = view.toStdString();
             m_struct.object_type = "view";
             ref = boost::to_string(arcirk::md5_to_uuid(arcirk::to_md5(m_struct.name + m_struct.object_type)));
-            m_struct.ref =  to_byte(to_binary(QUuid::fromString(ref.c_str()));
+            m_struct.ref =  to_byte(to_binary(QUuid::fromString(ref.c_str())));
             m_struct.parent = m_views.ref;
             m_struct.is_group = 0;
             m_struct.base_ref = m_struct.ref; //arcirk::uuids::random_uuid());
@@ -225,5 +258,7 @@ namespace arcirk::database::metadata{
     }
 
 }
+
+typedef ITree<arcirk::tree_model::ibase_object_structure> ITreeIBaseModel;
 
 #endif //QUERY_BUILDER_METADATA_HPP
