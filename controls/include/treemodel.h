@@ -32,8 +32,8 @@ namespace arcirk::widgets {
             [[nodiscard]] QModelIndex parent(const QModelIndex &index) const override;
             [[nodiscard]] json to_json() const;
             void form_json(const json& table);
-            [[nodiscard]] json to_array() const;
-            [[nodiscard]] json to_array(const QString& column) const;
+            [[nodiscard]] json to_array(const QModelIndex &parent = QModelIndex()) const;
+            [[nodiscard]] json to_array(const QString& column, const QModelIndex &parent = QModelIndex()) const;
             [[nodiscard]] json row(const QModelIndex &index, bool lite = true) const;
             QModelIndex add(const json& object, const QModelIndex &parent = QModelIndex());
             void set_object(const QModelIndex &index, const json& object);

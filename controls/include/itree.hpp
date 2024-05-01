@@ -48,7 +48,7 @@ namespace arcirk::widgets {
             return item->to_object();
         }
 
-        QVector<T> array(){
+        QVector<T> array(const QModelIndex& parent = QModelIndex()){
             auto arr = to_array();
             QVector<T> vec_projection{};
             auto result = std::transform(arr.begin(), arr.end(),  std::back_inserter(vec_projection) ,

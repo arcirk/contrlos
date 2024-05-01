@@ -5,9 +5,9 @@
 
 using namespace arcirk::query_builder_ui;
 
-QueryBuilderForeginKeyDialog::QueryBuilderForeginKeyDialog(QWidget *parent) :
+QueryBuilderForeignKeyDialog::QueryBuilderForeignKeyDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::QueryBuilderForeginKeyDialog)
+    ui(new Ui::QueryBuilderForeignKeyDialog)
 {
     ui->setupUi(this);
 
@@ -17,19 +17,19 @@ QueryBuilderForeginKeyDialog::QueryBuilderForeginKeyDialog(QWidget *parent) :
     ui->cmbDeferable->setModel(new QStringListModel(m_deferrable, this));
     ui->cmbDeferred->setModel(new QStringListModel(m_deferred, this));
 
-    connect(ui->cmbTables, &QComboBox::currentTextChanged, this, &QueryBuilderForeginKeyDialog::onCmbTablesCurrentTextChanged);
-    connect(ui->chkIsName, &QCheckBox::clicked, this, &QueryBuilderForeginKeyDialog::onCmbSelectedItem);
-    connect(ui->chkMatch, &QCheckBox::clicked, this, &QueryBuilderForeginKeyDialog::onCmbSelectedItem);
-    connect(ui->chkOnDelete, &QCheckBox::clicked, this, &QueryBuilderForeginKeyDialog::onCmbSelectedItem);
-    connect(ui->chkOnUpdate, &QCheckBox::clicked, this, &QueryBuilderForeginKeyDialog::onCmbSelectedItem);
+    connect(ui->cmbTables, &QComboBox::currentTextChanged, this, &QueryBuilderForeignKeyDialog::onCmbTablesCurrentTextChanged);
+    connect(ui->chkIsName, &QCheckBox::clicked, this, &QueryBuilderForeignKeyDialog::onCmbSelectedItem);
+    connect(ui->chkMatch, &QCheckBox::clicked, this, &QueryBuilderForeignKeyDialog::onCmbSelectedItem);
+    connect(ui->chkOnDelete, &QCheckBox::clicked, this, &QueryBuilderForeignKeyDialog::onCmbSelectedItem);
+    connect(ui->chkOnUpdate, &QCheckBox::clicked, this, &QueryBuilderForeignKeyDialog::onCmbSelectedItem);
 }
 
-QueryBuilderForeginKeyDialog::~QueryBuilderForeginKeyDialog()
+QueryBuilderForeignKeyDialog::~QueryBuilderForeignKeyDialog()
 {
     delete ui;
 }
 
-void QueryBuilderForeginKeyDialog::set_database_structure(ITree<ibase_object_structure> *structure){
+void QueryBuilderForeignKeyDialog::set_database_structure(ITree<ibase_object_structure> *structure){
 
     m_structure = structure;
     if(!m_structure)
@@ -46,7 +46,7 @@ void QueryBuilderForeginKeyDialog::set_database_structure(ITree<ibase_object_str
 
 }
 
-void QueryBuilderForeginKeyDialog::accept()
+void QueryBuilderForeignKeyDialog::accept()
 {
     m_result = sql_foreign_key();
     m_result.refereces_table = ui->cmbTables->currentText().toStdString();
@@ -81,7 +81,7 @@ void QueryBuilderForeginKeyDialog::accept()
     return QDialog::accept();
 }
 
-void QueryBuilderForeginKeyDialog::set_object(const sql_foreign_key &object)
+void QueryBuilderForeignKeyDialog::set_object(const sql_foreign_key &object)
 {
     //m_result = object; //sql_foreign_key(object);
     ui->cmbTables->setCurrentIndex(m_tables.indexOf(object.refereces_table.c_str()));
@@ -121,7 +121,7 @@ void QueryBuilderForeginKeyDialog::set_object(const sql_foreign_key &object)
     form_control();
 }
 
-void QueryBuilderForeginKeyDialog::form_control()
+void QueryBuilderForeignKeyDialog::form_control()
 {
     ui->cmbFields->setEnabled(true);
     ui->chkMatch->setEnabled(true);
@@ -137,7 +137,7 @@ void QueryBuilderForeginKeyDialog::form_control()
     ui->cmbOnUpdate->setEnabled(ui->chkOnUpdate->isChecked());
 }
 
-void QueryBuilderForeginKeyDialog::onCmbTablesCurrentTextChanged(const QString &arg1)
+void QueryBuilderForeignKeyDialog::onCmbTablesCurrentTextChanged(const QString &arg1)
 {
     if(!m_structure)
         return;
@@ -159,7 +159,7 @@ void QueryBuilderForeginKeyDialog::onCmbTablesCurrentTextChanged(const QString &
     ui->cmbDeferred->setEnabled(true);
 }
 
-void QueryBuilderForeginKeyDialog::onCmbSelectedItem(bool check)
+void QueryBuilderForeignKeyDialog::onCmbSelectedItem(bool check)
 {
     auto chk = qobject_cast<QCheckBox*>(sender());
     if(!chk)

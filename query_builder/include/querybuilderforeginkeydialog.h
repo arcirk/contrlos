@@ -4,23 +4,23 @@
 #include <QDialog>
 #include <itree.hpp>
 #include "sql/metadata.hpp"
-#include <treewidget.h>
+//#include <tablewidget.h>
 
 using namespace arcirk::database;
 using namespace arcirk::widgets;
 using namespace arcirk::database::builder;
 
 namespace Ui {
-class QueryBuilderForeginKeyDialog;
+class QueryBuilderForeignKeyDialog;
 }
 namespace arcirk::query_builder_ui {
-class QueryBuilderForeginKeyDialog : public QDialog
+class QueryBuilderForeignKeyDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit QueryBuilderForeginKeyDialog(QWidget *parent = nullptr);
-    ~QueryBuilderForeginKeyDialog();
+    explicit QueryBuilderForeignKeyDialog(QWidget *parent = nullptr);
+    ~QueryBuilderForeignKeyDialog();
 
     void set_database_structure(ITree<ibase_object_structure>* structure);
 
@@ -31,7 +31,7 @@ public:
     void set_object(const sql_foreign_key& object);
 
 private:
-    Ui::QueryBuilderForeginKeyDialog *ui;
+    Ui::QueryBuilderForeignKeyDialog *ui;
     ITree<ibase_object_structure>* m_structure;
     QStringList m_tables;
     QStringList m_fields;

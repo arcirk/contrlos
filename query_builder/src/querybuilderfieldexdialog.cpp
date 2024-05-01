@@ -61,7 +61,7 @@ QueryBuilderFieldExDialog::QueryBuilderFieldExDialog(QWidget *parent, const QUui
             m_table->hideColumn(i);
     }
 
-    ui->verticalLayout->addWidget(treeView);
+    ui->verticalLayout->addWidget(m_table);
 
     int i = sqlite_types_qt.indexOf("TEXT");
     ui->cmbDataType->setModel(new QStringListModel(sqlite_types_qt, this));
@@ -73,12 +73,12 @@ QueryBuilderFieldExDialog::QueryBuilderFieldExDialog(QWidget *parent, const QUui
     connect(ui->btnDelete, &QToolButton::clicked, this, &QueryBuilderFieldExDialog::onBtnDeleteClicked);
     connect(ui->btnEdit, &QToolButton::clicked, this, &QueryBuilderFieldExDialog::onBtnEditClicked);
 
-    m_packade_uuid = packade_uuid;
+    m_package_uuid = package_uuid;
 
     m_field = ibase_object_structure();
-    m_field.ref = generate_uuid().toStdString();
-    m_field.package_ref = quuid_to_string(m_packade_uuid).toStdString();
-    m_field.parent = NIL_STRING_UUID;
+    m_field.ref = generate_uuid();
+    m_field.package_ref = to_byte(to_binary(m_package_uuid)));
+    m_field.parent = to_nil_uuid();
 }
 
 QueryBuilderFieldExDialog::~QueryBuilderFieldExDialog()
@@ -86,53 +86,52 @@ QueryBuilderFieldExDialog::~QueryBuilderFieldExDialog()
     delete ui;
 }
 
-//void QueryBuilderFieldExDialog::set_database_structure(ITree<ibase_object_structure> *structure)
-//{
-//    m_structure = structure;
-//}
+void QueryBuilderFieldExDialog::set_database_structure(ITable<ibase_object_structure> *structure)
+{
+    m_structure = structure;
+}
 
 ibase_object_structure QueryBuilderFieldExDialog::getField()
 {
-//    m_field.name = ui->txtFieldName->text().toStdString();
-//    m_field.alias =  m_field.name;
-//    m_field.data_type = ui->cmbDataType->currentText().toStdString();
-//    m_field.object_type = "field";
-//    m_field.size = ui->spinSize1->value();
-//    QStringList lst{};
-//    if(ui->chkPrimaryKey->isChecked()){
-//        lst.append("PRIMARY KEY AUTOINCREMENT");
-//    }
-//    if(ui->chkNotNull->isChecked()){
-//        lst.append("NOT NULL");
-//    }
-//    if(ui->chkUnique->isChecked()){
-//        lst.append("UNIQUE");
-//    }
-//
-//    m_field.query = lst.join("|").toStdString();
-//    m_field.def_value = ui->txtDefValue->text().toStdString();
+    m_field.name = ui->txtFieldName->text().toStdString();
+    m_field.alias =  m_field.name;
+    m_field.data_type = ui->cmbDataType->currentText().toStdString();
+    m_field.object_type = "field";
+    m_field.size = ui->spinSize1->value();
+    QStringList lst{};
+    if(ui->chkPrimaryKey->isChecked()){
+        lst.append("PRIMARY KEY AUTOINCREMENT");
+    }
+    if(ui->chkNotNull->isChecked()){
+        lst.append("NOT NULL");
+    }
+    if(ui->chkUnique->isChecked()){
+        lst.append("UNIQUE");
+    }
 
+    m_field.query = lst.join("|").toStdString();
+    m_field.def_value = ui->txtDefValue->text().toStdString();
 
     return m_field;
 }
 
 void QueryBuilderFieldExDialog::setData(const ibase_object_structure &value)
 {
-//    m_field = value;
-//    ui->txtFieldName->setText(m_field.name.c_str());
-//    ui->cmbDataType->setCurrentIndex(sqlite_types_qt.indexOf(m_field.data_type.c_str()));
-//    ui->spinSize1->setValue(m_field.size);
-//    auto lst = QString(m_field.query.c_str()).split("|");
-//    ui->chkPrimaryKey->setChecked(lst.indexOf("PRIMARY KEY AUTOINCREMENT"));
-//    ui->chkNotNull->setChecked(lst.indexOf("NOT NULL"));
-//    ui->chkUnique->setChecked(lst.indexOf("UNIQUE"));
-//    ui->chkDefValue->setChecked(!m_field.def_value.empty());
-//    ui->txtDefValue->setText(m_field.def_value.c_str());
+    m_field = value;
+    ui->txtFieldName->setText(m_field.name.c_str());
+    ui->cmbDataType->setCurrentIndex(sqlite_types_qt.indexOf(m_field.data_type.c_str()));
+    ui->spinSize1->setValue(m_field.size);
+    auto lst = QString(m_field.query.c_str()).split("|");
+    ui->chkPrimaryKey->setChecked(lst.indexOf("PRIMARY KEY AUTOINCREMENT"));
+    ui->chkNotNull->setChecked(lst.indexOf("NOT NULL"));
+    ui->chkUnique->setChecked(lst.indexOf("UNIQUE"));
+    ui->chkDefValue->setChecked(!m_field.def_value.empty());
+    ui->txtDefValue->setText(m_field.def_value.c_str());
 }
 
 std::string QueryBuilderFieldExDialog::get_query(const sql_foreign_key& value)
 {
-//    std::string result;
+    std::string result;
 //    if(!value.name.empty()){
 //        result.append("CONSTRAINT ");
 //        result.append(value.name);
@@ -170,71 +169,70 @@ std::string QueryBuilderFieldExDialog::get_query(const sql_foreign_key& value)
 
 void QueryBuilderFieldExDialog::onMenuClicked()
 {
-//
-//    auto action = qobject_cast<QAction*>(sender());
-//    if(action){
-//        if(action->objectName() == "ExtKey"){
-//            auto dlg = QueryBuilderForeginKeyDialog(this);
-//            dlg.set_database_structure(m_structure);
-//            if(dlg.exec()){
-//                auto result = dlg.getResult();
-//                result.field = ui->txtFieldName->text().toStdString();
-//                result.query = get_query(result);
-//                auto item = field_restrictions();
-//                item.name = result.name;
-//                item.query = result.query;
-//                item.type = "FOREIGN KEY";
-//                item.value = result;
-//                auto model = (ITree<field_restrictions>*)treeView->get_model();
-//                model->add_struct(item);
-//            }
-//        }
-//    }
+
+    auto action = qobject_cast<QAction*>(sender());
+    if(action){
+        if(action->objectName() == "ExtKey"){
+            auto dlg = QueryBuilderForeginKeyDialog(this);
+            dlg.set_database_structure(m_structure);
+            if(dlg.exec()){
+                auto result = dlg.getResult();
+                result.field = ui->txtFieldName->text().toStdString();
+                result.query = get_query(result);
+                auto item = field_restrictions();
+                item.name = result.name;
+                item.query = result.query;
+                item.type = "FOREIGN KEY";
+                item.value = result;
+                auto model = (ITable<field_restrictions>*)m_table->model();
+                model->add_struct(item);
+            }
+        }
+    }
 
 }
 
 
 void QueryBuilderFieldExDialog::onBtnEditClicked()
 {
-//    auto index = treeView->current_index();
-//    if(!index.isValid())
-//        return;
-//
-//    auto model = (ITree<field_restrictions>*)treeView->get_model();
-//    auto object = model->object(index);
-//    if(object.type == "FOREIGN KEY"){
-//        auto dlg = QueryBuilderForeginKeyDialog(this);
-//        dlg.set_database_structure(m_structure);
-//        dlg.set_object(object.value);
-//        if(dlg.exec()){
-//            auto result = dlg.getResult();
-//            result.field = ui->txtFieldName->text().toStdString();
-//            result.query = get_query(result);
-//            auto item = field_restrictions();
-//            item.name = result.name;
-//            item.query = result.query;
-//            item.type = "FOREIGN KEY";
-//            item.value = result;
-//            auto model = (ITree<field_restrictions>*)treeView->get_model();
-//            model->set_struct(item, index);
-//        }
-//    }
+    auto index = m_table->currentIndex();
+    if(!index.isValid())
+        return;
+
+    auto model = (ITable<field_restrictions>*)m_table->model();
+    auto object = model->object(index);
+    if(object.type == "FOREIGN KEY"){
+        auto dlg = QueryBuilderForeginKeyDialog(this);
+        dlg.set_database_structure(m_structure);
+        dlg.set_object(object.value);
+        if(dlg.exec()){
+            auto result = dlg.getResult();
+            result.field = ui->txtFieldName->text().toStdString();
+            result.query = get_query(result);
+            auto item = field_restrictions();
+            item.name = result.name;
+            item.query = result.query;
+            item.type = "FOREIGN KEY";
+            item.value = result;
+            auto model = (ITable<field_restrictions>*)m_table->model();
+            model->set_struct(item, index);
+        }
+    }
 }
 
 
 void QueryBuilderFieldExDialog::onBtnDeleteClicked()
 {
-//
-//    auto index = treeView->current_index();
-//    if(!index.isValid())
-//        return;
-//
-//
-//    if(QMessageBox::question(this, "Удаление", "Удалить выбранную строку?") == QMessageBox::No)
-//        return;
-//
-//    auto model = (ITree<field_restrictions>*)treeView->get_model();
-//    model->remove(index);
+
+    auto index = m_table->currentIndex();
+    if(!index.isValid())
+        return;
+
+    if(QMessageBox::question(this, "Удаление", "Удалить выбранную строку?") == QMessageBox::No)
+        return;
+
+    auto model = (ITable<field_restrictions>*)m_table->model();
+    model->remove(index);
 
 }
 

@@ -176,9 +176,9 @@ json TreeModel::to_json() const {
                         });
 }
 
-json TreeModel::to_array() const {
+json TreeModel::to_array(const QModelIndex &parent) const {
     auto result = json::array();
-    for (int i = 0; i < rowCount(); ++i) {
+    for (int i = 0; i < rowCount(parent); ++i) {
         auto index = this->index(i, 0);
         auto item = getItem(index);
         result += item->to_object();
