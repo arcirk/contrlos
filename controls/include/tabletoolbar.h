@@ -4,10 +4,34 @@
 #ifndef IS_OS_ANDROID
 #include "../controls_global.h"
 #include <QWidget>
+#include <QMenu>
+#include <QAction>
 
 namespace Ui {
 class TableToolBar;
 }
+
+enum table_toolbar_buttons{
+    table_add_item,
+    table_add_group,
+    table_delete_item,
+    table_edit_item,
+    table_move_to_item,
+    table_move_up_item,
+    table_move_down_item,
+    table_btnINVALID = -1
+};
+NLOHMANN_JSON_SERIALIZE_ENUM(table_toolbar_buttons, {
+    {table_btnINVALID, nullptr}    ,
+    {table_add_item, "table_add_item"}  ,
+    {table_add_group, "table_add_group"}  ,
+    {table_delete_item, "table_delete_item"}  ,
+    {table_edit_item, "table_edit_item"}  ,
+    {table_move_to_item, "table_move_to_item"}  ,
+    {table_move_up_item, "table_move_up_item"}  ,
+    {table_move_down_item, "table_move_down_item"}  ,
+})
+
 namespace arcirk::widgets {
     class CONTROLS_EXPORT TableToolBar : public QWidget
     {
@@ -26,9 +50,14 @@ namespace arcirk::widgets {
 
         void setHierarchyState(bool state);
 
+        QMenu* context_menu();
+
     private:
         Ui::TableToolBar *ui;
         QMap<QString,QToolButton*> m_buttons;
+        QMenu* m_context_menu;
+        QMap<table_toolbar_buttons, QAction*> m_map_commands{};
+        bool m_hierarchical_list;
 
     public slots:
         void onTableEnabled(bool value);

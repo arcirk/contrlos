@@ -27,7 +27,7 @@ BOOST_FUSION_DEFINE_STRUCT(
     (std::string, parent_name)
     (std::string, parent_alias)
     (std::string, groupe_as)
-    (std::string, package_ref)
+    (arcirk::BJson, package_ref)
     (std::string, def_value)
     (int, size)
     (bool, is_group)
@@ -260,6 +260,6 @@ namespace arcirk::database::metadata{
 
 }
 
-typedef ITable<arcirk::database::ibase_object_structure> ITableIBaseModel;
+
 
 #endif //QUERY_BUILDER_METADATA_HPP

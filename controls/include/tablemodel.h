@@ -4,11 +4,23 @@
 
 #ifndef CONTROLSPROG_TABLEMODEL_H
 #define CONTROLSPROG_TABLEMODEL_H
+#include "tableconf.h"
 #include "../controls_global.h"
 #include "tableitem.h"
 #include <QAbstractItemModel>
 #include <QList>
 #include <QSize>
+
+enum table_predefined_fields{
+    fRef,
+    fVersion,
+    fINVALID = -1
+};
+NLOHMANN_JSON_SERIALIZE_ENUM(table_predefined_fields, {
+    {fINVALID, nullptr}    ,
+    {fRef, "ref"}  ,
+    {fVersion, "version"}  ,
+});
 
 namespace arcirk::widgets {
 

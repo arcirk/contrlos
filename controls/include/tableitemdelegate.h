@@ -33,10 +33,15 @@ namespace arcirk::widgets {
             void onEndEdit(int row, int col);
             void onStartEdit(int row, int col);
 
+        protected:
+            bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index);
+
         signals:
             void selectValue(int row, int col, const table_command& type);
             void startEdit(int row, int col) const;
             void endEdit(int row, int col) const;
+            void mouseButtonDblClick(const QModelIndex &index);
+            void mouseButtonRightClick(const QModelIndex &index);
     };
 }
 #endif //CONTROLSPROG_TABLEITEMDELEGATE_H

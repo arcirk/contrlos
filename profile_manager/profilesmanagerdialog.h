@@ -7,6 +7,7 @@
 #include "../../global/profile_conf.hpp"
 #include <QStatusBar>
 #include "include/profilespage.h"
+#include "include/mstscpage.h"
 #include <QSqlDatabase>
 #include "../global/certuser/certuser.h"
 
@@ -52,9 +53,10 @@ namespace arcirk::profile_manager{
         QAction         *installCertAction;
 
         //pages
-        ProfilesPage* m_profile_page;
+        ProfilesPage*   m_profile_page;
+        MstscPage*      m_mstsc_page;
 
-        QSqlDatabase m_database;
+        QSqlDatabase    m_database;
 
         void read_data();
         void createTrayActions();

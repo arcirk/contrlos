@@ -53,6 +53,9 @@ ProfilesManagerDialog::ProfilesManagerDialog(QWidget *parent)
     ui->verticalLayoutPF->addWidget(m_profile_page);
     connect(m_profile_page, &ProfilesPage::reset, this, &ProfilesManagerDialog::onResetHttpList);
 
+    m_mstsc_page = new MstscPage(this);
+    ui->verticalLayoutRDP->addWidget(m_mstsc_page);
+
     read_data();
 
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &ProfilesManagerDialog::onOkClicked);

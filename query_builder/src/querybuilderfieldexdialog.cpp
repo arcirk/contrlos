@@ -6,7 +6,7 @@
 #include <QMessageBox>
 #include <QToolButton>
 #include <QMap>
-#include "../include/querybuilderforeginkeydialog.h"
+#include "../include/querybuilderforeignkeydialog.h"
 
 BOOST_FUSION_DEFINE_STRUCT(
     (arcirk::query_builder_ui), field_restrictions,
@@ -77,7 +77,7 @@ QueryBuilderFieldExDialog::QueryBuilderFieldExDialog(QWidget *parent, const QUui
 
     m_field = ibase_object_structure();
     m_field.ref = generate_uuid();
-    m_field.package_ref = to_byte(to_binary(m_package_uuid)));
+    m_field.package_ref = to_byte(to_binary(m_package_uuid));
     m_field.parent = to_nil_uuid();
 }
 
@@ -86,7 +86,7 @@ QueryBuilderFieldExDialog::~QueryBuilderFieldExDialog()
     delete ui;
 }
 
-void QueryBuilderFieldExDialog::set_database_structure(ITable<ibase_object_structure> *structure)
+void QueryBuilderFieldExDialog::set_database_structure(ITree<ibase_object_structure> *structure)
 {
     m_structure = structure;
 }
@@ -173,7 +173,7 @@ void QueryBuilderFieldExDialog::onMenuClicked()
     auto action = qobject_cast<QAction*>(sender());
     if(action){
         if(action->objectName() == "ExtKey"){
-            auto dlg = QueryBuilderForeginKeyDialog(this);
+            auto dlg = QueryBuilderForeignKeyDialog(this);
             dlg.set_database_structure(m_structure);
             if(dlg.exec()){
                 auto result = dlg.getResult();
@@ -202,7 +202,7 @@ void QueryBuilderFieldExDialog::onBtnEditClicked()
     auto model = (ITable<field_restrictions>*)m_table->model();
     auto object = model->object(index);
     if(object.type == "FOREIGN KEY"){
-        auto dlg = QueryBuilderForeginKeyDialog(this);
+        auto dlg = QueryBuilderForeignKeyDialog(this);
         dlg.set_database_structure(m_structure);
         dlg.set_object(object.value);
         if(dlg.exec()){
@@ -214,8 +214,7 @@ void QueryBuilderFieldExDialog::onBtnEditClicked()
             item.query = result.query;
             item.type = "FOREIGN KEY";
             item.value = result;
-            auto model = (ITable<field_restrictions>*)m_table->model();
-            model->set_struct(item, index);
+            model->set_struct(index.row(), item);
         }
     }
 }

@@ -11,6 +11,8 @@
 #include <QPixmap>
 #include <QToolButton>
 #include <QFileDialog>
+#include <QDialogButtonBox>
+#include <QPushButton>
 
 using namespace arcirk::widgets;
 
@@ -23,6 +25,8 @@ SetImageDialog::SetImageDialog(QWidget *parent)  :
 
     connect(ui->btnLoatFormHttp, &QToolButton::clicked, this, &SetImageDialog::get_url_icon);
     connect(ui->btnLoadFromLocalhost, &QToolButton::clicked, this, &SetImageDialog::selectFile);
+
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Отмена");
 }
 
 SetImageDialog::~SetImageDialog() {

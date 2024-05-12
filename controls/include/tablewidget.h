@@ -8,25 +8,26 @@
 #include "../controls_global.h"
 #include "QTableView"
 #include "tabletoolbar.h"
+#include <QMenu>
 
 namespace arcirk::widgets{
 
-    enum table_toolbar_buttons{
-        table_add_item,
-        table_delete_item,
-        table_edit_item,
-        table_move_down_item,
-        table_move_up_item,
-        table_btnINVALID = -1
-    };
-    NLOHMANN_JSON_SERIALIZE_ENUM(table_toolbar_buttons, {
-        {table_btnINVALID, nullptr}    ,
-        {table_add_item, "table_add_item"}  ,
-        {table_delete_item, "table_delete_item"}  ,
-        {table_edit_item, "table_edit_item"}  ,
-        {table_move_down_item, "table_move_down_item"}  ,
-        {table_move_up_item, "table_move_up_item"}  ,
-    })
+//    enum table_toolbar_buttons{
+//        table_add_item,
+//        table_delete_item,
+//        table_edit_item,
+//        table_move_down_item,
+//        table_move_up_item,
+//        table_btnINVALID = -1
+//    };
+//    NLOHMANN_JSON_SERIALIZE_ENUM(table_toolbar_buttons, {
+//        {table_btnINVALID, nullptr}    ,
+//        {table_add_item, "table_add_item"}  ,
+//        {table_delete_item, "table_delete_item"}  ,
+//        {table_edit_item, "table_edit_item"}  ,
+//        {table_move_down_item, "table_move_down_item"}  ,
+//        {table_move_up_item, "table_move_up_item"}  ,
+//    })
 
     class CONTROLS_EXPORT TableWidget  : public QTableView{
     Q_OBJECT
@@ -40,6 +41,7 @@ namespace arcirk::widgets{
         TableToolBar* toolBar();
         void set_inners_dialogs(bool value);
         void allow_default_command(bool value);
+        void set_standard_context_menu(bool value);
 
         void addRow();
         void editRow();
@@ -55,9 +57,14 @@ namespace arcirk::widgets{
         bool m_inners_dialogs;
         bool m_allow_def_commands;
         TableToolBar* m_toolBar;
+        bool m_standard_context_menu;
+        QMenu* m_standard_menu;
+
         void currentChanged(const QModelIndex &current, const QModelIndex &previous) override;
 
         void editRowInDialog(const QModelIndex& index);
+//    protected:
+//        void mouseDoubleClickEvent(QMouseEvent * e) override;
 
     signals:
         void itemClicked(const QModelIndex& index);
@@ -67,14 +74,16 @@ namespace arcirk::widgets{
         void tableCurrentChanged(const QModelIndex& current, const QModelIndex& previous);
         void rowChanged(int row);
         void rowMove();
+        //void mouseDoubleClickEvent(const QModelIndex& index);
 
     private slots:
         void onItemClicked(const QModelIndex& index);
         void onItemDoubleClicked(const QModelIndex& index);
-        //void onSourceModelChanged();
+        void onMouseRightItemClick(const QModelIndex& index);
         void onToolBarItemClicked(const QString& buttonName);
-
+        void slotCustomMenuRequested(QPoint pos);
         void onSelectValue(int row, int col, const table_command& type);
+        //void onMouseDoubleClickEvent(const QModelIndex& index);
 
     };
 

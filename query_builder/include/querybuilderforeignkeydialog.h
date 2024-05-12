@@ -1,5 +1,5 @@
-#ifndef QUERYBUILDERFOREGINKEYDIALOG_H
-#define QUERYBUILDERFOREGINKEYDIALOG_H
+#ifndef QUERYBUILDERFOREIGNKEYDIALOG_H
+#define QUERYBUILDERFOREIGNKEYDIALOG_H
 
 #include <QDialog>
 #include <itree.hpp>
@@ -13,6 +13,7 @@ using namespace arcirk::database::builder;
 namespace Ui {
 class QueryBuilderForeignKeyDialog;
 }
+
 namespace arcirk::query_builder_ui {
 class QueryBuilderForeignKeyDialog : public QDialog
 {
@@ -51,4 +52,4 @@ private slots:
     void onCmbSelectedItem(bool check);
 };
 }
-#endif // QUERYBUILDERFOREGINKEYDIALOG_H
+#endif // QUERYBUILDERFOREIGNKEYDIALOG_H

@@ -33,6 +33,13 @@
    <property name="spacing">
     <number>3</number>
    </property>
+   <item row="2" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Ok</set>
+     </property>
+    </widget>
+   </item>
    <item row="1" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
@@ -48,13 +55,31 @@
        </item>
       </layout>
      </widget>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Ok</set>
-     </property>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>Удаленный доступ</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <layout class="QVBoxLayout" name="verticalLayoutRDP">
+         <item>
+          <widget class="QCheckBox" name="checkBoxEnableRdp">
+           <property name="text">
+            <string>Разрешить удаленный доступ</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBoxEnableRdpUsers">
+           <property name="text">
+            <string>Разрешить удаленный доступ к сессиям пользователей</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>

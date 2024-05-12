@@ -39,11 +39,11 @@ set(PROJECT_SOURCES
             src/querybuilderadditionallywidget.cpp
             ui/querybuilderadditionallywidget.ui
         include/querybuilderfieldexdialog.h
-        include/querybuilderforeginkeydialog.h
+        include/querybuilderforeignkeydialog.h
         src/querybuilderfieldexdialog.cpp
-        src/querybuilderforeginkeydialog.cpp
+        src/querybuilderforeignkeydialog.cpp
         ui/querybuilderfieldexdialog.ui
-        ui/querybuilderforeginkeydialog.ui
+        ui/querybuilderforeignkeydialog.ui
         )
 
 qt_add_executable(QueryBuilder

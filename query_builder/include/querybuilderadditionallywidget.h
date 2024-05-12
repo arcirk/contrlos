@@ -16,10 +16,13 @@ using namespace arcirk::database;
 using namespace arcirk::database::builder;
 using namespace arcirk::widgets;
 
+typedef ITable<arcirk::database::ibase_object_structure> ITableIBaseModel;
+
 namespace Ui {
 class QueryBuilderAdditionallyWidget;
 }
-    namespace arcirk::query_builder_ui {
+
+namespace arcirk::query_builder_ui {
     class QueryBuilderAdditionallyWidget : public QWidget
     {
         Q_OBJECT

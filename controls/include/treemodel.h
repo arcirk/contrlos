@@ -1,11 +1,27 @@
 #ifndef CONTROLSPROG_TREEMODEL_H
 #define CONTROLSPROG_TREEMODEL_H
 
+#include "treeconf.h"
 #include "../controls_global.h"
 #include <QAbstractItemModel>
 #include <QList>
 #include <QSize>
 #include "treeitem.h"
+
+enum tree_predefined_fields{
+    ftreeRef,
+    ftreeParent,
+    ftreeIsGroup,
+    ftreeVersion,
+    ftreeINVALID = -1
+};
+NLOHMANN_JSON_SERIALIZE_ENUM(tree_predefined_fields, {
+    {ftreeINVALID, nullptr}    ,
+    {ftreeRef, "ref"}  ,
+    {ftreeParent, "parent"}  ,
+    {ftreeIsGroup, "is_group"}  ,
+    {ftreeVersion, "version"}  ,
+});
 
 namespace arcirk::widgets {
 
@@ -73,6 +89,9 @@ namespace arcirk::widgets {
             [[nodiscard]] QList<QModelIndex> find_all(int column, const QVariant& source, const QModelIndex& parent = QModelIndex()) const;
 
             bool is_group(const QModelIndex& index = QModelIndex());
+
+            std::vector<std::string> predefined_fields() const;
+
     private:
         TreeItem* rootItem;
         std::shared_ptr<TreeConf> m_conf;

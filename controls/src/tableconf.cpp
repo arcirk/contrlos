@@ -5,7 +5,9 @@
 
 using namespace arcirk::widgets;
 
-TableConf::TableConf() {
+TableConf::TableConf()
+: IViewsConf()
+{
     Q_INIT_RESOURCE(controls_resource);
     m_size                  = QSize(22, 22);
     m_columns               = std::vector<header_item>{header_item_def("ref", "Ссылка")};
@@ -87,6 +89,9 @@ void TableConf::set_columns_order(const QList<QString> &names) {
         }
         i++;
     }
+    m_order_columns.clear();
+    m_order_columns.resize(names.size());
+    std::copy(names.begin(), names.end(), m_order_columns.begin());
 }
 
 QList<QString> TableConf::columns_order() const {
@@ -141,5 +146,11 @@ void TableConf::set_column_select_type(const QString &column, bool value) {
     auto index = index_of_for_name(column.toStdString(), m_columns);
     if(index != -1){
         m_columns[index].select_type = value;
+    }
+}
+
+void TableConf::set_column_not_public(const QList<QString> &columns, bool value) {
+    foreach(auto column, columns){
+        set_column_not_public(column, value);
     }
 }

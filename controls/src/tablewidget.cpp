@@ -8,6 +8,7 @@
 #include <QFileDialog>
 #include "../include/tableitemdelegate.h"
 #include "../include/tablerowdialog.h"
+#include <QAction>
 
 using namespace arcirk::widgets;
 
@@ -27,15 +28,21 @@ TableWidget::TableWidget(QWidget *parent, const QString &typeName)
     delegate->setParent(this);
 
     connect(this, &QAbstractItemView::clicked, this, &TableWidget::onItemClicked);
-    connect(this, &QAbstractItemView::doubleClicked, this, &TableWidget::onItemDoubleClicked);
 
     m_toolBar = nullptr;
     m_inners_dialogs = false;
     m_allow_def_commands = true;
+    m_standard_context_menu = true;
+    m_standard_menu = nullptr;
 
     horizontalHeader()->setStretchLastSection(true);
 
     connect(delegate, &TableItemDelegate::selectValue, this, &TableWidget::onSelectValue);
+    connect(delegate, &TableItemDelegate::mouseButtonDblClick, this, &TableWidget::onItemDoubleClicked);
+    connect(delegate, &TableItemDelegate::mouseButtonRightClick, this, &TableWidget::onMouseRightItemClick);
+
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotCustomMenuRequested(QPoint)));
 }
 
 void TableWidget::setModel(QAbstractItemModel* model) {
@@ -55,7 +62,9 @@ void TableWidget::setModel(QAbstractItemModel* model) {
     }
     if(m_toolBar){
         m_toolBar->setEnabled(true);
-        m_toolBar->setButtonEnabled("table_add_item", true);
+        m_toolBar->setHierarchyState(false);
+        if(m_standard_context_menu)
+            m_standard_menu = m_toolBar->context_menu();
     }
 }
 
@@ -84,24 +93,24 @@ void TableWidget::currentChanged(const QModelIndex &current, const QModelIndex &
     }
     if(m_toolBar){
         if(index.isValid()){
-            m_toolBar->setButtonEnabled("table_edit_item", true);
-            m_toolBar->setButtonEnabled("table_delete_item", true);
-            m_toolBar->setButtonEnabled("table_add_item", true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_edit_item).c_str(), true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_delete_item).c_str(), true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_item).c_str(), true);
             if(index.row() == model->rowCount() - 1)
-                m_toolBar->setButtonEnabled("table_move_down_item", false);
+                m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), false);
             else if(index.row() < model->rowCount() - 1)
-                m_toolBar->setButtonEnabled("table_move_down_item", true);
+                m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), true);
 
             if(index.row() != 0)
-                m_toolBar->setButtonEnabled("table_move_up_item", true);
+                m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), true);
             else
-                m_toolBar->setButtonEnabled("table_move_up_item", false);
+                m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), false);
         }else{
-            m_toolBar->setButtonEnabled("table_delete_item", false);
-            m_toolBar->setButtonEnabled("table_edit_item", false);
-            m_toolBar->setButtonEnabled("table_move_down_item", false);
-            m_toolBar->setButtonEnabled("table_move_up_item", false);
-            m_toolBar->setButtonEnabled("table_add_item", true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_delete_item).c_str(), false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_edit_item).c_str(), false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_item).c_str(), true);
         }
         emit tableCurrentChanged(current, previous);
     }
@@ -114,7 +123,12 @@ void TableWidget::setTableToolBar(TableToolBar *value) {
     auto model = this->model();
     if(!model || !m_toolBar)
         return;
-    m_toolBar->setButtonEnabled("table_add_item", true);
+    m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_item).c_str(), true);
+//    m_toolBar->setButtonVisible(arcirk::enum_synonym(table_add_group).c_str(), false);
+//    m_toolBar->setButtonVisible(arcirk::enum_synonym(table_move_to_item).c_str(), false);
+    m_toolBar->setHierarchyState(false);
+    if(m_standard_context_menu)
+        m_standard_menu = m_toolBar->context_menu();
 }
 
 void TableWidget::onToolBarItemClicked(const QString &buttonName) {
@@ -194,14 +208,14 @@ void TableWidget::moveUp() {
 
 
     if(row== model->rowCount() - 1)
-        m_toolBar->setButtonEnabled("table_move_down_item", false);
+        m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), false);
     else if(row < model->rowCount() - 1)
-        m_toolBar->setButtonEnabled("table_move_down_item", true);
+        m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), true);
 
     if(row != 0 && model->rowCount() > 1)
-        m_toolBar->setButtonEnabled("table_move_up_item", true);
+        m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), true);
     else
-        m_toolBar->setButtonEnabled("table_move_up_item", false);
+        m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), false);
 
 //    if(model->use_database())
 //        model->updateRowPosition();
@@ -222,14 +236,14 @@ void TableWidget::moveDown() {
         model->move_down(current_index);
 
     if(row== model->rowCount() - 1)
-        m_toolBar->setButtonEnabled("table_move_down_item", false);
+        m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), false);
     else if(row < model->rowCount() - 1)
-        m_toolBar->setButtonEnabled("table_move_down_item", true);
+        m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), true);
 
     if(row != 0 && model->rowCount() > 1)
-        m_toolBar->setButtonEnabled("table_move_up_item", true);
+        m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), true);
     else
-        m_toolBar->setButtonEnabled("table_move_up_item", false);
+        m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), false);
 
 //    if(model->use_database())
 //        model->updateRowPosition();
@@ -367,5 +381,23 @@ void TableWidget::onSelectValue(int row, int col, const table_command& type) {
             }
         }
 
+    }
+}
+
+void TableWidget::set_standard_context_menu(bool value) {
+    m_standard_context_menu = value;
+    if(m_standard_context_menu)
+        m_standard_menu = m_toolBar->context_menu();
+    else
+        m_standard_menu = nullptr;
+}
+
+void TableWidget::onMouseRightItemClick(const QModelIndex &index) {
+
+}
+
+void TableWidget::slotCustomMenuRequested(QPoint pos) {
+    if(m_standard_context_menu && m_standard_menu){
+        m_standard_menu->popup(viewport()->mapToGlobal(pos));
     }
 }

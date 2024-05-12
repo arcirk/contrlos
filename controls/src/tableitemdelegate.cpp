@@ -9,6 +9,8 @@
 #include "../include/tableitemdelegate.h"
 #include "../include/treeitemvariant.h"
 #include <QFileDialog>
+#include <QMouseEvent>
+#include <QEvent>
 
 using namespace arcirk::widgets;
 
@@ -130,4 +132,32 @@ void TableItemDelegate::onEndEdit(int /*row*/, int /*col*/) {
 
 void TableItemDelegate::onStartEdit(int row, int col) {
     m_current_index = std::make_pair(row,col);
+}
+
+bool TableItemDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option,
+                                    const QModelIndex &index) {
+    if (!index.isValid())
+    {
+        return false;
+    }
+
+    auto mouseEvent = dynamic_cast<QMouseEvent*>(event);
+
+//    // Added this debugging purposes!
+//    if (mouseEvent->button() == Qt::RightButton)
+//    {
+//        qDebug() << "Delegate received right mouse click";
+//    }
+
+    // Handling of left mouse button clicks
+    if (mouseEvent->button() == Qt::LeftButton)
+    {
+        if(event->type() == QEvent::MouseButtonDblClick){
+            //std::cout << "QEvent::MouseButtonDblClick" << std::endl;
+            emit mouseButtonDblClick(index);
+        }
+    }else if(mouseEvent->button() == Qt::RightButton){
+        emit mouseButtonRightClick(index);
+    }
+    return QStyledItemDelegate::editorEvent(event, model, option, index);
 }

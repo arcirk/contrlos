@@ -10,20 +10,23 @@
 
 using namespace arcirk::widgets;
 
-TableRowDialog::TableRowDialog(const json& data, TableConf* conf, QWidget *parent) :
+TableRowDialog::TableRowDialog(const json& data, IViewsConf* conf, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::TableRowDialog)
 {
     ui->setupUi(this);
-
+    is_tree_model = false;
     m_conf = conf;
     m_data = data;
+    is_group = data.value("is_group", false);
 
     if(is_object_empty(m_data)){
-        setWindowTitle("Новая строка");
+        if(!is_group)
+            setWindowTitle("Новая строка");
+        else
+            setWindowTitle("Новая группа");
         if(!m_data.is_object())
             m_data = json::object();
-        //auto var = to_variant_p(to_binary(QUuid::createUuid()));
         m_data["ref"] = arcirk::to_byte(arcirk::to_binary(QUuid::createUuid()));//serialize(var);
     }else
         setWindowTitle("Изменение строки");
@@ -79,7 +82,6 @@ void TableRowDialog::createControls() {
     int row = 0;
     for (auto itr = m_data.items().begin(); itr != m_data.items().end(); ++itr) {
         auto control = createEditor(itr.key());
-        //control.second->selectType(m_conf->columns()[m_conf->column_index(itr.key().c_str())].select_type);
         setEditorData(control.first, control.second, itr.value());
         auto lbl = new QLabel(this);
         auto h_data = find_element_for_name(control.first.toStdString(), m_conf->columns());
@@ -167,7 +169,12 @@ void TableRowDialog::hideNotPublicControls() {
                 }else{
                     auto itr = find_element_for_name(control->objectName().toStdString(), m_conf->columns());
                     if(itr != m_conf->columns().end()){
-                        if(itr->not_public){
+                        bool is_visible = false;
+                        if(is_group){
+                            is_visible = itr->use == 0 || itr->use == 2;
+                        }else
+                            is_visible = itr->use == 0 || itr->use == 1;
+                        if(itr->not_public || !is_visible){
                             control->setVisible(false);
                             auto lbl = layout->itemAtPosition(i,0)->widget();
                             if(lbl){

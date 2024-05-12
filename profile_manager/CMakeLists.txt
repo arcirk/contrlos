@@ -41,10 +41,6 @@ set(PROJECT_SOURCES
         ../global/global.hpp
         ../global/profile_conf.hpp
         ../global/sql/query_builder.hpp
-#        singleapplication/singleapplication.h
-#        singleapplication/singleapplication_p.h
-#        singleapplication/singleapplication.cpp
-#        singleapplication/singleapplication_p.cpp
         include/setimagedialog.h
         src/setimagedialog.cpp
         include/sql/datautils.h
@@ -64,6 +60,9 @@ set(PROJECT_SOURCES
         ../global/winreg/WinReg.cpp
         ../global/winreg/WinReg.hpp
         pm.rc
+        include/mstscpage.h
+        src/mstscpage.cpp
+        ui/mstscpage.ui
         )
 
 qt_add_executable(ProfileManager

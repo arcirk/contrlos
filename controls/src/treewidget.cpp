@@ -37,7 +37,7 @@ TreeViewWidget::TreeViewWidget(QWidget *parent, const QString& typeName)
     m_toolBar = nullptr;
     m_inners_dialogs = false;
     m_only_groups_in_root = false;
-    m_add_group_in_root_only = false;
+    //m_add_group_in_root_only = false;
     m_allow_def_commands = true;
 
     setProperty("typeName", typeName);
@@ -57,9 +57,9 @@ TreeModel* TreeViewWidget::get_model()
         return nullptr;
     if(this->model()->property("typeName").toString() == "TreeSortModel"){
         auto m_model = (TreeSortModel*)this->model();
-        return (TreeModel*)m_model->sourceModel();
+        return qobject_cast<TreeModel*>(m_model->sourceModel());
     }else{
-        return (TreeModel*)this->model();
+        return qobject_cast<TreeModel*>(this->model());
     }
 }
 
@@ -149,20 +149,36 @@ void TreeViewWidget::setModel(QAbstractItemModel *model)
     }
     if(model->property("typeName").toString() != "TreeSortModel"){
         m_sort_model->setSourceModel(model);
-        auto model_ = (TreeModel*)model;
+        QTreeView::setModel(model);
+        auto model_ = qobject_cast<TreeModel*>(model);
         m_hierarchy_list = model_->hierarchical_list();
         if(m_toolBar){
-            m_toolBar->setButtonEnabled("add_item", true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_item).c_str(), true);
             if(!model_->hierarchical_list()){
-                m_toolBar->setButtonVisible("add_group", false);
-                m_toolBar->setButtonVisible("move_to_item", false);
+                m_toolBar->setButtonVisible(arcirk::enum_synonym(table_add_group).c_str(), false);
+                m_toolBar->setButtonVisible(arcirk::enum_synonym(table_move_to_item).c_str(), false);
             }
             if(!m_inners_dialogs)
-                m_toolBar->setButtonVisible("move_to_item", false);
+                m_toolBar->setButtonVisible(arcirk::enum_synonym(table_move_to_item).c_str(), false);
         }
-        connect((TreeModel*)model, &TreeModel::fetch, this, &TreeViewWidget::onTreeFetch);
+
+        foreach(const auto& column, default_column_hidden){
+            if(model_->columns().indexOf(column) != -1){
+                hideColumn(model_->column_index(column));
+            }
+        }
+        for (auto itr = model_->get_conf()->columns().begin(); itr != model_->get_conf()->columns().end() ; ++itr) {
+            if(itr->not_public){
+                hideColumn(model_->column_index(itr->name.c_str()));
+            }
+        }
+        connect(model_, &TreeModel::fetch, this, &TreeViewWidget::onTreeFetch);
     }
-    return QTreeView::setModel(m_sort_model);
+    if(m_toolBar){
+        m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_item).c_str(), true);
+        m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_group).c_str(), true);
+    }
+    //return QTreeView::setModel(m_sort_model);
 }
 
 void TreeViewWidget::setEnabled(bool value)
@@ -198,14 +214,13 @@ void TreeViewWidget::setTableToolBar(TableToolBar *value)
     if(!model || !m_toolBar)
         return;
     m_hierarchy_list = model->hierarchical_list();
-    m_toolBar->setHierarchyState(model->hierarchical_list());
-    m_toolBar->setButtonEnabled("add_item", true);
-    if(!model->hierarchical_list()){
-        m_toolBar->setButtonVisible("add_group", false);
-        m_toolBar->setButtonVisible("move_to_item", false);
-    }
-    if(!m_inners_dialogs)
-        m_toolBar->setButtonVisible("move_to_item", false);
+    m_toolBar->setHierarchyState(m_hierarchy_list);
+    m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_item).c_str(), true);
+    m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_group).c_str(), true);
+    m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_to_item).c_str(), false);
+    m_toolBar->setButtonVisible(arcirk::enum_synonym(table_add_group).c_str(), m_hierarchy_list);
+    m_toolBar->setButtonVisible(arcirk::enum_synonym(table_move_to_item).c_str(), m_hierarchy_list);
+
 
 }
 
@@ -232,42 +247,42 @@ void TreeViewWidget::currentChanged(const QModelIndex &current, const QModelInde
         m_hierarchy_list = model->hierarchical_list();
 
         if(index.isValid()){
-            m_toolBar->setButtonEnabled("edit_item", true);
-            m_toolBar->setButtonEnabled("delete_item", true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_edit_item).c_str(), true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_delete_item).c_str(), true);
             if(model->is_group(index)){
-                m_toolBar->setButtonEnabled("add_group", true);
-                m_toolBar->setButtonEnabled("add_item", true);
+                m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_group).c_str(), true);
+                m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_item).c_str(), true);
             }else{
-                m_toolBar->setButtonEnabled("add_group", false);
+                m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_group).c_str(), false);
                 if(m_hierarchy_list)
-                    m_toolBar->setButtonEnabled("add_item", false);
+                    m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_item).c_str(), false);
             }
 
-            m_toolBar->setButtonEnabled("move_to_item", true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_to_item).c_str(), true);
             if(!model->hierarchical_list()){
                 if(index.row() == model->rowCount() - 1)
-                    m_toolBar->setButtonEnabled("move_down_item", false);
+                    m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), false);
                 else if(index.row() < model->rowCount() - 1)
-                    m_toolBar->setButtonEnabled("move_down_item", true);
+                    m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), true);
 
                 if(index.row() != 0)
-                    m_toolBar->setButtonEnabled("move_up_item", true);
+                    m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), true);
                 else
                     m_toolBar->setButtonEnabled("move_up_item", false);
             }
         }else{
-            m_toolBar->setButtonEnabled("add_group", false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_group).c_str(), false);
             if(m_hierarchy_list)
-                m_toolBar->setButtonEnabled("add_item", false);
-            m_toolBar->setButtonEnabled("move_to_item", false);
-            m_toolBar->setButtonEnabled("delete_item", false);
-            m_toolBar->setButtonEnabled("edit_item", false);
-            m_toolBar->setButtonEnabled("move_down_item", false);
-            m_toolBar->setButtonEnabled("move_up_item", false);
+                m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_item).c_str(), false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_to_item).c_str(), false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_delete_item).c_str(), false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_edit_item).c_str(), false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), false);
         }
     }
 
-    emit treeItemClicked(current);
+    emit itemClicked(current);
     return QTreeView::currentChanged(current, previous);
 }
 
@@ -276,9 +291,11 @@ void TreeViewWidget::hide_default_columns()
     auto model = get_model();
     if(!model)
         return;
-    hideColumn(model->column_index("ref"));
-    hideColumn(model->column_index("parent"));
-    hideColumn(model->column_index("is_group"));
+
+    for(auto const& f: model->predefined_fields()){
+        hideColumn(model->column_index(f.c_str()));
+    }
+
 }
 
 void TreeViewWidget::close_editor()
@@ -291,8 +308,8 @@ void TreeViewWidget::close_editor()
 
 }
 
-void TreeViewWidget::openNewItemDialog()
-{
+//void TreeViewWidget::openNewItemDialog()
+//{
 //    auto model = get_model();
 //    if(!model)
 //        return;
@@ -343,10 +360,11 @@ void TreeViewWidget::openNewItemDialog()
 //        emit addTreeItem(n_index, dlg.data());
 //    }
 
-}
+//}
+//
 
-void TreeViewWidget::openNewGroupDialog()
-{
+//void TreeViewWidget::openNewGroupDialog()
+//{
 //    auto model = get_model();
 //    if(!model)
 //        return;
@@ -396,10 +414,10 @@ void TreeViewWidget::openNewGroupDialog()
 //        auto n_index = model->add(dlg.data(), current_index);
 //        emit addTreeItem(n_index, dlg.data());
 //    }
-}
+//}
 
-void TreeViewWidget::openOpenEditDialog()
-{
+//void TreeViewWidget::openOpenEditDialog()
+//{
 //    auto model = get_model();
 //    if(!model)
 //        return;
@@ -434,10 +452,10 @@ void TreeViewWidget::openOpenEditDialog()
 //        }
 //        emit editTreeItem(current_index, dlg.data());
 //    }
-}
+//}
 
-void TreeViewWidget::openOpenMoveToDialog()
-{
+//void TreeViewWidget::openOpenMoveToDialog()
+//{
 //    auto model = get_model();
 //    if(!model)
 //        return;
@@ -475,10 +493,10 @@ void TreeViewWidget::openOpenMoveToDialog()
 //        }
 //
 //    }
-}
+//}
 
-void TreeViewWidget::deleteItemCommand()
-{
+//void TreeViewWidget::deleteItemCommand()
+//{
 //    auto model = get_model();
 //    if(!model)
 //        return;
@@ -492,7 +510,7 @@ void TreeViewWidget::deleteItemCommand()
 //        model->remove(current_index);
 //        emit deleteTreeItem(obj);
 //    }
-}
+//}
 
 void TreeViewWidget::mousePressEvent(QMouseEvent *event)
 {
@@ -625,18 +643,18 @@ int TreeViewWidget::text_width(int column, const QModelIndex &parent, const int&
 
 void TreeViewWidget::onItemClicked(const QModelIndex &index)
 {
-//    if(!index.isValid())
-//        return;
-//    auto index_ = get_index(index);
-//    emit itemClicked(index_, get_model()->object_name(index_));
+    if(!index.isValid())
+        return;
+    auto index_ = get_index(index);
+    emit itemClicked(index_);
 }
 
 void TreeViewWidget::onItemDoubleClicked(const QModelIndex &index)
 {
-//    if(!index.isValid())
-//        return;
-//    auto index_ = get_index(index);
-//    emit itemDoubleClicked(index_, get_model()->object_name(index_));
+    if(!index.isValid())
+        return;
+    auto index_ = get_index(index);
+    emit itemDoubleClicked(index_);
 }
 
 void TreeViewWidget::onSourceModelChanged()
@@ -663,22 +681,22 @@ void TreeViewWidget::onToolBarItemClicked(const QString &buttonName)
 
 {
     json b = buttonName.toStdString();
-    auto btn = b.get<toolbar_buttons>();
+    auto btn = b.get<table_toolbar_buttons>();
     if(!m_inners_dialogs){
         if(m_allow_def_commands){
-            if(btn == add_item){
+            if(btn == table_add_item){
                 addRow();
-            }else if(btn == add_group){
+            }else if(btn == table_add_group){
                 //
-            }else if(btn == delete_item){
-                deleteItemCommand();
-            }else if(btn == edit_item){
+            }else if(btn == table_delete_item){
+               // deleteItemCommand();
+            }else if(btn == table_edit_item){
                 editRow();
-            }else if(btn == move_to_item){
+            }else if(btn == table_move_to_item){
                 //
-            }else if(btn == move_up_item){
+            }else if(btn == table_move_up_item){
                 moveUp();
-            }else if(btn == move_down_item){
+            }else if(btn == table_move_down_item){
                 moveDown();
             }else
                     emit toolBarItemClicked(buttonName);
@@ -686,19 +704,19 @@ void TreeViewWidget::onToolBarItemClicked(const QString &buttonName)
                 emit toolBarItemClicked(buttonName);
 
     }else{
-        if(btn == add_item){
-            openNewItemDialog();
-        }else if(btn == add_group){
-            openNewGroupDialog();
-        }else if(btn == delete_item){
-            deleteItemCommand();
-        }else if(btn == edit_item){
-            openOpenEditDialog();
-        }else if(btn == move_to_item){
-            openOpenMoveToDialog();
-        }else if(btn == move_up_item){
+        if(btn == table_add_item){
+            //openNewItemDialog();
+        }else if(btn == table_add_group){
+            //openNewGroupDialog();
+        }else if(btn == table_delete_item){
+            //deleteItemCommand();
+        }else if(btn == table_edit_item){
+            //openOpenEditDialog();
+        }else if(btn == table_move_to_item){
+            //openOpenMoveToDialog();
+        }else if(btn == table_move_up_item){
             moveUp();
-        }else if(btn == move_down_item){
+        }else if(btn == table_move_down_item){
             moveDown();
         }else
                 emit toolBarItemClicked(buttonName);
@@ -707,29 +725,30 @@ void TreeViewWidget::onToolBarItemClicked(const QString &buttonName)
 
 void TreeViewWidget::addRow()
 {
-//    auto model = get_model();
-//    if(!model)
-//        return;
-//    auto current_index = this->current_index();
-//    json row_data = model->empty_data();
-//    m_hierarchy_list = model->hierarchical_list();
-//
-//    if(m_only_groups_in_root || m_hierarchy_list){
-//        if (!current_index.isValid() || !model->is_group(current_index))
-//            return;
+    auto model = get_model();
+    if(!model)
+        return;
+    auto current_index = this->current_index();
+    json row_data = model->empty_data();
+    m_hierarchy_list = model->hierarchical_list();
+
+    if(m_only_groups_in_root || m_hierarchy_list){
+        if (!current_index.isValid() || !model->is_group(current_index))
+            return;
 //        row_data["is_group"] = 0;
 //        row_data["ref"] = "";
 //        row_data["parent"] = uuid_to_string(model->ref(current_index)).toStdString();
-//    }else
+    }
+//    else
 //        row_data["parent"] = NIL_STRING_UUID;
-//
-//    auto n_index = model->add(row_data, current_index);
-//
-//    auto proxy_index = m_sort_model->mapFromSource(n_index);
-//
-//    if(proxy_index.isValid()){
-//        setCurrentIndex(proxy_index);
-//    }
+
+    auto n_index = model->add(row_data, current_index);
+
+    auto proxy_index = m_sort_model->mapFromSource(n_index);
+
+    if(proxy_index.isValid()){
+        setCurrentIndex(proxy_index);
+    }
 
 }
 
@@ -754,14 +773,14 @@ void TreeViewWidget::moveUp()
     auto index = this->current_index();
     if(!model->hierarchical_list()){
         if(index.row() == model->rowCount() - 1)
-            m_toolBar->setButtonEnabled("move_down_item", false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), false);
         else if(index.row() < model->rowCount() - 1)
-            m_toolBar->setButtonEnabled("move_down_item", true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), true);
 
         if(index.row() != 0)
-            m_toolBar->setButtonEnabled("move_up_item", true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), true);
         else
-            m_toolBar->setButtonEnabled("move_up_item", false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), false);
     }
 }
 
@@ -778,14 +797,64 @@ void TreeViewWidget::moveDown()
     auto index = this->current_index();
     if(!model->hierarchical_list()){
         if(index.row() == model->rowCount() - 1)
-            m_toolBar->setButtonEnabled("move_down_item", false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), false);
         else if(index.row() < model->rowCount() - 1)
-            m_toolBar->setButtonEnabled("move_down_item", true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), true);
 
         if(index.row() != 0)
-            m_toolBar->setButtonEnabled("move_up_item", true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), true);
         else
-            m_toolBar->setButtonEnabled("move_up_item", false);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_up_item).c_str(), false);
+    }
+}
+
+void TreeViewWidget::hide_not_ordered_columns() {
+    auto model = get_model();
+    if(!model)
+        return;
+    const auto& columns_ordered = model->get_conf()->columns_order();
+    for (auto column = model->get_conf()->columns().begin(); column != model->get_conf()->columns().end(); ++column) {
+        if(columns_ordered.indexOf(column->name.c_str()) == -1)
+            hideColumn(model->column_index(column->name.c_str()));
+    }
+}
+
+void TreeViewWidget::set_only_groups_in_top_level(bool value) {
+    m_only_groups_in_root = value;
+}
+
+bool TreeViewWidget::only_groups_in_top_level() {
+    return m_only_groups_in_root;
+}
+
+void TreeViewWidget::editRowInDialog(const QModelIndex &index, const QModelIndex &parent) {
+
+    auto model = get_model();
+    bool is_new = false;
+    if(!model)
+        return;
+    json data;
+    if(index.isValid()){
+        data = model->row(index);
+    }else{
+        data = model->empty_data();
+        is_new = true;
+    }
+
+    auto dlg = TableRowDialog(data, model->get_conf(), this);
+    if(dlg.exec()){
+        if(is_new){
+            const auto result = dlg.result();
+            auto n_index = model->add(result);
+            if(model->use_database())
+                model->onRowChanged(n_index);
+            emit rowChanged(n_index.row());
+        }else{
+            model->set_object(index, dlg.result());
+            if(model->use_database())
+                model->onRowChanged(index);
+            emit rowChanged(index.row());
+        }
     }
 }
 

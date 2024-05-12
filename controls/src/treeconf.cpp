@@ -6,7 +6,9 @@
 
 using namespace arcirk::widgets;
 
-TreeConf::TreeConf() {
+TreeConf::TreeConf()
+: IViewsConf()
+{
     Q_INIT_RESOURCE(controls_resource);
     m_size                  = QSize(22, 22);
     m_columns               = std::vector<header_item>{
@@ -92,13 +94,16 @@ QMap<QString, QString> TreeConf::columns_aliases() const  {
 
 void TreeConf::set_columns_order(const QList<QString> &names) {
     size_t i = 0;
-            foreach(auto name, names){
-            auto current_index = index_of_for_name(name.toStdString(), m_columns);
-            if(current_index != -1){
-                move_element(m_columns, current_index, i);
-            }
-            i++;
+    foreach(auto name, names){
+        auto current_index = index_of_for_name(name.toStdString(), m_columns);
+        if(current_index != -1){
+            move_element(m_columns, current_index, i);
         }
+        i++;
+    }
+    m_order_columns.clear();
+    m_order_columns.resize(names.size());
+    std::copy(names.begin(), names.end(), m_order_columns.begin());
 }
 
 QList<QString> TreeConf::columns_order() const {
@@ -176,4 +181,26 @@ void TreeConf::init_default_icons() {
 
 QIcon TreeConf::default_icon(tree_rows_icons state) const {
     return m_row_icon[state];
+}
+
+void TreeConf::set_column_not_public(const QList<QString> &columns, bool value) {
+    foreach(auto column, columns){
+        set_column_not_public(column, value);
+    }
+}
+
+void TreeConf::set_attribute_use(const QString &column, attribute_use value) {
+
+    int col = column_index(column);
+    if(m_columns.size() > col && col != -1){
+        m_columns[col].use = (int)value;
+    }
+
+}
+
+void TreeConf::set_attribute_use(const QList<QString> &columns, attribute_use value) {
+
+    foreach(auto const& column, columns){
+        set_attribute_use(column, value);
+    }
 }

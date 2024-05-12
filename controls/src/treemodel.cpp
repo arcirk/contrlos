@@ -402,12 +402,12 @@ QMap<QString, QString> TreeModel::columns_aliases() const {
     return m_conf->columns_aliases();
 }
 
-json TreeModel::to_array(const QString &column) const {
+json TreeModel::to_array(const QString &column, const QModelIndex &parent) const {
 
     if(columns().indexOf(column) == -1)
         return {};
     auto result = json::array();
-    for (int i = 0; i < rowCount(); ++i) {
+    for (int i = 0; i < rowCount(parent); ++i) {
         auto index = this->index(i, 0);
         auto item = getItem(index);
         auto object = item->to_object();
@@ -452,4 +452,16 @@ QList<QString> TreeModel::columns_order() const {
 void TreeModel::set_hierarchical_list(bool value) {
     m_hierarchical_list = value;
     emit hierarchicalListChanged(value);
+}
+
+std::vector<std::string> TreeModel::predefined_fields() const {
+
+    auto f = std::vector<std::string>{
+        arcirk::enum_synonym(ftreeRef),
+        arcirk::enum_synonym(ftreeParent),
+        arcirk::enum_synonym(ftreeIsGroup),
+        arcirk::enum_synonym(ftreeVersion)
+    };
+
+    return f;
 }

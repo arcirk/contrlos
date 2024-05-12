@@ -574,9 +574,16 @@ BOOST_FUSION_DEFINE_STRUCT(
     (bool, not_public)
     (bool, override_buttons)
     (bool, select_type)
+    (int, use)
 )
 
 namespace arcirk::widgets{
+
+    enum attribute_use{
+        for_group_and_element = 0,
+        for_element,
+        for_group
+    };
 
     struct header_item_wrapper{
         std::string name;
@@ -589,6 +596,7 @@ namespace arcirk::widgets{
         bool not_public = false;
         bool override_buttons = false;
         bool select_type = false;
+        int use = 0;
     };
 
     inline header_item_wrapper h_item_wrapper(){
@@ -602,6 +610,7 @@ namespace arcirk::widgets{
         item.marked = false;
         item.not_public = false;
         item.override_buttons = false;
+        item.use = 0;
         return item;
     }
 
@@ -617,6 +626,7 @@ namespace arcirk::widgets{
         item.not_public = source.not_public;
         item.override_buttons = source.override_buttons;
         item.select_type = source.select_type;
+        item.use = source.use;
         return item;
     }
 
@@ -630,12 +640,13 @@ namespace arcirk::widgets{
                            item.marked,
                            item.not_public,
                            item.override_buttons,
-                           item.select_type
+                           item.select_type,
+                           item.use
                            );
     }
 
     inline header_item header_item_def(const std::string& name, const std::string& alias = {}){
-        return header_item(name, alias, "", {}, -1, {}, false, false, false, true);
+        return header_item(name, alias, "", {}, -1, {}, false, false, false, true, 0);
     }
 
     template<class T>
@@ -827,6 +838,23 @@ namespace arcirk::widgets{
         (std::string, serial)
         (std::string, suffix)
         (std::string, sha1)
+        (arcirk::BJson, parent)
+        (bool, is_group)
+        (bool, deletion_mark)
+        (int, version)
+    );
+    BOOST_FUSION_DEFINE_STRUCT(
+        (arcirk::database), mstsc_item,
+        (arcirk::BJson, ref)
+        (std::string, name)
+        (std::string, address)
+        (std::string, user)
+        (int, port)
+        (bool, def_port)
+        (bool, not_full_window)
+        (int, width)
+        (int, height)
+        (bool, reset_user)
         (arcirk::BJson, parent)
         (bool, is_group)
         (bool, deletion_mark)

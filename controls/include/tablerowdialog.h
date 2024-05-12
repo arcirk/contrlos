@@ -7,6 +7,7 @@
 #include "treeitemvariant.h"
 #include <QAbstractButton>
 #include "tableconf.h"
+#include "treeconf.h"
 
 namespace Ui {
 class TableRowDialog;
@@ -18,8 +19,10 @@ namespace arcirk::widgets {
         Q_OBJECT
 
     public:
-        explicit TableRowDialog(const json& data, TableConf* conf,
+        explicit TableRowDialog(const json& data, IViewsConf* conf,
                            QWidget *parent = nullptr);
+
+
         ~TableRowDialog();
 
         json data();
@@ -32,7 +35,9 @@ namespace arcirk::widgets {
     private:
         Ui::TableRowDialog *ui;
         json m_data;
-        TableConf* m_conf;
+        IViewsConf* m_conf;
+        bool is_group;
+        bool is_tree_model;
 
         void createControls();
         QPair<QString, TreeItemVariant*> createEditor(const std::string& key);

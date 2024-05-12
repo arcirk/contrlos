@@ -1,7 +1,8 @@
-#include "../include/querybuilderforeginkeydialog.h"
-#include "../ui/ui_querybuilderforeginkeydialog.h"
+#include "../include/querybuilderforeignkeydialog.h"
+#include "../ui/ui_querybuilderforeignkeydialog.h"
 #include <QComboBox>
 #include <QCheckBox>
+
 
 using namespace arcirk::query_builder_ui;
 
