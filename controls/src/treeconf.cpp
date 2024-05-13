@@ -16,7 +16,7 @@ TreeConf::TreeConf()
         header_item_def("parent", "Родитель"),
         header_item_def("row_state", "Статус строки"),
         header_item_def("is_group", "Это группа")};
-    m_enable_rows_icons     = false;
+    m_enable_rows_icons     = true;
     m_read_only             = true;
     init_default_icons();
 }

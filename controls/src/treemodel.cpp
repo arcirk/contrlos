@@ -194,14 +194,14 @@ json TreeModel::row(const QModelIndex &index, bool lite) const {
 }
 
 QModelIndex TreeModel::add(const json &object, const QModelIndex &parent) {
-    TreeItem *rootItem_ = getItem(QModelIndex());
+    TreeItem *rootItem_ = getItem(parent);
     int position = rootItem_->childCount();
-    if (!insertRow(position, QModelIndex())) return {};
+    if (!insertRow(position, parent)) return {};
     TreeItem *item = getItem(index(position, 0, parent));
     if(item){
         item->set_object(object);
     }
-    return index(position, 0, QModelIndex());
+    return index(position, 0, parent);
 }
 
 bool TreeModel::remove(const QModelIndex &index) {

@@ -50,6 +50,7 @@ void MstscPage::init() {
 
     model->set_columns_aliases(aliases);
     model->reorder_columns(QList<QString>{"name", "address", "port", "user"});
+
     m_tree->setModel(model);
     m_tree->hide_not_ordered_columns();
     m_tree->set_inners_dialogs(true);
