@@ -52,7 +52,7 @@ void MstscPage::init() {
     model->reorder_columns(QList<QString>{"name", "address", "port", "user"});
     m_tree->setModel(model);
     m_tree->hide_not_ordered_columns();
-
+    m_tree->set_inners_dialogs(true);
     m_tree->setTableToolBar(m_tool_bar);
 }
 

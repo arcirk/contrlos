@@ -308,12 +308,20 @@ void TreeViewWidget::close_editor()
 
 }
 
-//void TreeViewWidget::openNewItemDialog()
-//{
-//    auto model = get_model();
-//    if(!model)
-//        return;
-//    auto current_index = this->current_index();
+void TreeViewWidget::openNewItemDialog()
+{
+    auto model = get_model();
+    if(!model)
+        return;
+    auto current_index = this->current_index();
+    if(current_index.isValid()){
+        if (model->is_group(current_index)){
+            editRowInDialog(QModelIndex(), current_index);
+        }else
+            editRowInDialog(QModelIndex(), current_index.parent());
+    }else
+        editRowInDialog(QModelIndex(), QModelIndex());
+
 //    json row_data = model->empty_data();
 //    m_hierarchy_list = model->hierarchical_list();
 //
@@ -360,15 +368,22 @@ void TreeViewWidget::close_editor()
 //        emit addTreeItem(n_index, dlg.data());
 //    }
 
-//}
-//
+}
 
-//void TreeViewWidget::openNewGroupDialog()
-//{
-//    auto model = get_model();
-//    if(!model)
-//        return;
-//    auto current_index = this->current_index();
+
+void TreeViewWidget::openNewGroupDialog()
+{
+    auto model = get_model();
+    if(!model)
+        return;
+    auto current_index = this->current_index();
+    if(current_index.isValid()){
+        if (model->is_group(current_index)){
+            editRowInDialog(QModelIndex(), current_index, true);
+        }else
+            editRowInDialog(QModelIndex(), current_index.parent(), true);
+    }else
+        editRowInDialog(QModelIndex(), QModelIndex(), true);
 //    json row_data = model->empty_data();
 //
 //    row_data["is_group"] = 1;
@@ -414,7 +429,7 @@ void TreeViewWidget::close_editor()
 //        auto n_index = model->add(dlg.data(), current_index);
 //        emit addTreeItem(n_index, dlg.data());
 //    }
-//}
+}
 
 //void TreeViewWidget::openOpenEditDialog()
 //{
@@ -705,9 +720,9 @@ void TreeViewWidget::onToolBarItemClicked(const QString &buttonName)
 
     }else{
         if(btn == table_add_item){
-            //openNewItemDialog();
+            openNewItemDialog();
         }else if(btn == table_add_group){
-            //openNewGroupDialog();
+            openNewGroupDialog();
         }else if(btn == table_delete_item){
             //deleteItemCommand();
         }else if(btn == table_edit_item){
@@ -735,12 +750,7 @@ void TreeViewWidget::addRow()
     if(m_only_groups_in_root || m_hierarchy_list){
         if (!current_index.isValid() || !model->is_group(current_index))
             return;
-//        row_data["is_group"] = 0;
-//        row_data["ref"] = "";
-//        row_data["parent"] = uuid_to_string(model->ref(current_index)).toStdString();
     }
-//    else
-//        row_data["parent"] = NIL_STRING_UUID;
 
     auto n_index = model->add(row_data, current_index);
 
@@ -827,7 +837,7 @@ bool TreeViewWidget::only_groups_in_top_level() {
     return m_only_groups_in_root;
 }
 
-void TreeViewWidget::editRowInDialog(const QModelIndex &index, const QModelIndex &parent) {
+void TreeViewWidget::editRowInDialog(const QModelIndex &index, const QModelIndex &parent, bool isGroup ) {
 
     auto model = get_model();
     bool is_new = false;
@@ -839,13 +849,17 @@ void TreeViewWidget::editRowInDialog(const QModelIndex &index, const QModelIndex
     }else{
         data = model->empty_data();
         is_new = true;
+        data["is_group"] = isGroup;
+        data["parent"] = to_byte(to_binary(model->row_uuid(parent)));
     }
 
-    auto dlg = TableRowDialog(data, model->get_conf(), this);
+    auto ordered = model->columns_order();
+
+    auto dlg = TableRowDialog(data, ordered, model->get_conf(), this);
     if(dlg.exec()){
         if(is_new){
             const auto result = dlg.result();
-            auto n_index = model->add(result);
+            auto n_index = model->add(result, parent);
             if(model->use_database())
                 model->onRowChanged(n_index);
             emit rowChanged(n_index.row());

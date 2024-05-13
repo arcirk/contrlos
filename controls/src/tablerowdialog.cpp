@@ -10,7 +10,7 @@
 
 using namespace arcirk::widgets;
 
-TableRowDialog::TableRowDialog(const json& data, IViewsConf* conf, QWidget *parent) :
+TableRowDialog::TableRowDialog(const json& data, const QList<QString>& ordered, IViewsConf* conf, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::TableRowDialog)
 {
@@ -31,8 +31,7 @@ TableRowDialog::TableRowDialog(const json& data, IViewsConf* conf, QWidget *pare
     }else
         setWindowTitle("Изменение строки");
 
-
-    createControls();
+    createControls(ordered);
 
     auto btn = ui->buttonBox->button(QDialogButtonBox::Cancel);
     if(btn)
@@ -74,15 +73,16 @@ void TableRowDialog::accept()
         return QDialog::accept();
 }
 
-void TableRowDialog::createControls() {
+void TableRowDialog::createControls(const QList<QString>& ordered) {
 
     if(!m_data.is_object())
         return;
 
     int row = 0;
-    for (auto itr = m_data.items().begin(); itr != m_data.items().end(); ++itr) {
-        auto control = createEditor(itr.key());
-        setEditorData(control.first, control.second, itr.value());
+    std::vector<std::pair<std::string ,json>> data = reordered_object(ordered);
+    for (auto itr = data.begin(); itr != data.end(); ++itr) {
+        auto control = createEditor(itr->first);
+        setEditorData(control.first, control.second, itr->second);
         auto lbl = new QLabel(this);
         auto h_data = find_element_for_name(control.first.toStdString(), m_conf->columns());
         if(h_data != m_conf->columns().end()){
@@ -152,13 +152,21 @@ void TableRowDialog::onButtonBoxClicked(QAbstractButton *button) {
 void TableRowDialog::hideNotPublicControls() {
 
     QGridLayout * layout = ui->gridLayout;
+    const QList<QString> predefined{
+        "ref",
+        "parent",
+        "is_group",
+        "version",
+        "deletion_mark",
+        "row_state"
+    };
 
     for (int i = 0; i < m_data.size(); ++i) {
         auto w =  layout->itemAtPosition(i,1)->widget();
         if(w){
             auto control = qobject_cast<TreeItemVariant*>(w);
             if(control){
-                if(control->objectName() == "ref"){
+                if(predefined.indexOf(control->objectName()) != -1){
                     control->setVisible(false);
                     auto lbl = layout->itemAtPosition(i,0)->widget();
                     if(lbl){
@@ -206,6 +214,27 @@ bool TableRowDialog::is_object_empty(const json &object) {
     auto uuid = QUuid::fromRfc4122(ref.data()->data);
     return uuid.toString(QUuid::WithoutBraces) == NIL_STRING_UUID;
 
+}
+
+std::vector<std::pair<std::string ,json>> TableRowDialog::reordered_object(const QList<QString> &ordered) {
+
+    std::vector<std::pair<std::string ,json>> ordered_data;
+    //json result = json::object();
+    foreach(auto const& val, ordered){
+        auto itr = m_data.find(val.toStdString());
+        if(itr != m_data.end()){
+            //result[val.toStdString()] = *itr;
+            ordered_data.emplace_back(val.toStdString(), m_data[val.toStdString()]);
+        }
+    }
+    for (auto itr = m_data.begin(); itr != m_data.end() ; ++itr) {
+        if(ordered.indexOf(itr.key().c_str()) == -1){
+            //result[itr.key()] = itr.value();
+            ordered_data.emplace_back(itr.key(), itr.value());
+        }
+    }
+
+    return ordered_data;
 }
 
 

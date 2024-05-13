@@ -22,8 +22,8 @@ namespace arcirk::widgets {
             setProperty("typeName", typeid(this).name());
         };
 
-        QModelIndex add_struct(const T& object){
-            return add(pre::json::to_json(object));
+        QModelIndex add_struct(const T& object, const QModelIndex& parent = QModelIndex()){
+            return add(pre::json::to_json(object), parent);
         }
 
         void set_struct(int row, const T& object){

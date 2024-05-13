@@ -207,6 +207,10 @@ namespace arcirk {
 
     }
 
+    inline QByteArray byte_to_qbyte(const BJson& value){
+        return {reinterpret_cast<const char*>(value.data()), (qsizetype)value.size()};
+    }
+
     inline QVariant to_variant(const json& value){
             if(value.is_string())
                 return value.get<std::string>().c_str();
@@ -218,7 +222,10 @@ namespace arcirk {
                 return value.get<int>();
             else if(value.is_array()){
                 auto val = value.get<BJson>();
-                return QByteArray(reinterpret_cast<const char*>(val.data()), (qsizetype)val.size());
+                return byte_to_qbyte(val);
+
+                //auto b = json::from_cbor(val);
+                //return QByteArray(reinterpret_cast<const char*>(val.data()), (qsizetype)val.size());
             // else if(val.is_binary())
             //     return QByteArray(reinterpret_cast<const char*>(value.data()), (qsizetype)value.size());
             // else if(val.is_object())
@@ -231,9 +238,6 @@ namespace arcirk {
         auto ba = BJson(value.size());
         std::copy(value.begin(), value.end(), ba.begin());
         return ba;
-    }
-    inline QByteArray byte_to_qbyte(const BJson& value){
-        return {reinterpret_cast<const char*>(value.data()), (qsizetype)value.size()};
     }
 
     inline json from_variant(const QVariant& value){

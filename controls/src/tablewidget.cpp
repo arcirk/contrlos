@@ -288,8 +288,8 @@ void TableWidget::editRowInDialog(const QModelIndex &index) {
         data = model->empty_data();
         is_new = true;
     }
-
-    auto dlg = TableRowDialog(data, model->get_conf(), this);
+    auto ordered = model->columns_order();
+    auto dlg = TableRowDialog(data, ordered, model->get_conf(), this);
     if(dlg.exec()){
         if(is_new){
             const auto result = dlg.result();

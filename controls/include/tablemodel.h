@@ -69,6 +69,7 @@ namespace arcirk::widgets {
             json empty_data();
 
             void reorder_columns(const QList<QString>& names);
+            QList<QString> columns_order() const;
 
             void display_icons(bool value);
             [[nodiscard]] bool is_display_icons() const;
@@ -81,6 +82,8 @@ namespace arcirk::widgets {
             [[nodiscard]] bool use_database() const;
             virtual void onRowChanged(const QModelIndex& index){ Q_UNUSED(index);};
             virtual void updateRowsPositions(){};
+
+            QUuid row_uuid(const QModelIndex& index) const;
 
         private:
             TableItem* rootItem;

@@ -41,10 +41,12 @@ namespace arcirk::widgets {
 
         bool is_group();
 
+        QUuid ref() const;
+
     private:
         std::shared_ptr<TreeConf> &m_conf;
         TreeItem *m_parentItem;
-        QByteArray m_ref;
+        QUuid m_ref;
         variant_map m_data;
         QList<TreeItem *> m_childItems;
         QMap<QString, bool> m_read_only;

@@ -49,7 +49,7 @@ namespace arcirk::widgets {
 
     int content_width(int column);
 
-    QString object_name() const {return "TreeViewWidget";};
+    static QString object_name() {return "TreeViewWidget";};
 
     void enable_sort(bool value){m_not_sort = value;};
 
@@ -71,8 +71,8 @@ namespace arcirk::widgets {
 
     void close_editor();
 
-//    void openNewItemDialog();
-//    void openNewGroupDialog();
+    void openNewItemDialog();
+    void openNewGroupDialog();
 //    void openOpenEditDialog();
 //    void openOpenMoveToDialog();
 //    void deleteItemCommand();
@@ -84,7 +84,7 @@ namespace arcirk::widgets {
     void moveUp();
     void moveDown();
 
-    void editRowInDialog(const QModelIndex &index, const QModelIndex& parent = {});
+    void editRowInDialog(const QModelIndex &index, const QModelIndex& parent = {}, bool isGroup = false);
 
     protected:
         void mousePressEvent(QMouseEvent *event) override;

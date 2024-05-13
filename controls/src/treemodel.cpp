@@ -465,3 +465,8 @@ std::vector<std::string> TreeModel::predefined_fields() const {
 
     return f;
 }
+
+QUuid TreeModel::row_uuid(const QModelIndex &index) const {
+    auto item = getItem(index);
+    return item->ref();
+}

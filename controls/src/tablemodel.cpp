@@ -414,3 +414,12 @@ json TableModel::to_array(const QString &column) const {
 bool TableModel::use_database() const {
     return is_use_database;
 }
+
+QList<QString> TableModel::columns_order() const {
+    return m_conf->columns_order();
+}
+
+QUuid TableModel::row_uuid(const QModelIndex &index) const {
+    auto item = getItem(index);
+    return item->ref();
+}

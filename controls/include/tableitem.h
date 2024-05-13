@@ -30,10 +30,12 @@ namespace arcirk::widgets {
             void set_object(const json& object);
             json to_object(bool lite = true);
             variant_map to_map() const;
+
+            QUuid ref() const;
         private:
             std::shared_ptr<TableConf>& m_conf;
             TableItem* m_parentItem;
-            QByteArray m_ref;
+            QUuid m_ref;
             variant_map m_data;
             QList <TableItem*> m_childItems;
             QMap<QString, bool> m_read_only;

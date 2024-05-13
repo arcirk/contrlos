@@ -178,9 +178,16 @@ void TreeItem::set_object(const json &object) {
                 return it.first == key;
             });
             if(itr == m_data.end()) {
-                auto var = std::make_shared<item_data>(to_byte(to_binary(QUuid::createUuid())));
+                m_ref = QUuid::createUuid();
+                auto var = std::make_shared<item_data>(to_byte(to_binary(m_ref)));
                 var->set_role(editor_inner_role::editorDataReference) ;
                 m_data.push_back(std::make_pair(key, std::move(var)));
+            }else{
+                auto ba = itr->second->data();
+                if(ba->subtype == variant_subtype::subtypeRef){
+                    m_ref = QUuid::fromRfc4122(ba->data);
+                    //std::cout << m_ref.toString().toStdString() << std::endl;
+                }
             }
         }else if(key == "parent"){
             const auto itr = std::find_if(m_data.begin(), m_data.end(), [key](const value_pair& it){
@@ -247,4 +254,8 @@ bool TreeItem::is_group() {
         else
             return childCount() > 0;
     }
+}
+
+QUuid TreeItem::ref() const {
+    return m_ref;
 }

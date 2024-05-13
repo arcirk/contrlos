@@ -92,6 +92,7 @@ namespace arcirk::widgets {
 
             std::vector<std::string> predefined_fields() const;
 
+            QUuid row_uuid(const QModelIndex& index) const;
     private:
         TreeItem* rootItem;
         std::shared_ptr<TreeConf> m_conf;
