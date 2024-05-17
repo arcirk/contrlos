@@ -152,14 +152,8 @@ void TableRowDialog::onButtonBoxClicked(QAbstractButton *button) {
 void TableRowDialog::hideNotPublicControls() {
 
     QGridLayout * layout = ui->gridLayout;
-    const QList<QString> predefined{
-        "ref",
-        "parent",
-        "is_group",
-        "version",
-        "deletion_mark",
-        "row_state"
-    };
+
+    auto const predefined = m_conf->predefined_list();
 
     for (int i = 0; i < m_data.size(); ++i) {
         auto w =  layout->itemAtPosition(i,1)->widget();

@@ -10,7 +10,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Sql)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Sql Network)
 find_package(nlohmann_json CONFIG REQUIRED)
 
 add_library(controls SHARED
@@ -80,12 +80,18 @@ add_library(controls SHARED
         src/treeitemswidget.cpp
         ui/treeitemswidget.ui
         include/itree.hpp
-        include/iconf.hpp)
+        include/iconf.hpp
+        include/treeitemipaddress.h
+        src/treeitemipaddress.cpp
+        include/selectitemdialog.h
+        src/selectitemdialog.cpp
+        ui/selectitemdialog.ui)
 
 target_link_libraries(controls PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Sql
+    Qt${QT_VERSION_MAJOR}::Network
     nlohmann_json::nlohmann_json
     )
 

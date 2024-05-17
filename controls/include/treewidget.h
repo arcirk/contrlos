@@ -73,9 +73,9 @@ namespace arcirk::widgets {
 
     void openNewItemDialog();
     void openNewGroupDialog();
-//    void openOpenEditDialog();
-//    void openOpenMoveToDialog();
-//    void deleteItemCommand();
+    void openOpenEditDialog();
+    void openOpenMoveToDialog();
+    void deleteItem();
 
     void allow_def_commands(bool value) {m_allow_def_commands = value;};
 
@@ -125,9 +125,10 @@ namespace arcirk::widgets {
         void itemDoubleClicked(const QModelIndex& index);
         void fetch(const QModelIndex& parent);
         void toolBarItemClicked(const QString& buttonName);
-        void removeTableItem(const json& object);
+        void removeTreeRow(const json& object);
         void tableCurrentChanged(const QModelIndex& current, const QModelIndex& previous);
         void rowChanged(int row);
+        void tableItemChanged(const QModelIndex& index);
         void rowMove();
 
     //void treeItemClicked(const QModelIndex& index);

@@ -151,7 +151,7 @@ QToolButton *TableToolBar::button(const QString &name)
     return nullptr;
 }
 
-void TableToolBar::addButton(const QString &name, const QIcon &ico, bool checkable, int position)
+void TableToolBar::addButton(const QString &name, const QIcon &ico, bool checkable, int position, const QString& toolTip)
 {
     auto btn = new QToolButton(this);
     btn->setMinimumSize(QSize(24,24));
@@ -161,6 +161,7 @@ void TableToolBar::addButton(const QString &name, const QIcon &ico, bool checkab
     btn->setAutoRaise(true);
     btn->setProperty("itemName", name);
     btn->setEnabled(false);
+    btn->setToolTip(toolTip);
     m_buttons.insert(name, btn);
     int pos = ui->horizontalLayout_2->count() - 1;
     if(position != -1)

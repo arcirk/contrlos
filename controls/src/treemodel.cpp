@@ -10,11 +10,61 @@ TreeModel::TreeModel(QObject *parent)
         : QAbstractItemModel{parent}
 {
     m_conf = std::make_shared<TreeConf>();
-    rootItem = new TreeItem(json::object({{"ref", ""}, {"parent", ""}, {"is_group", true}, {"row_state", 0}}), m_conf);
+    auto root = m_conf->predefined_object();
+    rootItem = new TreeItem(root, m_conf);
+    rootItem->set_mapped(true);
+    rootItem->set_not_move(true);
     is_use_database = false;
     m_hierarchical_list = true;
 }
 
+TreeModel::TreeModel(const json &rootData, QObject *parent) : QAbstractItemModel{parent}
+{
+    m_conf = std::make_shared<TreeConf>();
+    is_use_database = false;
+
+    Q_ASSERT(rootData.is_object());
+
+    auto _root = m_conf->restructure_facility(rootData);
+
+    rootItem = new TreeItem(_root, m_conf);
+
+    auto table = json::object();
+    auto columns = json::array();
+    auto column = header_item();
+    column.name = "ref";
+    column.default_type = editor_inner_role::editorText;
+    column.default_value = to_nil_uuid();
+    columns += pre::json::to_json(column);
+    for (auto itr = _root.items().begin(); itr != _root.items().end(); ++itr) {
+        if(itr.key() == "ref")
+            continue;
+        column = header_item();
+        column.name = itr.key();
+        json val{};
+        if(itr.value().is_string()){
+            column.default_type = editor_inner_role::editorText;
+            column.default_value =  to_byte(to_binary(itr.value(), variant_subtype::subtypeDump));// to_data(itr.value());
+        }else if(itr.value().is_array()){
+            column.default_type = editor_inner_role::editorByteArray;
+            column.default_value = to_byte(to_binary(itr.value(), variant_subtype::subtypeArray));//to_data(itr.value(), subtypeArray);
+        }else if(itr.value().is_number()){
+            column.default_type = editor_inner_role::editorNumber;
+            column.default_value = to_byte(to_binary(itr.value(), variant_subtype::subtypeDump));//to_data(itr.value());
+        }else if(itr.value().is_boolean()){
+            column.default_type = editor_inner_role::editorBoolean;
+            column.default_value = to_byte(to_binary(itr.value(), variant_subtype::subtypeDump));//to_data(itr.value());
+        }else if(itr.value().is_binary()){
+            column.default_type = editor_inner_role::editorByteArray;
+            column.default_value = to_byte(itr.value());//to_data(itr.value(), subtypeByte);
+        }
+        columns += pre::json::to_json(column); //itr.key();
+    }
+    table["columns"] = columns;
+    table["rows"] = json::array();
+
+    form_json(table);
+}
 int TreeModel::rowCount(const QModelIndex &parent) const
 {
     TreeItem *parentItem = getItem(parent);
@@ -47,9 +97,15 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const {
                 return item_icon;
             else{
                 if(item->is_group()){
-                    return m_conf->default_icon(tree_rows_icons::ItemGroup);
+                    if(!item->predefined())
+                        return m_conf->default_icon(tree_rows_icons::ItemGroup);
+                    else
+                        return m_conf->default_icon(tree_rows_icons::ItemGroupPredefined);
                 }else
-                    return m_conf->default_icon(tree_rows_icons::Item);
+                    if(!item->predefined())
+                        return m_conf->default_icon(tree_rows_icons::Item);
+                    else
+                        return m_conf->default_icon(tree_rows_icons::ItemPredefined);
             }
 
         }else{
@@ -129,7 +185,11 @@ QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) con
 }
 
 QModelIndex TreeModel::parent(const QModelIndex &index) const {
-    return {};
+    if (!index.isValid()) return QModelIndex();
+    TreeItem *childItem = getItem(index);
+    TreeItem *parentItem = childItem->parentItem();
+    if (parentItem == rootItem) return QModelIndex();
+    return createIndex(parentItem->childNumber(), 0, parentItem);
 }
 
 bool TreeModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role) {
@@ -163,25 +223,34 @@ void TreeModel::clear()
     endResetModel();
 }
 
-json TreeModel::to_json() const {
-    auto columns_j = json::array();
-    for (const auto& itr: m_conf->columns()) {
-        columns_j += itr.name;
-    }
-    auto rows = to_array();
-
-    return json::object({
-                                {"columns" , columns_j},
-                                {"rows", rows}
-                        });
+json TreeModel::to_json() {
+    return to_table_model(QModelIndex());
+//    auto columns_j = json::array();
+//    for (const auto& itr: m_conf->columns()) {
+//        columns_j += itr.name;
+//    }
+//    auto rows = to_array();
+//
+//    return json::object({
+//                                {"columns" , columns_j},
+//                                {"rows", rows}
+//                        });
 }
 
-json TreeModel::to_array(const QModelIndex &parent) const {
+json TreeModel::to_array(const QModelIndex &parent, bool hierarchy, bool group_only) {
     auto result = json::array();
-    for (int i = 0; i < rowCount(parent); ++i) {
-        auto index = this->index(i, 0);
-        auto item = getItem(index);
-        result += item->to_object();
+    if (hierarchy) {
+        to_array_recursive(parent, result, group_only);
+    } else{
+        for (int i = 0; i < rowCount(parent); ++i) {
+            auto index = this->index(i, 0);
+            auto item = getItem(index);
+            if(group_only)
+                if(item->is_group())
+                    result += item->to_object();
+            else
+                result += item->to_object();
+        }
     }
     return result;
 }
@@ -195,12 +264,16 @@ json TreeModel::row(const QModelIndex &index, bool lite) const {
 
 QModelIndex TreeModel::add(const json &object, const QModelIndex &parent) {
     TreeItem *rootItem_ = getItem(parent);
+    //std::cout << rootItem_->ref().toString().toStdString() << std::endl;
     int position = rootItem_->childCount();
-    if (!insertRow(position, parent)) return {};
+    if (!insertRow(position, parent)) return QModelIndex();
     TreeItem *item = getItem(index(position, 0, parent));
     if(item){
         item->set_object(object);
+        rootItem_ = getItem(index(position, 0, parent).parent());
     }
+    //std::cout << "item: " << item->ref().toString().toStdString() << std::endl;
+    //std::cout << "parent:  " << rootItem_->ref().toString().toStdString() << std::endl;
     return index(position, 0, parent);
 }
 
@@ -248,52 +321,6 @@ bool TreeModel::move_down(const QModelIndex &index) {
 
 int TreeModel::column_index(const QString &name) const {
     return m_conf->column_index(name);
-}
-
-TreeModel::TreeModel(const json &rootData, QObject *parent) : QAbstractItemModel{parent}
-{
-    m_conf = std::make_shared<TreeConf>();
-    is_use_database = false;
-
-    Q_ASSERT(rootData.is_object());
-
-    rootItem = new TreeItem(rootData, m_conf);
-
-    auto table = json::object();
-    auto columns = json::array();
-    auto column = header_item();
-    column.name = "ref";
-    column.default_type = editor_inner_role::editorText;
-    column.default_value = to_nil_uuid();
-    columns += pre::json::to_json(column);
-    for (auto itr = rootData.items().begin(); itr != rootData.items().end(); ++itr) {
-        if(itr.key() == "ref")
-            continue;
-        column = header_item();
-        column.name = itr.key();
-        json val{};
-        if(itr.value().is_string()){
-            column.default_type = editor_inner_role::editorText;
-            column.default_value =  to_byte(to_binary(itr.value(), variant_subtype::subtypeDump));// to_data(itr.value());
-        }else if(itr.value().is_array()){
-            column.default_type = editor_inner_role::editorByteArray;
-            column.default_value = to_byte(to_binary(itr.value(), variant_subtype::subtypeArray));//to_data(itr.value(), subtypeArray);
-        }else if(itr.value().is_number()){
-            column.default_type = editor_inner_role::editorNumber;
-            column.default_value = to_byte(to_binary(itr.value(), variant_subtype::subtypeDump));//to_data(itr.value());
-        }else if(itr.value().is_boolean()){
-            column.default_type = editor_inner_role::editorBoolean;
-            column.default_value = to_byte(to_binary(itr.value(), variant_subtype::subtypeDump));//to_data(itr.value());
-        }else if(itr.value().is_binary()){
-            column.default_type = editor_inner_role::editorByteArray;
-            column.default_value = to_byte(itr.value());//to_data(itr.value(), subtypeByte);
-        }
-        columns += pre::json::to_json(column); //itr.key();
-    }
-    table["columns"] = columns;
-    table["rows"] = json::array();
-
-    form_json(table);
 }
 
 QList<QString> TreeModel::columns() const {
@@ -402,7 +429,7 @@ QMap<QString, QString> TreeModel::columns_aliases() const {
     return m_conf->columns_aliases();
 }
 
-json TreeModel::to_array(const QString &column, const QModelIndex &parent) const {
+json TreeModel::to_array(const QString &column, const QModelIndex &parent, bool hierarchy, bool group_only) const {
 
     if(columns().indexOf(column) == -1)
         return {};
@@ -411,7 +438,12 @@ json TreeModel::to_array(const QString &column, const QModelIndex &parent) const
         auto index = this->index(i, 0);
         auto item = getItem(index);
         auto object = item->to_object();
-        result += object.value(column.toStdString(), json{});
+        if(group_only){
+            if(item->is_group())
+                result += object.value(column.toStdString(), json{});
+        } else{
+            result += object.value(column.toStdString(), json{});
+        }
     }
 
     return result;
@@ -426,15 +458,48 @@ bool TreeModel::hierarchical_list() {
 }
 
 QModelIndex TreeModel::find(const QUuid &ref, const QModelIndex &parent) const {
+
+    for (int i = 0; i < rowCount(parent); ++i) {
+        auto item = index(i, 0, parent);
+        auto it = getItem(item);
+        if(ref == it->ref())
+            return item;
+        else{
+            auto ind = find(ref, item);
+            if(ind.isValid())
+                return ind;
+        }
+    }
+
     return QModelIndex();
 }
 
 QModelIndex TreeModel::find(int column, const QVariant &source, const QModelIndex &parent) const {
+
+    QModelIndexList matches = match(
+            index(0,column, parent),
+            Qt::DisplayRole,
+            source,
+            -1,
+            Qt::MatchRecursive);
+            foreach (const QModelIndex &match, matches){
+            return match;
+        }
     return QModelIndex();
 }
 
 QList<QModelIndex> TreeModel::find_all(int column, const QVariant &source, const QModelIndex &parent) const {
-    return QList<QModelIndex>();
+    QList<QModelIndex> result{};
+    QModelIndexList matches = match(
+            index(0,column, parent),
+            Qt::DisplayRole,
+            source,
+            -1,
+            Qt::MatchRecursive);
+        foreach (const QModelIndex &match, matches){
+            result << match;
+        }
+    return result;
 }
 
 bool TreeModel::is_group(const QModelIndex &index) {
@@ -460,13 +525,163 @@ std::vector<std::string> TreeModel::predefined_fields() const {
         arcirk::enum_synonym(ftreeRef),
         arcirk::enum_synonym(ftreeParent),
         arcirk::enum_synonym(ftreeIsGroup),
-        arcirk::enum_synonym(ftreeVersion)
+        arcirk::enum_synonym(ftreeVersion),
+        arcirk::enum_synonym(ftreePredefined)
     };
 
     return f;
 }
 
-QUuid TreeModel::row_uuid(const QModelIndex &index) const {
+QUuid TreeModel::ref(const QModelIndex &index) const {
+    if(!index.isValid())
+        return QUuid();
     auto item = getItem(index);
+    if(item == rootItem)
+        return QUuid();
     return item->ref();
+}
+
+bool TreeModel::hasChildren(const QModelIndex &parent) const {
+    if(m_conf->fetch_expand()){
+        auto parentInfo = getItem(parent);
+        Q_ASSERT(parentInfo!=0);
+        return parentInfo->is_group();
+    }else
+        return QAbstractItemModel::hasChildren(parent);
+}
+
+bool TreeModel::canFetchMore(const QModelIndex &parent) const {
+    //qDebug() << __FUNCTION__;
+    if(m_conf->fetch_expand()){
+        auto parentInfo = getItem(parent);
+        Q_ASSERT(parentInfo != 0);
+        if(parentInfo == rootItem)
+            return false;
+        if(parentInfo->is_group()){
+            if(parentInfo->childCount() > 0)
+                return false;
+            else
+                return !parentInfo->mapped();
+        }else
+            return false;
+    }else
+        return false;
+}
+
+void TreeModel::fetchMore(const QModelIndex &parent) {
+    if(!m_conf->fetch_expand()){
+        return QAbstractItemModel::fetchMore(parent);
+    }
+
+    auto parentInfo = getItem(parent);
+    if(!parentInfo->mapped()){
+        emit fetch(parent);
+    }
+
+    return QAbstractItemModel::fetchMore(parent);
+}
+
+bool TreeModel::predefinedItem(const QModelIndex &index) const {
+    auto item = getItem(index);
+    return item->predefined();
+}
+
+bool TreeModel::row_not_move(const QModelIndex &index) {
+    if(index.isValid()){
+        auto item = getItem(index);
+        return item->not_move();
+    }else
+        return false;
+}
+
+void TreeModel::set_row_not_move(const QModelIndex &index, bool value) {
+    if(!index.isValid())
+        return;
+    auto item = getItem(this->index(index.row(), 0, index.parent()));
+    item->set_not_move(value);
+}
+
+json TreeModel::to_object(const QModelIndex &index, bool lite) const {
+    return row(index, lite);
+}
+
+json TreeModel::to_table_model(const QModelIndex &parent, bool group_only, bool lite) {
+
+    auto columns_j = json::array();
+    for (auto& key : m_conf->columns()) {
+        columns_j += key.name;
+    }
+
+    auto rows = json::array();
+
+    to_array_recursive(parent, rows, group_only);
+
+    return json::object({
+                                {"columns" , columns_j},
+                                {"rows", rows}
+                        });
+}
+
+void TreeModel::to_array_recursive(const QModelIndex &parent, json result, bool group_only) {
+    for (int i = 0; i < rowCount(parent); ++i) {
+        auto index = this->index(i, 0, parent);
+        auto item = getItem(index);
+        result += item->to_object();
+        if(!group_only) {
+            result += item->to_object();
+            to_array_recursive(index, result, group_only);
+        }else{
+            if(item->is_group()) {
+                result += item->to_object();
+                to_array_recursive(index, result, group_only);
+            }
+        }
+    }
+}
+
+void TreeModel::to_array_recursive(const QString& column, const QModelIndex &parent, json result, bool group_only) {
+    if(columns().indexOf(column) == -1)
+        return;
+    for (int i = 0; i < rowCount(parent); ++i) {
+        auto index = this->index(i, 0, parent);
+        auto item = getItem(index);
+        result += item->to_object();
+        if(!group_only) {
+            result += item->to_object().value(column.toStdString(), json{});
+            to_array_recursive(column, index, result, group_only);
+        }else{
+            if(item->is_group()) {
+                result += item->to_object().value(column.toStdString(), json{});
+                to_array_recursive(column, index, result, group_only);
+            }
+        }
+    }
+}
+
+bool TreeModel::belongsToItem(const QModelIndex &index, const QModelIndex parent)
+{
+    auto item = getItem(index);
+    auto parentItem = getItem(parent);
+    if(item == parentItem)
+        return true;
+    auto index_ = find(item->ref(), parent);
+    return index_.isValid();
+}
+
+void TreeModel::move_to(const QModelIndex &index, const QModelIndex &new_parent)
+{
+    Q_ASSERT(index.isValid());
+    Q_ASSERT(new_parent.isValid());
+
+    auto itemInfo = getItem(index);
+    Q_ASSERT(itemInfo != nullptr);
+    auto parentInfo = getItem(new_parent);
+    auto oldParentInfo = getItem(index.parent());
+    Q_ASSERT(parentInfo != nullptr);
+
+    beginMoveRows(index.parent(), index.row(), index.row(), new_parent, rowCount(new_parent));
+    itemInfo->setParent(parentInfo);
+    parentInfo->appendChild(itemInfo);
+    oldParentInfo->removeChildren(index.row(), 1);
+    endMoveRows();
 }

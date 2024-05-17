@@ -1,5 +1,9 @@
-#ifndef TREEITEMTEXTLINE_H
-#define TREEITEMTEXTLINE_H
+//
+// Created by admin on 16.05.2024.
+//
+
+#ifndef CONTROLSPROG_TREEITEMIPADDRESS_H
+#define CONTROLSPROG_TREEITEMIPADDRESS_H
 #ifndef IS_OS_ANDROID
 #include "treeitemwidget.h"
 #include <QToolButton>
@@ -10,12 +14,12 @@
 
 namespace arcirk::widgets {
 
-    class CONTROLS_EXPORT TreeItemTextLine : public TreeItemWidget
+    class CONTROLS_EXPORT TreeItemIPEdit : public TreeItemWidget
     {
-        Q_OBJECT
+    Q_OBJECT
     public:
-        explicit TreeItemTextLine(int row, int column, QWidget *parent = nullptr);
-        explicit TreeItemTextLine(QWidget *parent = nullptr);
+        explicit TreeItemIPEdit(int row, int column, QWidget *parent = nullptr);
+        explicit TreeItemIPEdit(QWidget *parent = nullptr);
 
         void setText(const QString& text) override;
         [[nodiscard]] QString text() const override;
@@ -28,11 +32,14 @@ namespace arcirk::widgets {
         void setAutoMarkIncomplete(bool value) override;
 
         void setValue(const QVariant& value) override;
+
         QVariant value() const override;
 
+        bool isValid();
 
     private:
         LineEdit* m_text_line;
+        bool _isValid;
 
         void init();
 
@@ -41,11 +48,14 @@ namespace arcirk::widgets {
         void onEraseClicked() override;
         void onCheckBoxClicked(bool /*state*/) override{};
 
-    private slots:
+        bool ipValidator(QString ip);
 
+    private slots:
+        void onTextChanged(const QString &text);
     };
 
 }
 
 #endif
-#endif // TREEITEMTEXTLINE_H
+
+#endif //CONTROLSPROG_TREEITEMIPADDRESS_H

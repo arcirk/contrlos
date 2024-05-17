@@ -154,3 +154,7 @@ void TableConf::set_column_not_public(const QList<QString> &columns, bool value)
         set_column_not_public(column, value);
     }
 }
+
+QList<QString> TableConf::predefined_list() const {
+    return {"ref", "row_state", "predefined", "version"};
+}

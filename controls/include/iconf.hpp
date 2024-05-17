@@ -43,8 +43,7 @@ namespace arcirk::widgets {
         virtual void set_read_only(bool value){m_read_only = value;};
         virtual void display_icons(bool value){m_enable_rows_icons = true;};
         [[nodiscard]] virtual bool is_display_icons() const{return m_enable_rows_icons;};
-        //[[nodiscard]] virtual QIcon default_icon() const{return m_row_icon;};
-        //virtual void set_default_icon(const QIcon& ico){m_row_icon = ico;};
+        virtual QList<QString> predefined_list() const{return {};};
 
     protected:
         QSize                               m_size;

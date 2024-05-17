@@ -43,6 +43,20 @@ namespace arcirk::widgets {
 
         QUuid ref() const;
 
+        bool mapped(){return m_mapped;};
+
+        void set_mapped(bool value){m_mapped = value;};
+
+        TreeItem * parentItem();
+
+        bool predefined();
+
+        bool not_move();
+
+        void set_not_move(bool value);
+
+        void setParent(TreeItem *parent);
+
     private:
         std::shared_ptr<TreeConf> &m_conf;
         TreeItem *m_parentItem;
@@ -51,6 +65,9 @@ namespace arcirk::widgets {
         QList<TreeItem *> m_childItems;
         QMap<QString, bool> m_read_only;
         QMap<QString, QIcon> m_icon;
+        bool m_mapped;
+        bool m_predefined;
+        bool m_not_move;
 
         void init(const json &data);
     };

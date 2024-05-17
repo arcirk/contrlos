@@ -30,10 +30,18 @@ namespace arcirk::widgets {
         [[nodiscard]] QIcon default_icon(tree_rows_icons state) const;
         void set_attribute_use(const QString& column, attribute_use value);
         void set_attribute_use(const QList<QString>& columns, attribute_use value);
+        [[nodiscard]] bool fetch_expand() const;
+        void set_fetch_expand(bool value);
+        static json predefined_object() ;
+        [[nodiscard]] QList<QString> predefined_list() const override;
+        json restructure_facility(const json& source) const;
+        void set_row_icon(tree_rows_icons state, const QIcon& value);
+
     protected:
         void set_columns_order(const QList<QString>& names) override;
     private:
         QMap<tree_rows_icons, QIcon>        m_row_icon;
+        bool                                m_fetch_expand;
         void init_default_icons();
 
     };

@@ -12,7 +12,7 @@
 #include <QMimeData>
 #include "../include/tablerowdialog.h"
 #include <QMessageBox>
-//#include "../ui/selectitemdialog.h"
+#include "../include/selectitemdialog.h"
 
 using namespace arcirk::widgets;
 
@@ -247,8 +247,13 @@ void TreeViewWidget::currentChanged(const QModelIndex &current, const QModelInde
         m_hierarchy_list = model->hierarchical_list();
 
         if(index.isValid()){
-            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_edit_item).c_str(), true);
-            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_delete_item).c_str(), true);
+            if(!model->predefinedItem(index)) {
+                m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_edit_item).c_str(), true);
+                m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_delete_item).c_str(), true);
+            }else{
+                m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_edit_item).c_str(), false);
+                m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_delete_item).c_str(), false);
+            }
             if(model->is_group(index)){
                 m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_group).c_str(), true);
                 m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_item).c_str(), true);
@@ -258,7 +263,7 @@ void TreeViewWidget::currentChanged(const QModelIndex &current, const QModelInde
                     m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_add_item).c_str(), false);
             }
 
-            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_to_item).c_str(), true);
+            m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_to_item).c_str(), !model->row_not_move(index));
             if(!model->hierarchical_list()){
                 if(index.row() == model->rowCount() - 1)
                     m_toolBar->setButtonEnabled(arcirk::enum_synonym(table_move_down_item).c_str(), false);
@@ -384,6 +389,7 @@ void TreeViewWidget::openNewGroupDialog()
             editRowInDialog(QModelIndex(), current_index.parent(), true);
     }else
         editRowInDialog(QModelIndex(), QModelIndex(), true);
+
 //    json row_data = model->empty_data();
 //
 //    row_data["is_group"] = 1;
@@ -431,8 +437,16 @@ void TreeViewWidget::openNewGroupDialog()
 //    }
 }
 
-//void TreeViewWidget::openOpenEditDialog()
-//{
+void TreeViewWidget::openOpenEditDialog()
+{
+    auto model = get_model();
+    if(!model)
+        return;
+    auto current_index = this->current_index();
+    if(current_index.isValid()){
+        editRowInDialog(current_index, current_index.parent(), model->is_group(current_index));
+    }
+
 //    auto model = get_model();
 //    if(!model)
 //        return;
@@ -467,65 +481,65 @@ void TreeViewWidget::openNewGroupDialog()
 //        }
 //        emit editTreeItem(current_index, dlg.data());
 //    }
-//}
+}
 
-//void TreeViewWidget::openOpenMoveToDialog()
-//{
-//    auto model = get_model();
-//    if(!model)
-//        return;
-//    auto current_index = this->current_index();
-//    json row_data = model->empty_data();
-//
-//    if(!current_index.isValid())
-//        return;
-//
-//    auto table = model->to_table_model(QModelIndex(),true, true);
-//    auto gr_model = new TreeItemModel(this);
-//    gr_model->set_columns_order(model->columns_order());
-//    gr_model->set_column_aliases(gr_model->columns_aliases());
-//    gr_model->set_table(table);
-//
-//    auto dlg = SelectItemDialog(gr_model, this);
-//    dlg.setWindowTitle("Выбрать группу");
-//    if(dlg.exec()){
-//        auto obj = dlg.result();
-//        auto parent_index = model->find(QUuid::fromString(obj.value("ref", NIL_STRING_UUID).c_str()));
-//        current_index = this->current_index();
-//        auto current_object = model->to_object(current_index);
-//        if(parent_index.isValid()){
-//            auto verify = model->belongsToItem(parent_index, current_index);
-//            if(verify){
-//                QMessageBox::critical(this, "Ошибка", "В выбранную группу перемещение не возможно!");
-//                return;
-//            }
-//            if(current_index.parent() == parent_index)
-//                return;
-//            model->move_to(current_index, parent_index);
-//            auto n_index = model->find(QUuid::fromString(current_object["ref"].get<std::string>().c_str()), parent_index);
-//            if(n_index.isValid())
-//                    emit editTreeItem(n_index, model->to_object(n_index));
-//        }
-//
-//    }
-//}
+void TreeViewWidget::openOpenMoveToDialog()
+{
+    auto model = get_model();
+    if(!model)
+        return;
+    auto current_index = this->current_index();
+    json row_data = model->empty_data();
 
-//void TreeViewWidget::deleteItemCommand()
-//{
-//    auto model = get_model();
-//    if(!model)
-//        return;
-//    auto current_index = this->current_index();
-//    json row_data = model->empty_data();
-//
-//    if(!current_index.isValid())
-//        return;
-//    if(QMessageBox::question(this, "Удаление", "Удалить выбранную строку?") == QMessageBox::Yes){
-//        auto obj = model->to_object(current_index);
-//        model->remove(current_index);
-//        emit deleteTreeItem(obj);
-//    }
-//}
+    if(!current_index.isValid())
+        return;
+
+    auto table = model->to_table_model(QModelIndex(),true, true);
+    auto gr_model = new TreeModel(this);
+    gr_model->get_conf()->reorder_columns(model->columns_order());
+    gr_model->get_conf()->set_columns_aliases(gr_model->columns_aliases());
+    gr_model->form_json(table);
+
+    auto dlg = SelectItemDialog(gr_model, this);
+    dlg.setWindowTitle("Выбрать группу");
+    if(dlg.exec()){
+        auto obj = dlg.result();
+        auto parent_index = model->find(QUuid::fromString(obj.value("ref", NIL_STRING_UUID).c_str()));
+        current_index = this->current_index();
+        auto current_object = model->to_object(current_index);
+        if(parent_index.isValid()){
+            auto verify = model->belongsToItem(parent_index, current_index);
+            if(verify){
+                QMessageBox::critical(this, "Ошибка", "В выбранную группу перемещение не возможно!");
+                return;
+            }
+            if(current_index.parent() == parent_index)
+                return;
+            model->move_to(current_index, parent_index);
+            auto n_index = model->find(QUuid::fromString(current_object["ref"].get<std::string>().c_str()), parent_index);
+            if(n_index.isValid())
+                emit tableItemChanged(n_index);
+        }
+
+    }
+}
+
+void TreeViewWidget::deleteItem()
+{
+    auto model = get_model();
+    if(!model)
+        return;
+    auto current_index = this->current_index();
+    json row_data = model->empty_data();
+
+    if(!current_index.isValid())
+        return;
+    if(QMessageBox::question(this, "Удаление", "Удалить выбранную строку?") == QMessageBox::Yes){
+        auto obj = model->row(current_index);
+        model->remove(current_index);
+        emit removeTreeRow(obj);
+    }
+}
 
 void TreeViewWidget::mousePressEvent(QMouseEvent *event)
 {
@@ -704,7 +718,7 @@ void TreeViewWidget::onToolBarItemClicked(const QString &buttonName)
             }else if(btn == table_add_group){
                 //
             }else if(btn == table_delete_item){
-               // deleteItemCommand();
+                deleteItem();
             }else if(btn == table_edit_item){
                 editRow();
             }else if(btn == table_move_to_item){
@@ -714,9 +728,9 @@ void TreeViewWidget::onToolBarItemClicked(const QString &buttonName)
             }else if(btn == table_move_down_item){
                 moveDown();
             }else
-                    emit toolBarItemClicked(buttonName);
-        }else
                 emit toolBarItemClicked(buttonName);
+        }else
+            emit toolBarItemClicked(buttonName);
 
     }else{
         if(btn == table_add_item){
@@ -724,9 +738,9 @@ void TreeViewWidget::onToolBarItemClicked(const QString &buttonName)
         }else if(btn == table_add_group){
             openNewGroupDialog();
         }else if(btn == table_delete_item){
-            //deleteItemCommand();
+            deleteItem();
         }else if(btn == table_edit_item){
-            //openOpenEditDialog();
+            openOpenEditDialog();
         }else if(btn == table_move_to_item){
             //openOpenMoveToDialog();
         }else if(btn == table_move_up_item){
@@ -734,7 +748,7 @@ void TreeViewWidget::onToolBarItemClicked(const QString &buttonName)
         }else if(btn == table_move_down_item){
             moveDown();
         }else
-                emit toolBarItemClicked(buttonName);
+            emit toolBarItemClicked(buttonName);
     }
 }
 
@@ -850,7 +864,7 @@ void TreeViewWidget::editRowInDialog(const QModelIndex &index, const QModelIndex
         data = model->empty_data();
         is_new = true;
         data["is_group"] = isGroup;
-        data["parent"] = to_byte(to_binary(model->row_uuid(parent)));
+        data["parent"] = to_byte(to_binary(model->ref(parent)));
     }
 
     auto ordered = model->columns_order();
@@ -860,14 +874,14 @@ void TreeViewWidget::editRowInDialog(const QModelIndex &index, const QModelIndex
         if(is_new){
             const auto result = dlg.result();
             auto n_index = model->add(result, parent);
-            if(model->use_database())
-                model->onRowChanged(n_index);
-            emit rowChanged(n_index.row());
+//            if(model->use_database())
+//                model->onRowChanged(n_index);
+            emit tableItemChanged(n_index);
         }else{
             model->set_object(index, dlg.result());
-            if(model->use_database())
-                model->onRowChanged(index);
-            emit rowChanged(index.row());
+//            if(model->use_database())
+//                model->onRowChanged(index);
+            emit tableItemChanged(index);
         }
     }
 }

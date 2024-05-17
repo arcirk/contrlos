@@ -30,6 +30,7 @@ bool DataUtils::verify() {
         std::make_tuple(tbCertificates, pre::json::to_json(certificates()), 0),
         std::make_tuple(tbContainers, pre::json::to_json(containers()), 0),
         std::make_tuple(tbAvailableCertificates, pre::json::to_json(available_certificates()), 0),
+        std::make_tuple(tbMstscConnections, pre::json::to_json(mstsc_item()), 0),
     };
     std::vector<std::tuple<views, std::string>> m_initial_data_views{};
 

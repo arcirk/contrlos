@@ -356,6 +356,7 @@ namespace arcirk{
             widgetCompareRole,
             widgetSpinBoxRole,
             widgetVariantRole,
+            widgetIpAddress,
             editorINVALID= -1
         };
         NLOHMANN_JSON_SERIALIZE_ENUM(item_editor_widget_roles, {
@@ -368,6 +369,7 @@ namespace arcirk{
             {widgetSpinBoxRole, "widgetSpinBoxRole"}  ,
             {widgetSpinBoxRole, "widgetSpinBoxRole"}  ,
             {widgetVariantRole, "widgetVariantRole"}  ,
+            {widgetIpAddress, "widgetIpAddress"}  ,
         })
 
         enum editor_inner_role{
@@ -382,6 +384,7 @@ namespace arcirk{
             editorArray,
             editorBoolean,
             editorDataReference,
+            editorIpAddress,
             editorInnerRoleINVALID=-1
         };
 
@@ -398,6 +401,7 @@ namespace arcirk{
             {editorArray, "editorArray"}  ,
             {editorBoolean, "editorBoolean"}  ,
             {editorDataReference, "editorDataReference"}  ,
+            {editorIpAddress, "editorIpAddress"}  ,
         });
 }
 
@@ -858,6 +862,7 @@ namespace arcirk::widgets{
         (arcirk::BJson, parent)
         (bool, is_group)
         (bool, deletion_mark)
+        (bool, predefined)
         (int, version)
     );
 
@@ -957,6 +962,7 @@ namespace arcirk::database {
         tbCertificates,
         tbContainers,
         tbAvailableCertificates,
+        tbMstscConnections,
         tables_INVALID = -1,
     };
 
@@ -968,6 +974,7 @@ namespace arcirk::database {
         {tbCertificates, "Certificates" },
         {tbContainers, "Containers" },
         {tbAvailableCertificates, "AvailableCertificates" },
+        {tbMstscConnections, "MstscConnections" },
     })
 
     enum views{

@@ -39,6 +39,7 @@ namespace arcirk::widgets {
         [[nodiscard]] bool is_display_icons() const override;
         [[nodiscard]] QIcon default_icon() const;
         void set_default_icon(const QIcon& ico);
+        QList<QString> predefined_list() const override;
 
     protected:
         void set_columns_order(const QList<QString>& names) override;

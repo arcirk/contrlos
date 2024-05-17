@@ -4,5 +4,12 @@
         <file>res/img/kontur/diadoc-16.svg</file>
         <file>res/img/kontur/file-format-png-24-regular.svg</file>
         <file>res/img/briefcase.ico</file>
+        <file>res/img/desktop.png</file>
+        <file>res/img/desktopInlegal.png</file>
+        <file>res/img/desktopOnline.png</file>
+        <file>res/img/desktop.svg</file>
+        <file>res/img/mstsc.png</file>
+        <file>res/img/mstsc.svg</file>
+        <file>res/img/mstscUsers.png</file>
     </qresource>
 </RCC>

@@ -13,6 +13,7 @@ enum tree_predefined_fields{
     ftreeParent,
     ftreeIsGroup,
     ftreeVersion,
+    ftreePredefined,
     ftreeINVALID = -1
 };
 NLOHMANN_JSON_SERIALIZE_ENUM(tree_predefined_fields, {
@@ -20,6 +21,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(tree_predefined_fields, {
     {ftreeRef, "ref"}  ,
     {ftreeParent, "parent"}  ,
     {ftreeIsGroup, "is_group"}  ,
+    {ftreePredefined, "predefined"}  ,
     {ftreeVersion, "version"}  ,
 });
 
@@ -36,6 +38,11 @@ namespace arcirk::widgets {
             [[nodiscard]] int rowCount(const QModelIndex &parent = QModelIndex()) const override;
             [[nodiscard]] int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
+            bool hasChildren(const QModelIndex &parent = QModelIndex()) const override;
+
+            bool canFetchMore(const QModelIndex &parent) const override;
+            void fetchMore(const QModelIndex &parent) override;
+
             [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
             bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole) override;
             void headerChanged(Qt::Orientation orientation, int section);
@@ -46,16 +53,20 @@ namespace arcirk::widgets {
             [[nodiscard]] QModelIndex index(int row, int column,
                                             const QModelIndex &parent = QModelIndex()) const override;
             [[nodiscard]] QModelIndex parent(const QModelIndex &index) const override;
-            [[nodiscard]] json to_json() const;
+
+            [[nodiscard]] json to_json();
             void form_json(const json& table);
-            [[nodiscard]] json to_array(const QModelIndex &parent = QModelIndex()) const;
-            [[nodiscard]] json to_array(const QString& column, const QModelIndex &parent = QModelIndex()) const;
+            [[nodiscard]] json to_array(const QModelIndex &parent = QModelIndex(), bool hierarchy = true, bool group_only = false);
+            [[nodiscard]] json to_array(const QString& column, const QModelIndex &parent = QModelIndex(), bool hierarchy = true, bool group_only = false) const;
             [[nodiscard]] json row(const QModelIndex &index, bool lite = true) const;
+            [[nodiscard]] json to_object(const QModelIndex &index, bool lite = true) const;
+            [[nodiscard]] json to_table_model(const QModelIndex &parent, bool group_only = false, bool lite = true);
             QModelIndex add(const json& object, const QModelIndex &parent = QModelIndex());
             void set_object(const QModelIndex &index, const json& object);
             bool remove(const QModelIndex &index);
             bool move_up(const QModelIndex &index);
             bool move_down(const QModelIndex &index);
+            void move_to(const QModelIndex &index, const QModelIndex &new_parent);
             void clear();
             [[nodiscard]] QString column_name(int index) const;
             [[nodiscard]] int column_index(const QString& name) const;
@@ -64,7 +75,7 @@ namespace arcirk::widgets {
             void set_read_only(bool value);
             bool read_only();
 
-        [[maybe_unused]] [[maybe_unused]] json empty_data();
+            [[maybe_unused]] [[maybe_unused]] json empty_data();
 
             void reorder_columns(const QList<QString>& names);
             QList<QString> columns_order() const;
@@ -92,14 +103,23 @@ namespace arcirk::widgets {
 
             std::vector<std::string> predefined_fields() const;
 
-            QUuid row_uuid(const QModelIndex& index) const;
+            QUuid ref(const QModelIndex& index) const;
+
+            bool predefinedItem(const QModelIndex& index) const;
+
+            bool row_not_move(const QModelIndex& index);
+            void set_row_not_move(const QModelIndex& index, bool value);
+
+            bool belongsToItem(const QModelIndex& index, const QModelIndex parent);
+
     private:
         TreeItem* rootItem;
         std::shared_ptr<TreeConf> m_conf;
         bool m_hierarchical_list;
 
         [[nodiscard]] Qt::ItemFlags flags(const QModelIndex& index) const override;
-
+        void to_array_recursive(const QModelIndex& parent, json result, bool group_only = false);
+        void to_array_recursive(const QString& column, const QModelIndex& parent, json result, bool group_only = false);
 
     protected:
         bool is_use_database;

@@ -360,7 +360,7 @@ inline value_pair to_value_pair(const std::string& key, const json& value){
 inline variant_map object_to_map(const json& object){
     variant_map result{};
     for (auto itr = object.items().begin(); itr != object.items().end(); ++itr) {
-        result.push_back(std::make_pair(itr.key(), std::make_shared<arcirk::widgets::item_data>(itr.value())));
+        result.push_back(to_value_pair(itr.key(), itr.value()));
     }
     return result;
 }
@@ -370,7 +370,7 @@ inline variant_map struct_to_map(const T& value){
     auto object = pre::json::to_json(value);
     variant_map result{};
     for (auto itr = object.items().begin(); itr != object.items().end(); ++itr) {
-        result.push_back(std::make_pair(itr.key(), std::make_shared<arcirk::widgets::item_data>(itr.value())));
+        result.push_back(to_value_pair(itr.key(), itr.value()));
     }
     return result;
 }

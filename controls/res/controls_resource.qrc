@@ -28,5 +28,13 @@
         <file>img/move_to.png</file>
         <file>img/erase_type.png</file>
         <file>img/element_pictograms.png</file>
+        <file>img/groupPredefined.png</file>
+        <file>img/group_16.png</file>
+        <file>img/groupDeleted_16.png</file>
+        <file>img/item_16.png</file>
+        <file>img/itemOver_16.png</file>
+        <file>img/desktop.png</file>
+        <file>img/desktopInlegal.png</file>
+        <file>img/desktopOnline.png</file>
     </qresource>
 </RCC>

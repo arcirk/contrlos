@@ -10,6 +10,9 @@ TreeItem::TreeItem(const json &data, std::shared_ptr<TreeConf>& conf, TreeItem *
 {
     m_parentItem = parentItem;
     m_childItems = {};
+    m_mapped = false;
+    m_predefined = false;
+    m_not_move = false;
     init(data);
 }
 
@@ -168,55 +171,83 @@ void TreeItem::set_object(const json &object) {
     if(object.empty())
         return;
 
-    m_data = object_to_map(object);
+    m_data = object_to_map(m_conf->restructure_facility(object));
 
-    std::vector<std::string> m_fields{"ref", "parent", "is_group", "row_state"};
+    auto m_fields = m_conf->predefined_list();
 
     for (const auto& key : m_fields) {
         if(key == "ref"){
             const auto itr = std::find_if(m_data.begin(), m_data.end(), [key](const value_pair& it){
-                return it.first == key;
+                return it.first == key.toStdString();
             });
             if(itr == m_data.end()) {
                 m_ref = QUuid::createUuid();
                 auto var = std::make_shared<item_data>(to_byte(to_binary(m_ref)));
                 var->set_role(editor_inner_role::editorDataReference) ;
-                m_data.push_back(std::make_pair(key, std::move(var)));
+                m_data.push_back(std::make_pair(key.toStdString(), std::move(var)));
             }else{
                 auto ba = itr->second->data();
                 if(ba->subtype == variant_subtype::subtypeRef){
                     m_ref = QUuid::fromRfc4122(ba->data);
-                    //std::cout << m_ref.toString().toStdString() << std::endl;
+                    itr->second->set_role(editor_inner_role::editorDataReference);
                 }
             }
         }else if(key == "parent"){
             const auto itr = std::find_if(m_data.begin(), m_data.end(), [key](const value_pair& it){
-                return it.first == key;
+                return it.first == key.toStdString();
             });
             if(itr == m_data.end()) {
-                auto var = std::make_shared<item_data>(to_byte(to_binary(QUuid())));
+                auto var = std::make_shared<item_data>(to_byte(to_binary(m_parentItem->ref())));
                 var->set_role(editor_inner_role::editorDataReference) ;
-                m_data.push_back(std::make_pair(key, std::move(var)));
-            }
+                m_data.push_back(std::make_pair(key.toStdString(), std::move(var)));
+            }else
+                itr->second->set_role(editor_inner_role::editorDataReference);
         }else if(key == "is_group"){
             const auto itr = std::find_if(m_data.begin(), m_data.end(), [key](const value_pair& it){
-                return it.first == key;
+                return it.first == key.toStdString();
             });
             if(itr == m_data.end()) {
                 auto var = std::make_shared<item_data>(to_byte(to_binary(false)));
                 var->set_role(editor_inner_role::editorBoolean) ;
-                m_data.push_back(std::make_pair(key, std::move(var)));
-            }
+                m_data.push_back(std::make_pair(key.toStdString(), std::move(var)));
+            }else
+                itr->second->set_role(editor_inner_role::editorBoolean);
         }else if(key == "row_state"){
             const auto itr = std::find_if(m_data.begin(), m_data.end(), [key](const value_pair& it){
-                return it.first == key;
+                return it.first == key.toStdString();
             });
             if(itr == m_data.end()) {
                 int val = is_group() ? tree_rows_icons::ItemGroup : tree_rows_icons::Item;
                 auto var = std::make_shared<item_data>(to_byte(to_binary(val)));
                 var->set_role(editor_inner_role::editorNumber) ;
-                m_data.push_back(std::make_pair(key, std::move(var)));
+                m_data.push_back(std::make_pair(key.toStdString(), std::move(var)));
+            }else
+                itr->second->set_role(editor_inner_role::editorNumber);
+        }else if(key == "predefined") {
+            const auto itr = std::find_if(m_data.begin(), m_data.end(), [key](const value_pair &it) {
+                return it.first == key.toStdString();
+            });
+            if(itr == m_data.end()) {
+                auto var = std::make_shared<item_data>(to_byte(to_binary(false)));
+                var->set_role(editor_inner_role::editorBoolean);
+                m_data.push_back(std::make_pair(key.toStdString(), std::move(var)));
+            }else{
+                itr->second->set_role(editor_inner_role::editorBoolean);
+                auto val = itr->second->json_value();
+                if(val.is_boolean()){
+                    m_predefined = val.get<bool>();
+                }
             }
+        }else if(key == "version") {
+            const auto itr = std::find_if(m_data.begin(), m_data.end(), [key](const value_pair &it) {
+                return it.first == key.toStdString();
+            });
+            if(itr == m_data.end()) {
+                auto var = std::make_shared<item_data>(to_byte(to_binary(0)));
+                var->set_role(editor_inner_role::editorNumber) ;
+                m_data.push_back(std::make_pair(key.toStdString(), std::move(var)));
+            }else
+                itr->second->set_role(editor_inner_role::editorNumber);
         }
     }
 }
@@ -258,4 +289,36 @@ bool TreeItem::is_group() {
 
 QUuid TreeItem::ref() const {
     return m_ref;
+}
+
+TreeItem *TreeItem::parentItem()
+{
+    return m_parentItem;
+}
+
+bool TreeItem::predefined() {
+    return m_predefined;
+}
+
+bool TreeItem::not_move() {
+    return m_not_move;
+}
+
+void TreeItem::set_not_move(bool value) {
+    m_not_move = value;
+}
+
+void TreeItem::setParent(TreeItem *parent)
+{
+    m_parentItem = parent;
+    const std::string key = "parent";
+    const auto itr = std::find_if(m_data.begin(), m_data.end(), [key](const value_pair& it){
+        return it.first == key;
+    });
+    if(itr == m_data.end())
+        return;
+    auto index = std::distance(m_data.begin(), itr);
+
+    m_data[index] = to_value_pair(key, to_byte(to_binary(parent->ref())));
+
 }

@@ -63,7 +63,9 @@ set(PROJECT_SOURCES
         include/mstscpage.h
         src/mstscpage.cpp
         ui/mstscpage.ui
-        )
+        src/mstscitemdialog.cpp
+        include/mstscitemdialog.h
+        ui/mstscitemdialog.ui)
 
 qt_add_executable(ProfileManager
         MANUAL_FINALIZATION
@@ -87,6 +89,7 @@ target_link_libraries(ProfileManager PRIVATE
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Sql
+        Qt${QT_VERSION_MAJOR}::Network
         controls
         alpaca::alpaca
         SingleApplication::SingleApplication

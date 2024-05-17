@@ -3,6 +3,7 @@
 #include <QPixmap>
 #include <QIcon>
 #include <QPainter>
+#include "../../global/variant/item_data.h"
 
 using namespace arcirk::widgets;
 
@@ -15,9 +16,11 @@ TreeConf::TreeConf()
         header_item_def("ref", "Ссылка"),
         header_item_def("parent", "Родитель"),
         header_item_def("row_state", "Статус строки"),
+        header_item_def("predefined", "Предопределенный"),
         header_item_def("is_group", "Это группа")};
     m_enable_rows_icons     = true;
     m_read_only             = true;
+    m_fetch_expand          = false;
     init_default_icons();
 }
 
@@ -59,6 +62,8 @@ void TreeConf::reset_columns(const json& arr){
         m_columns.push_back(header_item_def("row_state", "Статус строки"));
     if(index_of_for_name("is_group", m_columns) == -1)
         m_columns.push_back(header_item_def("is_group", "Это группа"));
+    if(index_of_for_name("predefined", m_columns) == -1)
+        m_columns.push_back(header_item_def("predefined", "Предопределенный"));
 }
 
 QString TreeConf::column_name(int index, bool alias) const {
@@ -156,26 +161,32 @@ void TreeConf::set_column_select_type(const QString &column, bool value) {
 void TreeConf::init_default_icons() {
 
     m_row_icon.clear();
-    QPixmap image("://img/element_pictograms.png");
-
-    for (int i = 0; i < 6; ++i) {
-        QImage t(QSize(16, 16), QImage::Format_RGB32); //
-        QPainter tp(&t);
-        tp.drawPixmap(0,0, image, i * 16, 0, 16,16);
-
-        QPixmap transparent(t.size());
-        // Do transparency
-        transparent.fill(Qt::transparent);
-        QPainter p;
-        p.begin(&transparent);
-        p.setCompositionMode(QPainter::CompositionMode_Source);
-        p.drawPixmap(0, 0, QPixmap::fromImage(t));
-        p.setCompositionMode(QPainter::CompositionMode_DestinationIn);
-        p.fillRect(transparent.rect(), QColor(0, 0, 0, 255));
-        p.end();
-
-        m_row_icon.insert((tree_rows_icons)i, QIcon(transparent));
-    }
+    m_row_icon.insert(tree_rows_icons::ItemGroup, QIcon("://img/group_16.png"));
+    m_row_icon.insert(tree_rows_icons::Item, QIcon("://img/item_16.png"));
+    m_row_icon.insert(tree_rows_icons::DeletedItem, QIcon("://img/deletionMarkItem_16.png"));
+    m_row_icon.insert(tree_rows_icons::DeletedItemGroup, QIcon("://img/groupDeleted_16.png"));
+    m_row_icon.insert(tree_rows_icons::ItemGroupPredefined, QIcon("://img/groupPredefined.png"));
+    m_row_icon.insert(tree_rows_icons::ItemPredefined, QIcon("://img/itemOver_16.png"));
+//    QPixmap image("://img/element_pictograms.png");
+//
+//    for (int i = 0; i < 6; ++i) {
+//        QImage t(QSize(16, 16), QImage::Format_RGB32); //
+//        QPainter tp(&t);
+//        tp.drawPixmap(0,0, image, i * 16, 0, 16,16);
+//
+//        QPixmap transparent(t.size());
+//        // Do transparency
+//        transparent.fill(Qt::transparent);
+//        QPainter p;
+//        p.begin(&transparent);
+//        p.setCompositionMode(QPainter::CompositionMode_Source);
+//        p.drawPixmap(0, 0, QPixmap::fromImage(t));
+//        p.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+//        p.fillRect(transparent.rect(), QColor(0, 0, 0, 255));
+//        p.end();
+//
+//        m_row_icon.insert((tree_rows_icons)i, QIcon(transparent));
+//    }
 
 }
 
@@ -204,3 +215,38 @@ void TreeConf::set_attribute_use(const QList<QString> &columns, attribute_use va
         set_attribute_use(column, value);
     }
 }
+
+bool TreeConf::fetch_expand() const {return m_fetch_expand;};
+
+void TreeConf::set_fetch_expand(bool value){m_fetch_expand = value;}
+
+json TreeConf::predefined_object() {
+    json root{
+            {"ref", arcirk::to_byte(arcirk::to_binary(QUuid()))},
+            {"parent", arcirk::to_byte(arcirk::to_binary(QUuid()))},
+            {"is_group", true},
+            {"row_state", 0},
+            {"predefined", false},
+            {"version", 0}
+    };
+    return root;
+}
+
+json TreeConf::restructure_facility(const json &source) const {
+
+    json result(predefined_object());
+
+    for (auto itr = source.items().begin();  itr != source.items().end() ; ++itr) {
+        result[itr.key()] = itr.value();
+    }
+
+    return result;
+}
+
+QList<QString> TreeConf::predefined_list() const {
+    return {"ref", "parent", "is_group", "row_state", "predefined", "version"};
+}
+
+void TreeConf::set_row_icon(tree_rows_icons state, const QIcon &value) {
+    m_row_icon[state] = value;
+};

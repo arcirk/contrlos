@@ -26,8 +26,7 @@ namespace arcirk::widgets {
             return add(pre::json::to_json(object), parent);
         }
 
-        void set_struct(int row, const T& object){
-            auto index = this->index(row, 0);
+        void set_struct(const T& object, const QModelIndex& index){
             if(index.isValid()){
                 this->set_object(index, pre::json::to_json(object));
             }
