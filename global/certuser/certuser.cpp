@@ -130,7 +130,7 @@ void CertUser::read_user_info(QObject* parent)
     cmd.start();
     loop.exec();
 
-   std::string result_ = arcirk::strings::to_utf(cmd_text.toStdString(), "cp866");
+   std::string result_ = arcirk::strings::to_utf(cmd_text.toStdString(), DEFAULT_CHARSET_);
 
    auto info = CommandLineParser::parse(result_.c_str(), wmicGetSID);
 
@@ -201,7 +201,6 @@ nlohmann::json CertUser::get_local_certificates(bool brief)
         }
     }
 
-
     if(info.is_array()){
         if(!info.empty()){
             for (auto itr = info.begin(); itr != info.end(); ++itr) {
@@ -244,7 +243,7 @@ nlohmann::json CertUser::get_local_containers()
 
     auto started = [&cmd]() -> void
     {
-        cmd.send("csptest -keyset -enum_cont -fqcn -verifyc & exit", CmdCommand::csptestGetConteiners);
+        cmd.send("csptest -keyset -enum_cont -fqcn -verifyc & exit", CmdCommand::csptestGetContainers);
     };
     loop.connect(&cmd, &CommandLine::started_process, started);
 
@@ -276,7 +275,7 @@ nlohmann::json CertUser::get_local_containers()
 
    qDebug() << Q_FUNC_INFO << qPrintable(result_.data());
 
-   auto info = CommandLineParser::parse(result_.c_str(), csptestGetConteiners);
+   auto info = CommandLineParser::parse(result_.c_str(), csptestGetContainers);
 
    return info;
 }
@@ -330,7 +329,7 @@ json CertUser::get_container_info(const QString &name)
 
     auto started = [&cmd, name]() -> void
     {
-        cmd.send(QString("csptest -keyset -container \"%1\" -info & exit").arg(name), CmdCommand::csptestContainerFnfo);
+        cmd.send(QString("csptest -keyset -container \"%1\" -info & exit").arg(name), CmdCommand::csptestContainerInfo);
     };
     loop.connect(&cmd, &CommandLine::started_process, started);
 
@@ -360,11 +359,15 @@ json CertUser::get_container_info(const QString &name)
 
    std::string result_ = arcirk::strings::to_utf(cmd_text.toStdString(), "cp866");
 
-   auto info = CommandLineParser::parse(result_.c_str(), csptestContainerFnfo);
+   auto info = CommandLineParser::parse(result_.c_str(), csptestContainerInfo);
 
    return info;
 }
 
 void CertUser::isValid() {
 
+}
+
+QString CertUser::sid() const {
+    return cert_user_.sid.c_str();
 }

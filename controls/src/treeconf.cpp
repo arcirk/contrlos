@@ -249,4 +249,81 @@ QList<QString> TreeConf::predefined_list() const {
 
 void TreeConf::set_row_icon(tree_rows_icons state, const QIcon &value) {
     m_row_icon[state] = value;
+}
+
+json TreeConf::unload_conf() const {
+
+    json result = json::object();
+    result["size"] = {
+            {"width" , m_size.width()},
+            {"height" , m_size.height()},
+    };
+    auto _columns = json::array();
+    for(const auto& item : m_columns){
+        _columns += pre::json::to_json(item);
+    }
+    result["columns"] = _columns;
+    auto aliases = json::object();
+    for (auto itr = m_column_aliases.begin(); itr != m_column_aliases.end() ; ++itr) {
+        aliases[itr.key().toStdString()] = itr.value().toStdString();
+    }
+    result["aliases"] = aliases;
+    auto _columns_order = json::array();
+    for (auto const& itr : m_order_columns) {
+        _columns_order += itr.toStdString();
+    }
+    result["columns_order"] = _columns_order;
+    result["root_data"] = m_root_data;
+    result["read_only"] = m_read_only;
+    result["enable_rows_icons"] = m_enable_rows_icons;
+
+    json icons = json::object();
+    for (auto itr = m_row_icon.begin(); itr != m_row_icon.end() ; ++itr) {
+        auto key = arcirk::enum_synonym(itr.key());
+        auto ba = icon_to_bytearray(itr.value());
+        auto data = to_byte(to_binary(qbyte_to_byte(ba), variant_subtype::subtypeByte));
+        icons[key] = data;
+    };
+    result["icons"] = icons;
+
+    return result;
+}
+
+void TreeConf::load_conf(const json& data) {
+
+    m_size.setHeight(data.value("size", json::object()).value("height", 22));
+    m_size.setWidth(data.value("size", json::object()).value("width", 22));
+
+    m_columns.clear();
+    auto _columns = data.value("columns", json::array());
+    for (auto itr = _columns.begin(); itr != _columns.end(); ++itr) {
+        auto object = *itr;
+        m_columns.push_back(pre::json::from_json<header_item>(object));
+    }
+    m_column_aliases.clear();
+    auto aliases = data.value("aliases", json::object());
+    for (auto itr = aliases.items().begin(); itr != aliases.items().end(); ++itr) {
+        m_column_aliases.insert(itr.key().c_str(), itr.value().get<std::string>().c_str());
+    }
+    m_order_columns.clear();
+    auto _m_order_columns = data.value("columns_order", json::array());
+    for (auto itr = _m_order_columns.begin(); itr != _m_order_columns.end(); ++itr) {
+        auto object = *itr;
+        m_order_columns.push_back(object.get<std::string>().c_str());
+    }
+    m_root_data = data.value("root_data" , json::object());
+    m_read_only = data.value("read_only" , true);
+    m_enable_rows_icons = data.value("enable_rows_icons" , true);
+
+    m_row_icon.clear();
+    json icons = data.value("icons", json::object());
+    for (auto itr = icons.items().begin(); itr != icons.items().end() ; ++itr) {
+        json _key = itr.key();
+        auto key = _key.get<tree_rows_icons>();
+        auto ba = binary_data();
+        ba.from_json(itr.value());
+        auto byte = byte_to_qbyte(ba.data);
+        auto icon = icon_from_bytearray(&byte);
+        m_row_icon.insert(key, icon);
+    };
 };

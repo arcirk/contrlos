@@ -54,7 +54,6 @@ namespace arcirk::widgets {
         bool                                m_read_only{};
         bool                                m_enable_rows_icons{};
         QPair<QIcon, QIcon>                 m_logical_icon_def;
-       // QIcon                               m_row_icon;
 
         virtual void set_columns_order(const QList<QString>& names){};
     };

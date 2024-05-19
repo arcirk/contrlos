@@ -726,17 +726,17 @@ namespace arcirk::widgets{
             echoUserName,
             wmicGetSID,
             echoGetEncoding,
-            csptestGetConteiners,
+            csptestGetContainers,
             csptestContainerCopy,
-            csptestContainerFnfo,
+            csptestContainerInfo,
             csptestContainerDelete,
             csptestGetCertificates,
             certutilGetCertificateInfo,
             certmgrInstallCert,
-            certmgrExportlCert,
-            certmgrDeletelCert,
+            certmgrExportCert,
+            certmgrDeleteCert,
             certmgrGetCertificateInfo,
-            cryptcpCopycert,
+            cryptcpCopyCert,
             mstscAddUserToConnect,
             mstscEditFile,
             quserList,
@@ -745,7 +745,7 @@ namespace arcirk::widgets{
             cmdEXIT,
             wmicUserAccount,
             wmicUsers,
-            COMMAND_INVALID = -1,
+            COMMAND_INVALID=-1,
         };
 }
     BOOST_FUSION_DEFINE_STRUCT(
@@ -824,6 +824,9 @@ namespace arcirk::widgets{
         (bool, def_password)
         (bool, autoreconnect)
         (bool, log_arhive)
+        (bool, allow_certificates)
+        (bool, allow_mstsc)
+        (bool, allow_mstsc_users)
     );
 
     BOOST_FUSION_DEFINE_STRUCT(
@@ -864,6 +867,7 @@ namespace arcirk::widgets{
         (bool, deletion_mark)
         (bool, predefined)
         (int, version)
+        (int, pos)
     );
 
 namespace arcirk::cryptography{
@@ -934,7 +938,7 @@ namespace arcirk::cryptography{
         {storgareTypeRemoteBase, REMOTEBASE},
     })
 
-    inline TypeOfStorgare type_storgare(const std::string& source){
+    inline TypeOfStorgare type_storage(const std::string& source){
         if(source.empty())
             return storgareTypeUnknown;
         else{

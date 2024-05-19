@@ -382,7 +382,7 @@ nlohmann::json CryptContainer::info(const QString &container_name)
     auto started = [&cmd, &container_name]() -> void
     {
         QString command = QString("csptest -keyset -container \"%1\" -info & exit").arg(container_name);
-        cmd.send(command, CmdCommand::csptestContainerFnfo);
+        cmd.send(command, CmdCommand::csptestContainerInfo);
     };
     loop.connect(&cmd, &CommandLine::started_process, started);
 

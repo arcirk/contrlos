@@ -34,13 +34,23 @@ namespace arcirk::widgets{
     };
 
     enum tree_rows_icons{
-        ItemGroup = 0,
+        ItemGroup,
         DeletedItemGroup,
         ItemGroupPredefined,
         Item,
         DeletedItem,
-        ItemPredefined
+        ItemPredefined,
+        enumInvalid = -1
     };
+    NLOHMANN_JSON_SERIALIZE_ENUM(tree_rows_icons, {
+        {enumInvalid, nullptr},
+        {ItemGroup, "ItemGroup"},
+        {DeletedItemGroup, "DeletedItemGroup"},
+        {ItemGroupPredefined, "ItemGroupPredefined"},
+        {Item, "Item"},
+        {DeletedItem, "DeletedItem"},
+        {ItemPredefined, "ItemPredefined"},
+    });
 
     inline QString variant_to_number_string(const QVariant& value){
         if(value.typeId() == QMetaType::Int){

@@ -365,7 +365,7 @@ bool CryptCertificate::save_as(const QString &sha1, const QString &file)
     auto started = [&cmd, &file, &sha1]() -> void
     {
         QString command = QString(R"(cryptcp -copycert -thumbprint "%1" -u -df "%2" & exit)").arg(sha1, file);
-        cmd.send(command, CmdCommand::certmgrExportlCert);
+        cmd.send(command, CmdCommand::certmgrExportCert);
     };
     loop.connect(&cmd, &CommandLine::started_process, started);
 
@@ -510,7 +510,7 @@ void CryptCertificate::remove(const QString &sha1)
     auto started = [&cmd, &sha1]() -> void
     {
         QString command = QString("certmgr -delete -thumbprint \"%1\" & exit").arg(sha1);;
-        cmd.send(command, CmdCommand::certmgrDeletelCert);
+        cmd.send(command, CmdCommand::certmgrDeleteCert);
     };
     loop.connect(&cmd, &CommandLine::started_process, started);
 

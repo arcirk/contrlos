@@ -55,7 +55,9 @@ namespace arcirk::widgets {
             [[nodiscard]] QModelIndex parent(const QModelIndex &index) const override;
 
             [[nodiscard]] json to_json();
-            void form_json(const json& table);
+            void to_tree(json& result, const QModelIndex& parent = QModelIndex());
+
+            void form_json(const json& table, bool resel_columns = true);
             [[nodiscard]] json to_array(const QModelIndex &parent = QModelIndex(), bool hierarchy = true, bool group_only = false);
             [[nodiscard]] json to_array(const QString& column, const QModelIndex &parent = QModelIndex(), bool hierarchy = true, bool group_only = false) const;
             [[nodiscard]] json row(const QModelIndex &index, bool lite = true) const;
@@ -78,7 +80,7 @@ namespace arcirk::widgets {
             [[maybe_unused]] [[maybe_unused]] json empty_data();
 
             void reorder_columns(const QList<QString>& names);
-            QList<QString> columns_order() const;
+            [[nodiscard]] QList<QString> columns_order() const;
 
             void display_icons(bool value);
             [[nodiscard]] bool is_display_icons() const;
@@ -112,14 +114,17 @@ namespace arcirk::widgets {
 
             bool belongsToItem(const QModelIndex& index, const QModelIndex parent);
 
+            int first_element_position(const QModelIndex &index);
+            int last_element_position(const QModelIndex &index);
+
     private:
         TreeItem* rootItem;
         std::shared_ptr<TreeConf> m_conf;
         bool m_hierarchical_list;
 
         [[nodiscard]] Qt::ItemFlags flags(const QModelIndex& index) const override;
-        void to_array_recursive(const QModelIndex& parent, json result, bool group_only = false);
-        void to_array_recursive(const QString& column, const QModelIndex& parent, json result, bool group_only = false);
+        void to_array_recursive(const QModelIndex& parent, json& result, bool group_only = false);
+        void to_array_recursive(const QString& column, const QModelIndex& parent, json& result, bool group_only = false);
 
     protected:
         bool is_use_database;

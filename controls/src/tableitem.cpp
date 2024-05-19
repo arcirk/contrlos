@@ -10,6 +10,7 @@ TableItem::TableItem(const json &data, std::shared_ptr<TableConf>& conf, TableIt
 {
     m_parentItem = parentItem;
     m_childItems = {};
+    m_predefined = false;
     init(data);
 }
 
@@ -208,4 +209,8 @@ variant_map TableItem::to_map() const {
 
 QUuid TableItem::ref() const {
     return m_ref;
+}
+
+bool TableItem::predefined() const {
+    return m_predefined;
 }

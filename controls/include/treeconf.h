@@ -2,6 +2,8 @@
 #define CONTROLSPROG_TREECONF_H
 
 #include "iconf.hpp"
+#include <QBuffer>
+#include <QDataStream>
 
 namespace arcirk::widgets {
 
@@ -37,6 +39,9 @@ namespace arcirk::widgets {
         json restructure_facility(const json& source) const;
         void set_row_icon(tree_rows_icons state, const QIcon& value);
 
+        json unload_conf() const;
+        void load_conf(const json& data);
+
     protected:
         void set_columns_order(const QList<QString>& names) override;
     private:
@@ -44,6 +49,25 @@ namespace arcirk::widgets {
         bool                                m_fetch_expand;
         void init_default_icons();
 
+        QByteArray icon_to_bytearray(const QIcon& icon) const{
+            QByteArray bArray;
+            QBuffer buffer(&bArray);
+            buffer.open(QIODevice::WriteOnly);
+            QDataStream out(&buffer);
+            out << icon;
+            buffer.close();
+            return bArray;
+        }
+
+        QIcon icon_from_bytearray(QByteArray * data) const{
+            QBuffer buffer(data);
+            buffer.open(QIODevice::ReadOnly);
+            QIcon ico;
+            QDataStream in(&buffer);
+            in >> ico;
+            buffer.close();
+            return ico;
+        }
     };
 }
 

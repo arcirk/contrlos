@@ -8,6 +8,9 @@
 #include "../include/sql/datautils.h"
 #include "../global/sql/query_builder.hpp"
 #include <QDialogButtonBox>
+#include <QCheckBox>
+#include <QFileDialog>
+#include "../global/sh/commandline.h"
 
 using namespace arcirk::profile_manager;
 using namespace arcirk::filesystem;
@@ -19,9 +22,6 @@ ProfilesManagerDialog::ProfilesManagerDialog(QWidget *parent)
 {
     ui->setupUi(this);
     setWindowTitle("Менеджер профилей");
-
-    m_conf = std::make_shared<ProfilesConf>();
-
     //m_status_bar = new QStatusBar(this);
     //ui->horizontalLayout->addWidget(m_status_bar);
 
@@ -48,6 +48,7 @@ ProfilesManagerDialog::ProfilesManagerDialog(QWidget *parent)
     }
 
     m_current_user = std::make_shared<CertUser>();
+    m_conf = std::make_shared<ProfilesConf>(m_current_user);
     m_current_user->read_user_info(this);
     m_profile_page = new ProfilesPage(m_conf, m_database, this);
     ui->verticalLayoutPF->addWidget(m_profile_page);
@@ -55,6 +56,10 @@ ProfilesManagerDialog::ProfilesManagerDialog(QWidget *parent)
 
     m_mstsc_page = new MstscPage(m_database, this);
     ui->verticalLayoutRDP->addWidget(m_mstsc_page);
+    connect(m_mstsc_page, &MstscPage::reset, this, &ProfilesManagerDialog::onResetMstscPage);
+
+    m_cert_page = new CertsPage(m_conf, m_database, this);
+    ui->verticalLayoutCerts->addWidget(m_cert_page);
 
     read_data();
 
@@ -65,10 +70,16 @@ ProfilesManagerDialog::ProfilesManagerDialog(QWidget *parent)
     createDynamicMenu();
     trayIcon->show();
 
+    connect(ui->checkBoxEnableRdp, &QCheckBox::clicked, this, &ProfilesManagerDialog::onCheckBoxClicked);
+    connect(ui->checkBoxEnableRdpUsers, &QCheckBox::clicked, this, &ProfilesManagerDialog::onCheckBoxClicked);
+
+    mozillaApp = new QProcess(this);
 }
 
 ProfilesManagerDialog::~ProfilesManagerDialog()
 {
+//    mozillaApp->close();
+//    delete mozillaApp;
     delete ui;
 }
 
@@ -90,6 +101,10 @@ void ProfilesManagerDialog::read_data() {
     ByteArray ba(qba.size());
     std::copy(qba.begin(), qba.end(), ba.begin());
     m_profile_page->set_firefox_profiles(ba);
+
+    ui->checkBoxEnableRdpUsers->setChecked(m_conf->conf().allow_mstsc_users);
+    ui->checkBoxEnableRdp->setChecked(m_conf->conf().allow_mstsc);
+
 }
 
 void ProfilesManagerDialog::onOkClicked() {
@@ -119,7 +134,7 @@ void ProfilesManagerDialog::onOkClicked() {
 
 void ProfilesManagerDialog::createTrayActions() {
 
-    qDebug() << __FUNCTION__;
+    //qDebug() << __FUNCTION__;
     quitAction = new QAction(tr("&Выйти"), this);
     connect(quitAction, &QAction::triggered, this, &ProfilesManagerDialog::onAppExit);
     showAction = new QAction(tr("&Открыть менеджер профилей"), this);
@@ -137,6 +152,23 @@ void ProfilesManagerDialog::createTrayActions() {
 
 void ProfilesManagerDialog::onTrayTriggered() {
 
+    auto action = qobject_cast<QAction*>(sender());
+    if(!action)
+        return;
+
+    auto type = action->property("type").toString();
+
+    if (type == "mstsc"){
+        auto file = QFile(cache_mstsc_directory() + "/" + action->text() + ".rdp");
+        if(!file.exists()){
+            auto uuid = action->property("uuid").toUuid();
+            m_mstsc_page->openMstscEditDialog(uuid);
+        }else{
+            run_mstsc_link(file.fileName());
+        }
+    }else if(type == "link"){
+        run_mozilla_firefox(action->property("url").toString(), action->property("profile").toString());
+    }
 }
 
 void ProfilesManagerDialog::onTrayMstscConnectToSessionTriggered() {
@@ -144,12 +176,12 @@ void ProfilesManagerDialog::onTrayMstscConnectToSessionTriggered() {
 }
 
 void ProfilesManagerDialog::onAppExit() {
-    qDebug() << __FUNCTION__;
+    //qDebug() << __FUNCTION__;
     QApplication::exit();
 }
 
 void ProfilesManagerDialog::onWindowShow() {
-    qDebug() << __FUNCTION__;
+    //qDebug() << __FUNCTION__;
     setVisible(true);
 }
 
@@ -158,11 +190,11 @@ void ProfilesManagerDialog::trayMessageClicked() {
 }
 
 void ProfilesManagerDialog::trayIconActivated(QSystemTrayIcon::ActivationReason reason) {
-    qDebug() << __FUNCTION__ << reason;
+    //qDebug() << __FUNCTION__ << reason;
     if(reason == QSystemTrayIcon::DoubleClick){
         setVisible(true);
     }else if(reason == QSystemTrayIcon::Context){
-        qDebug() << "QSystemTrayIcon::Context";
+        //qDebug() << "QSystemTrayIcon::Context";
     }
 
 }
@@ -185,7 +217,7 @@ void ProfilesManagerDialog::onCheckIP() {
 
 void ProfilesManagerDialog::createTrayIcon() {
 
-    qDebug() << __FUNCTION__;
+    //qDebug() << __FUNCTION__;
     trayIcon = new QSystemTrayIcon(this);
     trayIcon->setContextMenu(trayIconMenu);
 
@@ -200,49 +232,63 @@ void ProfilesManagerDialog::createTrayIcon() {
 
 }
 
+void ProfilesManagerDialog::createMenuRecursive(QMenu *parent, const json &array) {
+    for (auto itr = array.begin(); itr != array.end(); ++itr) {
+        auto object = *itr;
+        if(object.is_object()){
+            auto items = object.value("items", json::array());
+            object.erase("items");
+            auto item = pre::json::from_json<mstsc_item>(object);
+            if(item.is_group){
+                auto section = parent->addMenu(item.name.c_str());
+                createMenuRecursive(section, items);
+            }else{
+                QString name = item.name.c_str();
+                auto action = new QAction(name, this);
+                action->setProperty("type", "mstsc");
+                action->setIcon(QIcon("://res/img/mstsc.png"));
+                auto _item_data = widgets::item_data(item.ref);
+                QUuid uuid = QUuid::fromRfc4122(_item_data.data()->data);
+                action->setProperty("uuid", qvariant_cast<QUuid>(uuid));
+                parent->addAction(action);
+                connect(action, &QAction::triggered, this, &ProfilesManagerDialog::onTrayTriggered);
+            }
+        }else{
+            std::cout << type_string(object.type()) << std::endl;
+        }
+
+    }
+}
+
 void ProfilesManagerDialog::createDynamicMenu() {
 
-    qDebug() << __FUNCTION__;
     trayIconMenu->clear();
     trayIconMenu->addAction(showAction);
     trayIconMenu->addAction(checkIpAction);
     trayIconMenu->addAction(openFirefox);
     trayIconMenu->addAction(installCertAction);
 
-//    auto cache = current_user->cache();
-//    auto mstsc_param = cache.value("mstsc_param", json::object());
-//    auto mpl_ = arcirk::internal_structure<arcirk::client::mpl_options>("mpl_options", cache);
-//    //auto use_firefox = mpl_.use_firefox;
-//    auto firefox_path = mpl_.firefox_path;
-//    auto is_connect_to_users = mstsc_param.value("enable_mstsc_users_sess", false);
-//
-//    if(is_connect_to_users){
-//        trayIconMenu->addSeparator();
-//        auto action = new QAction("Подключиться к сеансу пользователя", this);
-//        action->setIcon(QIcon(":/img/mstscUsers.png"));
-//        trayIconMenu->addAction(action);
-//        connect(action, &QAction::triggered, this, &DialogMain::onTrayMstscConnectToSessionTriggered);
-//    }
-//
-//    if(!mstsc_param.empty()){
-//        auto is_enable = mstsc_param.value("enable_mstsc", false);
-//        auto detailed_records = mstsc_param.value("detailed_records", json::array());
-//        if(is_enable && detailed_records.size() > 0){
-//            trayIconMenu->addSeparator();
-//            for(auto itr = detailed_records.begin(); itr != detailed_records.end(); ++itr){
-//                auto object = *itr;
-//                auto mstsc = arcirk::secure_serialization<arcirk::client::mstsc_options>(object, __FUNCTION__);
-//                QString name = mstsc.name.c_str();
-//                auto action = new QAction(name, this);
-//                action->setProperty("data", object.dump().c_str());
-//                action->setProperty("type", "mstsc");
-//                action->setIcon(QIcon(":/img/mstsc.png"));
-//                trayIconMenu->addAction(action);
-//                connect(action, &QAction::triggered, this, &DialogMain::onTrayTriggered);
-//            }
-//        }
-//    }
-//
+    auto mstsc_tree = m_mstsc_page->get_mstsc_items();
+    if(!mstsc_tree.empty()){
+        std::cout << mstsc_tree.dump(4) << std::endl;
+        trayIconMenu->addSeparator();
+        for (auto itr = mstsc_tree.begin(); itr != mstsc_tree.end(); ++itr) {
+            auto root_object = *itr;
+            if(!root_object.is_object())
+                break;
+            auto items = root_object.value("items", json::array());
+            root_object.erase("items");
+            try {
+                auto object = pre::json::from_json<mstsc_item>(root_object);
+                if(object.is_group){
+                    createMenuRecursive(trayIconMenu, items);
+                }
+            } catch (const std::exception &e) {
+                std::cerr << e.what() <<std::endl;
+                std::cout << root_object.dump(4) << std::endl;
+            }
+        }
+    }
 
     auto mpl_list = m_profile_page->profiles();
 
@@ -253,6 +299,7 @@ void ProfilesManagerDialog::createDynamicMenu() {
             QString name = itr->name.c_str();
             auto action = new QAction(name, this);
             action->setProperty("url", itr->url.c_str());
+            action->setProperty("profile", itr->profile.c_str());
             action->setProperty("type", "link");
             if(!itr->icon.empty()){
                 auto item_d = arcirk::widgets::item_data(itr->icon);
@@ -273,11 +320,7 @@ void ProfilesManagerDialog::createDynamicMenu() {
 }
 
 void ProfilesManagerDialog::accept() {
-    qDebug() << __FUNCTION__;
-
-  //write_cache();
-
-    //QDialog::accept();
+    //qDebug() << __FUNCTION__;
     QDialog::hide();
 }
 
@@ -298,3 +341,137 @@ void ProfilesManagerDialog::onResetHttpList() {
     createDynamicMenu();
 }
 
+void ProfilesManagerDialog::onCheckBoxClicked(bool checked) {
+
+    auto check = qobject_cast<QCheckBox*>(sender());
+
+    if(check){
+        if(check->objectName() == "checkBoxEnableRdp")
+            m_conf->conf().allow_mstsc = checked;
+        else if(check->objectName() == "checkBoxEnableRdpUsers")
+            m_conf->conf().allow_mstsc_users = checked;
+
+    }
+
+}
+
+void ProfilesManagerDialog::onResetMstscPage() {
+    createDynamicMenu();
+}
+
+QString ProfilesManagerDialog::cache_mstsc_directory() const {
+    auto app_data = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    app_data.append("/mstsc");
+    QDir f(app_data);
+    if(!f.exists())
+        f.mkpath(f.path());
+    return f.path();
+}
+
+void ProfilesManagerDialog::run_mstsc_link(const QString& fileName)
+{
+
+    QString command;
+    QFile f(fileName);
+    command.append("mstsc \"" + QDir::toNativeSeparators(f.fileName()) + "\" & exit");
+
+    auto cmd = CommandLine(this);
+    QEventLoop loop;
+
+    auto started = [&cmd, &command]() -> void
+    {
+        cmd.send(command, CmdCommand::mstscEditFile);
+    };
+    loop.connect(&cmd, &CommandLine::started_process, started);
+
+    auto output = [](const QByteArray& data) -> void
+    {
+        std::string result_ = to_utf(data.toStdString(), DEFAULT_CHARSET_);
+    };
+    loop.connect(&cmd, &CommandLine::output, output);
+
+    auto err = [&loop, &cmd](const QString& data, int command) -> void
+    {
+        //qDebug() << __FUNCTION__ << data << command;
+        cmd.stop();
+        loop.quit();
+    };
+    loop.connect(&cmd, &CommandLine::error, err);
+
+    auto state = [&loop]() -> void
+    {
+        loop.quit();
+    };
+    loop.connect(&cmd, &CommandLine::complete, state);
+
+    cmd.start();
+    loop.exec();
+}
+
+void ProfilesManagerDialog::run_mozilla_firefox(const QString& defPage, const QString& profName) {
+
+    QString page(defPage);
+
+    //открываем адрес указанный на флешке банка
+    if(defPage == BANK_CLIENT_USB_KEY){
+        foreach (const QStorageInfo &storage, QStorageInfo::mountedVolumes()) {
+            if (storage.isValid()) {
+                // << storage.rootPath() + QDir::separator() + BANK_CLIENT_FILE;
+                QFile file = QFile(storage.rootPath() + QDir::separator() + BANK_CLIENT_FILE);
+                if(file.exists()){
+                    QSettings lnk(file.fileName(), QSettings::IniFormat);
+                    QStringList keys = lnk.allKeys();
+                    foreach(const QString& key, keys){
+                        if(key.compare("InternetShortcut")){
+                            if(key.endsWith("/URL")){
+                                page = lnk.value(key).toString();
+                                break;
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    QStringList args;
+
+    //args.append("-new-instance");
+    if(!profName.isEmpty()){
+        args.append("-P");
+        args.append(profName);
+        if(!page.isEmpty()){
+            QFile file = QFile(page);
+            if(file.exists())
+                page = "file:///" + page;
+            args.append("-URL");
+            args.append(page);
+        }
+    }
+
+    QString exeFile = "firefox";
+#ifdef Q_OS_WINDOWS
+    exeFile.append(".exe");
+#endif
+    QFile exe(m_profile_page->firefox_path());
+    if(!exe.exists()){
+        QString file = QFileDialog::getOpenFileName(this, tr("Путь к firefox"),
+                                                    QDir::homePath(),
+                                                    exeFile);
+        if(file != ""){
+            QFileInfo fi(file);
+            exe.setFileName(file);
+            m_profile_page->set_firefox_path(QDir::toNativeSeparators(fi.absolutePath()));
+        }
+    }
+
+    if(exe.exists()){
+        //qDebug() << mozillaApp->state();
+        mozillaApp->terminate();
+        mozillaApp->kill();
+        mozillaApp->waitForFinished();
+        mozillaApp->start(exe.fileName(), args);
+    }
+
+}

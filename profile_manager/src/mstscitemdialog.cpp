@@ -34,6 +34,7 @@ MstscItemDialog::MstscItemDialog(arcirk::database::mstsc_item& item, QWidget *pa
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Отмена");
+    ui->spinPort->setEnabled(!ui->chkDefaultPort->isChecked());
 
     setWindowTitle("RDP соединение");
 }

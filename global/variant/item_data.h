@@ -257,6 +257,30 @@ namespace arcirk {
             return {};
         }
     }
+    inline json from_variant(const QVariant& value, nlohmann::json::value_t t){
+        if(t == json::value_t::null) return from_variant(value);
+        else if(t == json::value_t::boolean){
+            if(value.userType() == QMetaType::Double ||
+                    value.userType() == QMetaType::Int ||
+                    value.userType() == QMetaType::LongLong ||
+                    value.userType() == QMetaType::ULongLong ||
+                    value.userType() == QMetaType::Long ||
+                    value.userType() == QMetaType::Float){
+                return value.toInt() > 0;
+            }else if(value.userType() == QMetaType::Bool){
+                return value.toBool();
+            }else
+                return false;
+        }
+        else if(t == json::value_t::number_integer) return value.toInt();
+        else if(t == json::value_t::number_unsigned) return value.toUInt();
+        else if(t == json::value_t::number_float) return value.toFloat();
+        else if(t == json::value_t::object) return qbyte_to_byte(value.toByteArray());
+        else if(t == json::value_t::array) return qbyte_to_byte(value.toByteArray());
+        else if(t == json::value_t::string) return value.toString().toStdString();
+        else if(t == json::value_t::binary) return qbyte_to_byte(value.toByteArray());
+        else return {};
+    }
 
     namespace widgets {
         struct CONTROLS_EXPORT binary_data{
@@ -385,8 +409,13 @@ inline T map_to_struct(const variant_map& value){
         });
         if(exists != value.end()){
             auto val = exists->second->json_value();
+            //std::cout << key << " " << arcirk::type_string(result[key].type()) << " " << arcirk::type_string(val.type()) << std::endl;
             if(result[key].type() == val.type())
                 result[key] = val;
+            else{
+                if(result[key].is_number() && val.is_number())
+                    result[key] = val;
+            }
         }
     }
     try {

@@ -10,12 +10,16 @@
 #include "include/mstscpage.h"
 #include <QSqlDatabase>
 #include "../global/certuser/certuser.h"
+#include "include/certspage.h"
 
 #include <QSystemTrayIcon>
 #include <QAction>
 #include <QMenu>
 #include <QCloseEvent>
 #include <QProcess>
+
+#define BANK_CLIENT_FILE "sslgate.url"
+#define BANK_CLIENT_USB_KEY "BankUsbKey"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -39,7 +43,7 @@ namespace arcirk::profile_manager{
 
     private:
         Ui::ProfilesManagerDialog *ui;
-        //QStatusBar * m_status_bar;
+        QProcess * mozillaApp;
         std::shared_ptr<ProfilesConf> m_conf;
         std::shared_ptr<CertUser> m_current_user;
 
@@ -55,6 +59,7 @@ namespace arcirk::profile_manager{
         //pages
         ProfilesPage*   m_profile_page;
         MstscPage*      m_mstsc_page;
+        CertsPage*      m_cert_page;
 
         QSqlDatabase    m_database;
 
@@ -62,13 +67,16 @@ namespace arcirk::profile_manager{
         void createTrayActions();
         void createTrayIcon();
         void createDynamicMenu();
-
-
+        void createMenuRecursive(QMenu * parent, const json& array);
+        [[nodiscard]] QString cache_mstsc_directory() const;
+        void run_mstsc_link(const QString& fileName);
+        void run_mozilla_firefox(const QString& defPage, const QString& profName);
 
     private slots:
         void onOkClicked();
+        void onCheckBoxClicked(bool checked);
 
-    //tray
+        //tray
         void onTrayTriggered();
         void onTrayMstscConnectToSessionTriggered();
         void onAppExit();
@@ -82,6 +90,9 @@ namespace arcirk::profile_manager{
 
         //http links page
         void onResetHttpList();
+
+        //mstscpage
+        void onResetMstscPage();
     };
 }
 

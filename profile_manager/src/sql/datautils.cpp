@@ -24,13 +24,13 @@ bool DataUtils::verify() {
         return false;
 
     std::vector<std::tuple<tables, json, int>> m_initial_data_table{
-        std::make_tuple(tbDatabaseConfig, pre::json::to_json(database_config()), 0),
+        std::make_tuple(tbDatabaseConfig, pre::json::to_json(database_config()), 1),
         std::make_tuple(tbHttpAddresses, pre::json::to_json(profile_item()), 0),
-        std::make_tuple(tbApplicationConfig, pre::json::to_json(application_config()), 0),
+        std::make_tuple(tbApplicationConfig, pre::json::to_json(application_config()), 2),
         std::make_tuple(tbCertificates, pre::json::to_json(certificates()), 0),
         std::make_tuple(tbContainers, pre::json::to_json(containers()), 0),
         std::make_tuple(tbAvailableCertificates, pre::json::to_json(available_certificates()), 0),
-        std::make_tuple(tbMstscConnections, pre::json::to_json(mstsc_item()), 0),
+        std::make_tuple(tbMstscConnections, pre::json::to_json(mstsc_item()), 1),
     };
     std::vector<std::tuple<views, std::string>> m_initial_data_views{};
 

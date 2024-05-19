@@ -19,7 +19,7 @@ CommandLine::CommandLine(QObject *parent)
 
 }
 
-bool CommandLine::listening()
+bool CommandLine::listening() const
 {
     return m_listening;
 }

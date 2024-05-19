@@ -22,7 +22,7 @@ find_package(alpaca CONFIG REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 LINK_DIRECTORIES(
         ../controls/cmake-build-debug
-        ../tree_model/cmake-build-debug
+        ../arhive/tree_model/cmake-build-debug
 )
 
 set(PROJECT_SOURCES
@@ -59,7 +59,7 @@ set(PROJECT_SOURCES
 target_include_directories(TestControls PRIVATE
         ${Boost_INCLUDE_DIRS}
         ../controls/include
-        ../tree_model
+        ../arhive/tree_model
         )
 
 target_link_libraries(TestControls PRIVATE

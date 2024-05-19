@@ -9,6 +9,7 @@
 #include "../include/tableitemdelegate.h"
 #include "../include/tablerowdialog.h"
 #include <QAction>
+#include "../include/arraydialog.h"
 
 using namespace arcirk::widgets;
 
@@ -146,6 +147,8 @@ void TableWidget::onToolBarItemClicked(const QString &buttonName) {
                 moveUp();
             }else if(btn == table_move_down_item){
                 moveDown();
+            }else if(btn == table_options){
+                open_table_options_dialog();
             }else
                 emit toolBarItemClicked(buttonName);
         }else
@@ -162,6 +165,8 @@ void TableWidget::onToolBarItemClicked(const QString &buttonName) {
             moveUp();
         }else if(btn == table_move_down_item){
             moveDown();
+        }else if(btn == table_options) {
+            open_table_options_dialog();
         }else
             emit toolBarItemClicked(buttonName);
     }
@@ -399,5 +404,55 @@ void TableWidget::onMouseRightItemClick(const QModelIndex &index) {
 void TableWidget::slotCustomMenuRequested(QPoint pos) {
     if(m_standard_context_menu && m_standard_menu){
         m_standard_menu->popup(viewport()->mapToGlobal(pos));
+    }
+}
+
+void TableWidget::hide_default_columns()
+{
+    auto model = get_model();
+    if(!model)
+        return;
+
+    for(auto const& f: model->predefined_fields()){
+        hideColumn(model->column_index(f.c_str()));
+    }
+
+}
+
+TableModel *TableWidget::get_model() const{
+    return qobject_cast<TableModel*>(model());
+}
+
+void TableWidget::hide_not_ordered_columns() {
+    auto model = get_model();
+    if(!model)
+        return;
+    const auto& columns_ordered = model->get_conf()->columns_order();
+    for (auto column = model->get_conf()->columns().begin(); column != model->get_conf()->columns().end(); ++column) {
+        if(columns_ordered.indexOf(column->name.c_str()) == -1)
+            hideColumn(model->column_index(column->name.c_str()));
+    }
+}
+
+void TableWidget::open_table_options_dialog() {
+
+    auto model = get_model();
+    auto columns = model->get_conf()->columns();
+    json rows = json::array();
+    for (auto itr = columns.begin(); itr != columns.end(); ++itr) {
+        auto row = json::object();
+        row["select"] = !isColumnHidden(model->column_index(itr->name.c_str()));
+        row["value"] = itr->alias.empty() ? itr->name : itr->alias;
+        rows += row;
+    }
+    auto result = json::object();
+    result["columns"] = json::array({"select", "value"});
+    result["rows"] = rows;
+    auto dlg = ArrayDialog(result, this);
+    dlg.set_checked(true);
+    dlg.set_toolbar_visible(false);
+    dlg.setWindowTitle("Настройка списка");
+    if(dlg.exec()){
+
     }
 }

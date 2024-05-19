@@ -1,13 +1,14 @@
 #ifndef IS_OS_ANDROID
 #include "../include/treeitemvariant.h"
 #include <QMenu>
-#include "../include/araydialog.h"
+#include "../include/arraydialog.h"
 #include <QFileDialog>
 #include <QLabel>
 #include <QSpinBox>
 #include <QToolButton>
 #include "../include/treeitemcombobox.h"
 #include "../include/texteditdialog.h"
+#include <QCheckBox>
 
 using namespace arcirk::widgets;
 
@@ -26,6 +27,7 @@ TreeItemVariant::TreeItemVariant(QWidget *parent)
 
 void TreeItemVariant::init()
 {
+    m_check_box = false;
     createEditor();
 }
 
@@ -40,7 +42,10 @@ void TreeItemVariant::setText(const QString &text)
 
 QString TreeItemVariant::text() const
 {
-    return m_raw->representation().c_str();
+    if(!m_check_box)
+        return m_raw->representation().c_str();
+    else
+        return "";
 }
 
 void TreeItemVariant::setRole(editor_inner_role role)
@@ -167,10 +172,16 @@ void TreeItemVariant::updateControl()
             }else if(jval.is_boolean()){
                 val = jval.get<bool>();
             }
-            auto m_combo = qobject_cast<QComboBox*>(m_current_widget);
-            if(m_combo){
-                m_combo->setCurrentIndex(val ? 1 : 0);
+            if(!m_check_box){
+                auto m_combo = qobject_cast<QComboBox*>(m_current_widget);
+                if(m_combo){
+                    m_combo->setCurrentIndex(val ? 1 : 0);
+                }
+            }else{
+                auto m_check = qobject_cast<QCheckBox*>(m_current_widget);
+                m_check->setChecked(val);
             }
+
         }
     }else if(type == subtypeByte){
         if(role == editorByteArray){
@@ -227,7 +238,10 @@ void TreeItemVariant::createEditor()
     }else if(m_raw->role() == editor_inner_role::editorNumber){
         m_current_widget = createEditorNumber();
     }else if(m_raw->role() == editor_inner_role::editorBoolean){
-        m_current_widget = createBooleanBox();
+        if(!m_check_box)
+            m_current_widget = createBooleanBox();
+        else
+            m_current_widget = createCheckBox();
     }else if(m_raw->role() == editor_inner_role::editorDataReference){
         m_current_widget = createEditorLabel(false);
     }else{
@@ -274,19 +288,19 @@ void TreeItemVariant::onSelectClicked()
     Q_ASSERT(m_current_widget!=0);
 
     if(m_raw->role() == editorArray){
-        auto dlg = ArrayDialog(m_raw->data()->data, this);
-        if(dlg.exec()){
-            auto result = dlg.result();
-            m_raw->set_value(result);
-//            auto array = verify_array(result);
-//            variant_p_set_array(array, m_raw);
-//            m_value = QVariant(m_raw.representation.c_str());
-            auto m_label = qobject_cast<QLabel*>(m_current_widget);
-            if(m_label){
-                m_label->setText(m_raw->representation().c_str());
-                emit valueChanged(row(), column(), m_value);
-            }
-        }
+//        auto dlg = ArrayDialog(m_raw->data()->data, this);
+//        if(dlg.exec()){
+//            auto result = dlg.result();
+//            m_raw->set_value(result);
+////            auto array = verify_array(result);
+////            variant_p_set_array(array, m_raw);
+////            m_value = QVariant(m_raw.representation.c_str());
+//            auto m_label = qobject_cast<QLabel*>(m_current_widget);
+//            if(m_label){
+//                m_label->setText(m_raw->representation().c_str());
+//                emit valueChanged(row(), column(), m_value);
+//            }
+ //       }
     }else if(m_raw->role() == editorByteArray){
         if(is_table_item) {
             emit selectObject(row(), column(), selectReadFile);
@@ -389,7 +403,11 @@ void TreeItemVariant::onEraseClicked()
 
 void TreeItemVariant::onCheckBoxClicked(bool /*state*/)
 {
-
+    auto m_check = qobject_cast<QCheckBox*>(m_current_widget);
+    if(!m_check)
+        return;
+    m_raw->set_value(m_check->isChecked());
+    emit valueChanged(row(), column(), m_check->isChecked());
 }
 
 void TreeItemVariant::reset() {
@@ -442,6 +460,10 @@ void TreeItemVariant::setComboData() {
     control->setModel(model);
     if(!rep.empty())
         m_raw->data()->from_byte(data);
+}
+
+void TreeItemVariant::checkBox(bool value) {
+    m_check_box = true;
 }
 
 #endif

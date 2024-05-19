@@ -42,7 +42,7 @@ namespace arcirk::database{
 
         std::map<T, int> get_release_tables_versions(){
             std::map<T, int> result;
-            foreach (auto itr , m_initial_data_table) {
+            for (auto itr : m_initial_data_table) {
                 result.insert(std::make_pair(std::get<0>(itr), std::get<2>(itr)));
             }
             return result;
@@ -188,7 +188,7 @@ namespace arcirk::database{
             QSqlQuery query(sql);
             query.exec(temp_query);
             query.exec(QString("drop table %1;").arg(table_name));
-            query.exec(get_ddl(object, table));
+            query.exec(get_ddl(table, object));
             sql.commit();
 
             sql.transaction();
@@ -305,7 +305,7 @@ namespace arcirk::database{
                     bool result = rs.prepare(q_string.c_str());
                     if(!result)
                         std::cerr << rs.lastError().text().toStdString() << std::endl;
-                    foreach(auto t, blobs){
+                    for(auto t : blobs){
                         auto f_name = std::get<0>(t);
                         ByteArray ba = std::get<1>(t);
                         rs.bindValue(f_name.c_str(), QByteArray(reinterpret_cast<const char*>(ba.data()), qsizetype(ba.size())));
@@ -331,7 +331,7 @@ namespace arcirk::database{
                                     {"ref",  to_byte(to_binary(ref))} //ref_to_byte(QUuid::createUuid().toString(QUuid::WithoutBraces).toStdString(), "DatabaseConfig")}
                             }, blobs);
                             rs.prepare(q_string.c_str());
-                            foreach(auto t, blobs){
+                            for(auto t : blobs){
                                 auto f_name = std::get<0>(t);
                                 ByteArray ba = std::get<1>(t);
                                 rs.bindValue(f_name.c_str(), QByteArray(reinterpret_cast<const char*>(ba.data()), qsizetype(ba.size())));

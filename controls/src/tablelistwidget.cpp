@@ -6,6 +6,7 @@
 #include "../include/tablelistwidget.h"
 #include "../ui/ui_TableListWidget.h"
 #include "../../global/variant/item_data.h"
+#include <QHeaderView>
 
 using namespace arcirk::widgets;
 
@@ -22,26 +23,20 @@ TableListWidget::TableListWidget(QWidget *parent, editor_inner_role role) :
     ui->verticalLayout->addWidget(m_table_widget);
     m_table_widget->setTableToolBar(m_tool_bar);
 
-    m_model = new TableModel(this);
-    json table = json::object();
-    auto h_item = header_item_def("value", "Значение");
-    h_item.default_type = editorText;
-    h_item.default_value = to_byte(to_binary(""));
-    h_item.select_type = true;
-    table["columns"] = json::array({pre::json::to_json(h_item)});
-    table["rows"] = json::array();
-    m_model->form_json(table);
+    m_model = new TableModel(pre::json::to_json(table_list_item()), this);
     m_model->set_read_only(false);
-//    m_model->set_columns_aliases(QMap<QString, QString>{
-//            qMakePair("value", "Значение")
-//    });
     m_table_widget->setModel(m_model);
     m_table_widget->set_inners_dialogs(false);
     m_table_widget->allow_default_command(false);
     m_table_widget->header_visible(Qt::Horizontal, false);
     m_table_widget->header_visible(Qt::Vertical, false);
+    m_table_widget->hideColumn(0);
 
     connect(m_table_widget, &TableWidget::toolBarItemClicked, this, &TableListWidget::onToolbarButtonClick);
+
+//    m_table_widget->setColumnWidth(0, 16);
+//    m_table_widget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Custom);
+//   m_table_widget->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
 
 }
 
@@ -79,25 +74,33 @@ void TableListWidget::close_editor() {
     m_table_widget->close_editor();
 }
 
-void TableListWidget::set_array(const arcirk::BJson &data) {
+void TableListWidget::set_array(const json& data) {
 
     m_model->clear();
-    if(!data.empty()){
-        //auto str = byte_array_to_string(data);
-        auto js = json::from_cbor(data);
-        if(js.is_string()){
-            auto str = js.get<std::string>();
-            if(json::accept(str)){
-                auto arr = json::parse(str);
-                if(arr.is_array()){
-                    for (auto itr = arr.begin(); itr != arr.end() ; ++itr) {
-                        auto row = json::object();
-                        row["value"] = *itr;
-                        m_model->add(row);
-                    }
-                }
-            }
-        }
+//    if(!data.empty()){
+        m_model->from_json(data, false);
+//        auto js = json::from_cbor(data);
+//        if(js.is_string()){
+//            auto str = js.get<std::string>();
+//            if(json::accept(str)){
+//                auto arr = json::parse(str);
+//                if(arr.is_array()){
+//                    for (auto itr = arr.begin(); itr != arr.end() ; ++itr) {
+//                        auto row = json::object();
+//                        row["value"] = *itr;
+//                        m_model->add(row);
+//                    }
+//                }
+//            }
+//        }
 
-    }
+ //   }
+}
+
+void TableListWidget::set_toolbar_visible(bool value) {
+    m_tool_bar->setVisible(value);
+}
+
+void TableListWidget::set_checked(bool value) {
+    m_table_widget->setColumnHidden(0, value);
 }

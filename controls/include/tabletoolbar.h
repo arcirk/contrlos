@@ -19,6 +19,7 @@ enum table_toolbar_buttons{
     table_move_to_item,
     table_move_up_item,
     table_move_down_item,
+    table_options,
     table_btnINVALID = -1
 };
 NLOHMANN_JSON_SERIALIZE_ENUM(table_toolbar_buttons, {
@@ -30,6 +31,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(table_toolbar_buttons, {
     {table_move_to_item, "table_move_to_item"}  ,
     {table_move_up_item, "table_move_up_item"}  ,
     {table_move_down_item, "table_move_down_item"}  ,
+    {table_options, "table_options"}  ,
 })
 
 namespace arcirk::widgets {

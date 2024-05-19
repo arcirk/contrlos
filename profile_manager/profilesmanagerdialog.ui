@@ -55,7 +55,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="tabRDP">
       <attribute name="title">
        <string>Удаленный доступ</string>
       </attribute>
@@ -77,6 +77,16 @@
           </widget>
          </item>
         </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabCerts">
+      <attribute name="title">
+       <string>Сертификаты</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0">
+        <layout class="QVBoxLayout" name="verticalLayoutCerts"/>
        </item>
       </layout>
      </widget>

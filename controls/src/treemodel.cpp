@@ -140,19 +140,28 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const {
     return {};
 }
 
-void TreeModel::form_json(const json &table) {
+void TreeModel::form_json(const json &table, bool resel_columns) {
 
     Q_ASSERT(table.is_object());
     Q_ASSERT(table.find("columns")!=table.end());
     Q_ASSERT(table.find("rows")!=table.end());
 
-    beginResetModel();
-    m_conf->reset_columns(table["columns"]);
-    endResetModel();
+    if(resel_columns){
+        beginResetModel();
+        m_conf->reset_columns(table["columns"]);
+        endResetModel();
+    }
 
     for (auto itr = table["rows"].begin(); itr != table["rows"].end(); ++itr) {
         const auto& object = *itr;
-        add(object);
+        json j_parent = object.value("parent", BJson());
+        QModelIndex parent = QModelIndex();
+        if(!j_parent.empty()){
+            auto item_ba = item_data(j_parent);
+            auto uuid = QUuid::fromRfc4122(item_ba.data()->data);
+            parent = find(uuid);
+        }
+        add(object, parent);
     }
 
 }
@@ -166,6 +175,8 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int rol
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole){;
         return m_conf->column_name(section, true);
     }
+//    if(role == Qt::SizeHintRole)
+//        return m_conf->size();
 
     return QAbstractItemModel::headerData(section, orientation, role);
 }
@@ -225,16 +236,6 @@ void TreeModel::clear()
 
 json TreeModel::to_json() {
     return to_table_model(QModelIndex());
-//    auto columns_j = json::array();
-//    for (const auto& itr: m_conf->columns()) {
-//        columns_j += itr.name;
-//    }
-//    auto rows = to_array();
-//
-//    return json::object({
-//                                {"columns" , columns_j},
-//                                {"rows", rows}
-//                        });
 }
 
 json TreeModel::to_array(const QModelIndex &parent, bool hierarchy, bool group_only) {
@@ -287,13 +288,15 @@ bool TreeModel::move_up(const QModelIndex &index) {
     if(index.row() < 1)
         return false;
 
+    auto root = getItem(index.parent());
+
     beginMoveRows(index.parent(), index.row(), index.row(), index.parent(), index.row()-1);
     auto itemInfo = getItem(index);
-    Q_ASSERT(itemInfo != 0);
+    Q_ASSERT(itemInfo != nullptr);
     auto pos = itemInfo->childNumber();
 
-    if(rootItem != 0)
-        rootItem->moveChildren(pos, pos - 1);
+    if(root != nullptr)
+        root->moveChildren(pos, pos - 1);
 
     endMoveRows();
 
@@ -305,14 +308,16 @@ bool TreeModel::move_down(const QModelIndex &index) {
     if(index.row() > rowCount(index.parent()) - 2)
         return false;
 
+    auto root = getItem(index.parent());
+
     beginMoveRows(index.parent(), index.row(), index.row(), index.parent(), index.row()+1);
     auto itemInfo = getItem(index);
-    Q_ASSERT(itemInfo != 0);
+    Q_ASSERT(itemInfo != nullptr);
     auto pos = itemInfo->childNumber();
 
-    if(rootItem != 0){
-        beginMoveRows(index.parent(), pos, pos, index.parent(), (pos >= rootItem->childCount()) ? rootItem->childCount() : (pos + 2));
-        rootItem->moveChildren(pos, pos + 1);
+    if(root != nullptr){
+        beginMoveRows(index.parent(), pos, pos, index.parent(), (pos >= root->childCount()) ? root->childCount() : (pos + 2));
+        root->moveChildren(pos, pos + 1);
     }
 
     endMoveRows();
@@ -622,11 +627,11 @@ json TreeModel::to_table_model(const QModelIndex &parent, bool group_only, bool 
                         });
 }
 
-void TreeModel::to_array_recursive(const QModelIndex &parent, json result, bool group_only) {
+void TreeModel::to_array_recursive(const QModelIndex &parent, json& result, bool group_only) {
     for (int i = 0; i < rowCount(parent); ++i) {
         auto index = this->index(i, 0, parent);
         auto item = getItem(index);
-        result += item->to_object();
+        //result += item->to_object();
         if(!group_only) {
             result += item->to_object();
             to_array_recursive(index, result, group_only);
@@ -639,7 +644,7 @@ void TreeModel::to_array_recursive(const QModelIndex &parent, json result, bool 
     }
 }
 
-void TreeModel::to_array_recursive(const QString& column, const QModelIndex &parent, json result, bool group_only) {
+void TreeModel::to_array_recursive(const QString& column, const QModelIndex &parent, json& result, bool group_only) {
     if(columns().indexOf(column) == -1)
         return;
     for (int i = 0; i < rowCount(parent); ++i) {
@@ -684,4 +689,61 @@ void TreeModel::move_to(const QModelIndex &index, const QModelIndex &new_parent)
     parentInfo->appendChild(itemInfo);
     oldParentInfo->removeChildren(index.row(), 1);
     endMoveRows();
+}
+
+void TreeModel::to_tree(json& result, const QModelIndex &parent) {
+
+    if(!result.is_array())
+        result = json::array();
+
+    auto items = json::array();
+    auto parentInfo = getItem(parent);
+    auto object = parentInfo->to_object();
+
+    for (int i = 0; i < rowCount(parent); ++i) {
+        auto index = this->index(i, 0, parent);
+        auto itemInfo = getItem(index);
+        auto child = itemInfo->to_object();
+        if(itemInfo->is_group()){
+            to_tree(items, index);
+        }else{
+            child["items"] = json::array();
+            items += child;
+        }
+    }
+    object["items"] = items;
+    result += object;
+}
+
+int TreeModel::first_element_position(const QModelIndex &index) {
+
+    auto item = getItem(index);
+    bool group = item->is_group();
+    int position = 0;
+
+    for (int i = 0; i < rowCount(index.parent()); ++i) {
+        auto cur_index = this->index(i, 0, index.parent());
+        if(group == is_group(cur_index)){
+            position = cur_index.row();
+            break;
+        }
+    }
+
+    return position;
+}
+
+int TreeModel::last_element_position(const QModelIndex &index) {
+
+    auto item = getItem(index);
+    bool group = item->is_group();
+    int position = 0;
+
+    for (int i = 0; i < rowCount(index.parent()); ++i) {
+        auto cur_index = this->index(i, 0, index.parent());
+        if(group == is_group(cur_index)){
+            position = cur_index.row();
+        }
+    }
+
+    return position;
 }

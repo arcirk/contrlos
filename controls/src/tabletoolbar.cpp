@@ -21,6 +21,7 @@ TableToolBar::TableToolBar(QWidget *parent) :
     ui->btnMoveDown->setProperty("itemName", arcirk::enum_synonym(table_move_down_item).c_str());
     ui->btnMoveUp->setProperty("itemName", arcirk::enum_synonym(table_move_up_item).c_str());
     ui->btnMoveTo->setProperty("itemName", arcirk::enum_synonym(table_move_to_item).c_str());
+    ui->btnTableOpt->setProperty("itemName", arcirk::enum_synonym(table_options).c_str());
 
     connect(ui->btnAdd, &QToolButton::clicked, this, &TableToolBar::onButtonClicked);
     connect(ui->btnAddGroup, &QToolButton::clicked, this, &TableToolBar::onButtonClicked);
@@ -29,6 +30,7 @@ TableToolBar::TableToolBar(QWidget *parent) :
     connect(ui->btnMoveDown, &QToolButton::clicked, this, &TableToolBar::onButtonClicked);
     connect(ui->btnMoveUp, &QToolButton::clicked, this, &TableToolBar::onButtonClicked);
     connect(ui->btnMoveTo, &QToolButton::clicked, this, &TableToolBar::onButtonClicked);
+    connect(ui->btnTableOpt, &QToolButton::clicked, this, &TableToolBar::onButtonClicked);
 
     m_buttons.insert(arcirk::enum_synonym(table_add_item).c_str(), ui->btnAdd);
     m_buttons.insert(arcirk::enum_synonym(table_add_group).c_str(), ui->btnAddGroup);
@@ -37,6 +39,7 @@ TableToolBar::TableToolBar(QWidget *parent) :
     m_buttons.insert(arcirk::enum_synonym(table_move_down_item).c_str(), ui->btnMoveDown);
     m_buttons.insert(arcirk::enum_synonym(table_move_up_item).c_str(), ui->btnMoveUp);
     m_buttons.insert(arcirk::enum_synonym(table_move_to_item).c_str(), ui->btnMoveTo);
+    m_buttons.insert(arcirk::enum_synonym(table_options).c_str(), ui->btnTableOpt);
 
     m_context_menu = new QMenu(this);
     auto action = new QAction(QIcon("://img/itemAdd.png"), "Добавить", m_context_menu);
@@ -75,8 +78,15 @@ TableToolBar::TableToolBar(QWidget *parent) :
     connect(action, &QAction::triggered, this, &TableToolBar::onButtonClicked);
     m_context_menu->addAction(action);
     m_map_commands.insert(table_move_down_item, action);
-
+    m_context_menu->addSeparator();
+    action = new QAction(QIcon(":/img/options.png"), "Настройка таблицы", m_context_menu);
+    action->setProperty("itemName", arcirk::enum_synonym(table_options).c_str());
+    connect(action, &QAction::triggered, this, &TableToolBar::onButtonClicked);
+    m_context_menu->addAction(action);
+    m_map_commands.insert(table_options, action);
     setHierarchyState(false);
+
+    ui->btnTableOpt->setVisible(false);
 }
 
 TableToolBar::~TableToolBar()
@@ -102,6 +112,8 @@ void TableToolBar::setButtonEnabled(const QString &name, bool value)
         ui->btnMoveUp->setEnabled(value);
     else if(btn == table_move_to_item)
         ui->btnMoveTo->setEnabled(value);
+    else if(btn == table_options)
+        ui->btnTableOpt->setEnabled(value);
 
     auto itr = m_map_commands.find(btn);
     if(itr != m_map_commands.end())
@@ -127,6 +139,8 @@ void TableToolBar::setButtonVisible(const QString &name, bool value)
         ui->btnMoveUp->setVisible(value);
     else if(btn == table_move_to_item)
         ui->btnMoveUp->setVisible(value);
+    else if(btn == table_options)
+        ui->btnTableOpt->setVisible(value);
 
     auto itr = m_map_commands.find(btn);
     if(itr != m_map_commands.end())
@@ -163,7 +177,7 @@ void TableToolBar::addButton(const QString &name, const QIcon &ico, bool checkab
     btn->setEnabled(false);
     btn->setToolTip(toolTip);
     m_buttons.insert(name, btn);
-    int pos = ui->horizontalLayout_2->count() - 1;
+    int pos = ui->horizontalLayout_2->count() - 2;
     if(position != -1)
         pos = position;
     ui->horizontalLayout_2->insertWidget( pos, btn);

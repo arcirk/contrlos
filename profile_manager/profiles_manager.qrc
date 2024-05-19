@@ -11,5 +11,6 @@
         <file>res/img/mstsc.png</file>
         <file>res/img/mstsc.svg</file>
         <file>res/img/mstscUsers.png</file>
+        <file>res/img/cert16NoKey.png</file>
     </qresource>
 </RCC>

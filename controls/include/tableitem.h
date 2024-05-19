@@ -32,6 +32,8 @@ namespace arcirk::widgets {
             variant_map to_map() const;
 
             QUuid ref() const;
+            bool predefined() const;
+
         private:
             std::shared_ptr<TableConf>& m_conf;
             TableItem* m_parentItem;
@@ -40,6 +42,7 @@ namespace arcirk::widgets {
             QList <TableItem*> m_childItems;
             QMap<QString, bool> m_read_only;
             QMap<QString, QIcon> m_icon;
+            bool m_predefined;
 
             void init(const json& data);
     };

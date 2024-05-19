@@ -3,15 +3,20 @@
 //
 
 // You may need to build the project (run Qt uic code generator) to get "ui_MstscPage.h" resolved
-
+#include <itree.hpp>
 #include "../include/mstscpage.h"
 #include "../ui/ui_mstscpage.h"
-#include <itree.hpp>
 #include "../include/mstscitemdialog.h"
 #include "../include/sql/datautils.h"
 #include "../global/sql/query_builder.hpp"
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QHeaderView>
+#include <QStandardPaths>
+#include <QDir>
+#include <QFile>
+#include <QMessageBox>
+#include <sh/commandline.h>
 
 using namespace arcirk::profile_manager;
 using namespace arcirk::database;
@@ -37,6 +42,8 @@ MstscPage::MstscPage(QSqlDatabase& db, QWidget *parent) :
     connect(m_tree, &TreeViewWidget::itemClicked, this, &MstscPage::onCurrentChanged);
     connect(m_tree, &TreeViewWidget::tableItemChanged, this, &MstscPage::onTableItemChanged);
     connect(m_tree, &TreeViewWidget::removeTreeRow, this, &MstscPage::onRemoveItem);
+    connect(m_tree, &TreeViewWidget::rowMove, this, &MstscPage::onRowMove);
+
 }
 
 MstscPage::~MstscPage() {
@@ -94,7 +101,7 @@ void MstscPage::onToolBarItemClicked(const QString &buttonName) {
         m_tree->moveDown();
     }else{
         if(buttonName == "mstsc"){
-
+            openMstscEditDialog();
         }
     }
 
@@ -118,8 +125,10 @@ void MstscPage::openItemEditDialog(bool isNew) {
         item.def_port = true;
         item.port = 3389;
     }else{
-        if(model->is_group(index))
+        if(model->is_group(index)){
+            m_tree->openOpenEditDialog();
             return;
+        }
         item = model->object(index);
     }
     auto dlg = MstscItemDialog(item, this);
@@ -132,8 +141,11 @@ void MstscPage::openItemEditDialog(bool isNew) {
             model->set_struct(item, index);
         }
     }
-    if(new_index.isValid())
+    if(new_index.isValid()){
         update_database(new_index);
+        emit reset();
+    }
+
 
 }
 
@@ -155,7 +167,8 @@ void MstscPage::initData() {
         return;
     using namespace arcirk::database::builder;
     auto query = builder::query_builder();
-    auto rs = QSqlQuery(query.select().from(enum_synonym(tbMstscConnections)).prepare().c_str(), m_db);
+    //auto rs = QSqlQuery(query.select().from(enum_synonym(tbMstscConnections)).prepare().c_str(), m_db);
+    auto rs = QSqlQuery(query.select().from("MstscItemView").prepare().c_str(), m_db);
     rs.exec();
 
     while (rs.next()){
@@ -168,25 +181,7 @@ void MstscPage::initData() {
             if(item_json.find(column_name) == item_json.end())
                 continue;
             QVariant val = row.field(i).value();
-//            auto t = val.typeName();
-//            if(t)
-//                std::cout << val.typeName() << " " << column_name << std::endl;
-            if(val.userType() == QMetaType::QString && item_json[column_name].is_string())
-                item_json[column_name] = val.toString().toStdString();
-            else if(val.userType() == QMetaType::Double && item_json[column_name].is_number())
-                item_json[column_name] = val.toDouble();
-            else if(val.userType() == QMetaType::Int && item_json[column_name].is_number())
-                item_json[column_name] = val.toInt();
-            else if(val.userType() == QMetaType::Int && item_json[column_name].is_boolean())
-                item_json[column_name] = val.toInt() > 0;
-            else if(val.userType() == QMetaType::LongLong && item_json[column_name].is_boolean())
-                item_json[column_name] = val.toLongLong() > 0;
-            else if(val.userType() == QMetaType::LongLong && item_json[column_name].is_number())
-                item_json[column_name] = val.toLongLong();
-            else if(val.userType() == QMetaType::ULongLong && item_json[column_name].is_number())
-                item_json[column_name] = val.toULongLong();
-            else if(val.userType() == QMetaType::QByteArray && item_json[column_name].is_array())
-                item_json[column_name] = qbyte_to_byte(val.toByteArray());
+            item_json[column_name] = from_variant(val, item_json[column_name].type());
         }
         item = pre::json::from_json<mstsc_item>(item_json);
         auto parent_data = item_data(item_json["parent"]);
@@ -205,6 +200,8 @@ void MstscPage::initData() {
 //            }
         }
     }
+
+    //m_tree->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 }
 
 void MstscPage::onCurrentChanged(const QModelIndex &current) {
@@ -234,6 +231,7 @@ void MstscPage::update_database(const QModelIndex &index) {
 
     auto model = (ITree<mstsc_item>*)m_tree->get_model();
     auto object = model->object(index);
+    object.pos = index.row();
 
     auto query = builder::query_builder();
     auto rs = QSqlQuery(m_db);
@@ -277,14 +275,221 @@ void MstscPage::update_database(const QModelIndex &index) {
 
 void MstscPage::update_database(const json &object) {
 
-    if(!m_db.isOpen())
-        return;
-    using namespace arcirk::database::builder;
-
-    auto st = arcirk::secure_serialization<mstsc_item>(object);
+//    if(!m_db.isOpen())
+//        return;
+//    using namespace arcirk::database::builder;
+//
+//    auto st = arcirk::secure_serialization<mstsc_item>(object);
 }
 
 void MstscPage::onTableItemChanged(const QModelIndex &index) {
     update_database(index);
+    emit reset();
+}
+
+QString MstscPage::cache_mstsc_directory() const {
+    auto app_data = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    app_data.append("/mstsc");
+    QDir f(app_data);
+    if(!f.exists())
+        f.mkpath(f.path());
+    return f.path();
+}
+
+QString MstscPage::rdp_file_text() {
+    QString text = "screen mode id:i:%1\n"
+                   "use multimon:i:0\n"
+                   "desktopwidth:i:%2\n"
+                   "desktopheight:i:%3\n"
+                   "session bpp:i:32\n"
+                   "winposstr:s:0,3,0,0,%2,%3\n"
+                   "compression:i:1\n"
+                   "keyboardhook:i:2\n"
+                   "audiocapturemode:i:0\n"
+                   "videoplaybackmode:i:1\n"
+                   "connection type:i:7\n"
+                   "networkautodetect:i:1\n"
+                   "bandwidthautodetect:i:1\n"
+                   "displayconnectionbar:i:1\n"
+                   "username:s:%4\n"
+                   "enableworkspacereconnect:i:0\n"
+                   "disable wallpaper:i:0\n"
+                   "allow font smoothing:i:0\n"
+                   "allow desktop composition:i:0\n"
+                   "disable full window drag:i:1\n"
+                   "disable menu anims:i:1\n"
+                   "disable themes:i:0\n"
+                   "disable cursor setting:i:0\n"
+                   "bitmapcachepersistenable:i:1\n"
+                   "full address:s:%5\n"
+                   "audiomode:i:0\n"
+                   "redirectprinters:i:1\n"
+                   "redirectcomports:i:0\n"
+                   "redirectsmartcards:i:1\n"
+                   "redirectclipboard:i:1\n"
+                   "redirectposdevices:i:0\n"
+                   "autoreconnection enabled:i:1\n"
+                   "authentication level:i:2\n"
+                   "prompt for credentials:i:0\n"
+                   "negotiate security layer:i:1\n"
+                   "remoteapplicationmode:i:0\n"
+                   "alternate shell:s:\n"
+                   "shell working directory:s:\n"
+                   "gatewayhostname:s:\n"
+                   "gatewayusagemethod:i:4\n"
+                   "gatewaycredentialssource:i:4\n"
+                   "gatewayprofileusagemethod:i:0\n"
+                   "promptcredentialonce:i:0\n"
+                   "gatewaybrokeringtype:i:0\n"
+                   "use redirection server name:i:0\n"
+                   "rdgiskdcproxy:i:0\n"
+                   "kdcproxyname:s:";
+
+    return text;
+}
+
+void MstscPage::openMstscEditDialog(const QUuid& uuid) {
+
+    QString file_name;
+    auto model = (ITree<mstsc_item>*)m_tree->get_model();
+    mstsc_item object;
+
+    if(uuid.isNull()){
+        auto current_index = m_tree->current_index();
+        if(!current_index.isValid() || model->is_group(current_index))
+            return;
+
+        QDir dir(cache_mstsc_directory());
+        object = model->object(current_index);
+        file_name = dir.path() + "/";
+        file_name.append(object.name.c_str());
+        file_name.append(".rdp");
+    }else{
+        auto current_index = model->find(uuid);
+        if(!current_index.isValid() || model->is_group(current_index))
+            return;
+        QDir dir(cache_mstsc_directory());
+        object = model->object(current_index);
+        file_name = dir.path() + "/";
+        file_name.append(object.name.c_str());
+        file_name.append(".rdp");
+    }
+
+    QFile f(file_name);
+
+    if(!f.exists()) {
+        if (f.open(QIODevice::WriteOnly)) {
+            int screenMode = 2;
+            if (object.not_full_window) {
+                screenMode = 1;
+            }
+            QString rdp = rdp_file_text().arg(QString::number(screenMode), QString::number(object.width),
+                                              QString::number(object.height), object.user.c_str(),
+                                              object.address.c_str());
+            f.write(rdp.toUtf8());
+            f.close();
+        }
+    }
+
+    editMstsc(f.fileName());
+
+}
+
+void MstscPage::editMstsc(const QString &fileName) {
+
+    QString command;
+
+    QFile f(fileName);
+    if(!f.exists()){
+        QMessageBox::critical(this, "Ошибка", "Настройка не найдена!");
+        return;
+    }
+
+    command.append("mstsc /edit \"" + QDir::toNativeSeparators(fileName) + "\" & exit");
+
+    auto cmd = CommandLine(this);
+    QEventLoop loop{};
+
+    auto started = [&cmd, &command]() -> void
+    {
+        cmd.send(command, CmdCommand::mstscEditFile);
+    };
+    loop.connect(&cmd, &CommandLine::started_process, started);
+
+    auto output = [](const QByteArray& data) -> void
+    {
+        std::string result_ = to_utf(data.toStdString(), DEFAULT_CHARSET_);
+    };
+    loop.connect(&cmd, &CommandLine::output, output);
+
+    auto err = [&loop, &cmd](const QString& data, int command) -> void
+    {
+        qDebug() << __FUNCTION__ << data << command;
+        cmd.stop();
+        loop.quit();
+    };
+    loop.connect(&cmd, &CommandLine::error, err);
+
+    auto state = [&loop]() -> void
+    {
+        loop.quit();
+    };
+    loop.connect(&cmd, &CommandLine::complete, state);
+
+    cmd.start();
+    loop.exec();
+}
+
+json MstscPage::get_mstsc_items() const {
+    auto model = (ITree<mstsc_item>*)m_tree->get_model();
+    auto root_uuid = QUuid::fromString("416a9257-788a-4115-a978-e1a4e6194f29");
+    auto root = model->find(root_uuid);
+    auto tree = json::object();
+    model->to_tree(tree, root);
+    return tree;
+}
+
+void MstscPage::onRowMove() {
+
+    if(!m_db.isOpen())
+        return;
+    using namespace arcirk::database::builder;
+
+    auto model = m_tree->get_model();
+    auto root_uuid = QUuid::fromString("416a9257-788a-4115-a978-e1a4e6194f29");
+    auto root = model->find(root_uuid);
+
+    m_db.transaction();
+    update_rows_positions(model, root);
+    m_db.commit();
+
+    emit reset();
+}
+
+void MstscPage::update_rows_positions(TreeModel *model, const QModelIndex &parent) {
+
+    auto query = builder::query_builder();
+    auto rs = QSqlQuery(m_db);
+
+    for (int i = 0; i < model->rowCount(parent); ++i) {
+        query.clear();
+        rs.clear();
+        auto index = model->index(i, 0, parent);
+        query.use(json::object({
+            {"pos", index.row()}
+        }));
+        auto object = pre::json::from_json<mstsc_item>(model->to_object(index));
+        std::vector<std::tuple<std::string, arcirk::ByteArray>> blobs;
+        rs.prepare(query.update(enum_synonym(tbMstscConnections)).where(json{{"ref", object.ref}}, blobs).prepare().c_str());
+        for(auto itr : blobs){
+            std::string key = std::get<0>(itr);
+            ByteArray b = std::get<1>(itr);
+            auto qba = QByteArray(reinterpret_cast<const char*>(b.data()), (qsizetype)b.size());
+            rs.bindValue(key.c_str(), qba);
+        }
+        rs.exec();
+        if(model->rowCount(index) > 0)
+            update_rows_positions(model, index);
+    }
 }
 

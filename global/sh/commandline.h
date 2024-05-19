@@ -4,7 +4,6 @@
 #include <QObject>
 #include "../global.hpp"
 #include <QProcess>
-//#include <QTextCodec>
 
 #define DEFAULT_CHARSET_ "CP866"
 #define DEFAULT_CHARSET_WIN "CP1251"
@@ -16,7 +15,7 @@ class CommandLine : public QObject
     Q_OBJECT
 public:
     explicit CommandLine(QObject *parent = nullptr);
-    bool listening();
+    bool listening() const;
     void setWorkingDirectory(const QString& value);
 
 public slots:

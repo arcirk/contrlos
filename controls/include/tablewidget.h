@@ -9,25 +9,9 @@
 #include "QTableView"
 #include "tabletoolbar.h"
 #include <QMenu>
+#include "tablemodel.h"
 
 namespace arcirk::widgets{
-
-//    enum table_toolbar_buttons{
-//        table_add_item,
-//        table_delete_item,
-//        table_edit_item,
-//        table_move_down_item,
-//        table_move_up_item,
-//        table_btnINVALID = -1
-//    };
-//    NLOHMANN_JSON_SERIALIZE_ENUM(table_toolbar_buttons, {
-//        {table_btnINVALID, nullptr}    ,
-//        {table_add_item, "table_add_item"}  ,
-//        {table_delete_item, "table_delete_item"}  ,
-//        {table_edit_item, "table_edit_item"}  ,
-//        {table_move_down_item, "table_move_down_item"}  ,
-//        {table_move_up_item, "table_move_up_item"}  ,
-//    })
 
     class CONTROLS_EXPORT TableWidget  : public QTableView{
     Q_OBJECT
@@ -50,8 +34,14 @@ namespace arcirk::widgets{
         void removeRow();
         void clear();
 
+        TableModel* get_model() const;
+
         void header_visible(Qt::Orientation orientation, bool value);
         void close_editor();
+        void hide_default_columns();
+        void hide_not_ordered_columns();
+
+        void open_table_options_dialog();
 
     private:
         bool m_inners_dialogs;

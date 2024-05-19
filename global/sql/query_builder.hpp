@@ -286,7 +286,7 @@ using namespace soci;
         json item = e;
         bool is_id = false;
         if(item.find("ref") == item.end())
-            item["ref"] = ByteArray();
+            item["ref"] = BJson();
 
         for (auto itr = item.items().begin(); itr != item.items().end(); ++itr) {
             sql_field f;

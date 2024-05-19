@@ -25,7 +25,10 @@ namespace arcirk::widgets {
 
         void selectType(bool value) override;
 
+        void checkBox(bool value);
+
     private:
+        bool m_check_box;
 
         void createEditor();
 

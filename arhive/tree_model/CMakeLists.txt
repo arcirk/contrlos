@@ -16,9 +16,9 @@ find_package(alpaca CONFIG REQUIRED)
 
 include_directories(
         ${Boost_INCLUDE_DIRS}
-        ../controls/include
+        ../../controls/include
 )
-LINK_DIRECTORIES(../controls/cmake-build-debug)
+LINK_DIRECTORIES(../../controls/cmake-build-debug)
 
 add_library(tree_model SHARED
         treeitemmodel.h
@@ -53,7 +53,7 @@ add_library(tree_model SHARED
 
 target_include_directories(tree_model PRIVATE
         ${Boost_INCLUDE_DIRS}
-        ../controls/include
+        ../../controls/include
         )
 
 target_link_libraries(tree_model PRIVATE

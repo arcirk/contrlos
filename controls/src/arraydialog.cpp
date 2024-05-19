@@ -1,4 +1,4 @@
-#include "../include/araydialog.h"
+#include "../include/arraydialog.h"
 #include "../ui/ui_araydialog.h"
 #include <QStringList>
 #include <QToolButton>
@@ -17,17 +17,17 @@ void ArrayDialog::accept()
     return QDialog::accept();
 }
 
-ArrayDialog::ArrayDialog(const arcirk::BJson &data, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ArrayDialog)
-{
-    ui->setupUi(this);
-
-    m_list = new TableListWidget(this);
-    ui->verticalLayout->addWidget(m_list);
-    m_list->set_array(data);
-
-}
+//ArrayDialog::ArrayDialog(const arcirk::BJson &data, QWidget *parent) :
+//    QDialog(parent),
+//    ui(new Ui::ArrayDialog)
+//{
+//    ui->setupUi(this);
+//
+//    m_list = new TableListWidget(this);
+//    ui->verticalLayout->addWidget(m_list);
+//    m_list->set_array(data);
+//
+//}
 
 ArrayDialog::ArrayDialog(const json& data, QWidget *parent) :
     QDialog(parent),
@@ -37,10 +37,19 @@ ArrayDialog::ArrayDialog(const json& data, QWidget *parent) :
 
     m_list = new TableListWidget(this);
     ui->verticalLayout->addWidget(m_list);
+    m_list->set_array(data);
 }
 
 ArrayDialog::~ArrayDialog()
 {
     delete ui;
+}
+
+void ArrayDialog::set_toolbar_visible(bool value) {
+    m_list->set_toolbar_visible(value);
+}
+
+void ArrayDialog::set_checked(bool value) {
+    m_list->set_checked(value);
 }
 

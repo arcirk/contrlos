@@ -24,7 +24,7 @@ add_library(controls SHARED
           include/treeitemtextedit.h
           include/treeitemtextline.h
           include/treeitemvariant.h
-          include/araydialog.h
+        include/arraydialog.h
           include/texteditdialog.h
           src/treeitemwidget.cpp
           src/treeitemcombobox.cpp
@@ -33,7 +33,7 @@ add_library(controls SHARED
           src/treeitemtextline.cpp
           src/treeitemvariant.cpp
           src/treeitemcheckbox.cpp
-          src/araydialog.cpp
+        src/arraydialog.cpp
           src/texteditdialog.cpp
           ui/araydialog.ui
           ui/texteditdialog.ui

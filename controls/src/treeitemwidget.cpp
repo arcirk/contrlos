@@ -206,6 +206,7 @@ QWidget *TreeItemWidget::createCheckBox()
     m_erase_button = false;
     m_select_type_button = false;
     auto m_check = new QCheckBox(this);
+    m_check->setText("");
     this->layout()->addWidget(m_check);
     this->layout()->setAlignment(m_check, Qt::AlignHCenter | Qt::AlignVCenter);
 

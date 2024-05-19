@@ -14,11 +14,11 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Pdf Network)
 find_package(nlohmann_json CONFIG REQUIRED)
 include_directories(
         ${Boost_INCLUDE_DIRS}
-        ../../tree_model
+        ../../arhive/tree_model
 )
 LINK_DIRECTORIES(
 #        ../controls/cmake-build-debug
-        ../../tree_model/cmake-build-debug
+        ../../arhive/tree_model/cmake-build-debug
 )
 add_library(bksplugin SHARED
         ../include/iplugin.hpp
@@ -32,7 +32,7 @@ add_library(bksplugin SHARED
 
 target_include_directories(bksplugin PRIVATE
         ${Boost_INCLUDE_DIRS}
-        ../../tree_model
+        ../../arhive/tree_model
         )
 
 target_link_libraries(bksplugin PRIVATE

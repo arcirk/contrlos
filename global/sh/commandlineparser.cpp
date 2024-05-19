@@ -3,6 +3,7 @@
 #include <QRegularExpression>
 #include <QStringLiteral>
 #include <QDir>
+#include "../global.hpp"
 
 //[[maybe_unused]] void certInfoRUtoEN(QString& info){
 //
@@ -166,7 +167,7 @@ nlohmann::json CommandLineParser::parse(const QString &response, CmdCommand comm
             }else
                 return {};
 
-        }else if(command == csptestGetConteiners){
+        }else if(command == csptestGetContainers){
             auto ind = response.indexOf("[ErrorCode: 0x00000000]");
             if(ind > 0){
                 QString tmp(response);
@@ -191,7 +192,7 @@ nlohmann::json CommandLineParser::parse(const QString &response, CmdCommand comm
                     if(m.hasMatch()){
                         auto name = m.captured(0);
                         auto vol = key.left(key.length() - name.length());
-                        auto type = arcirk::cryptography::type_storgare(vol.toStdString());
+                        auto type = arcirk::cryptography::type_storage(vol.toStdString());
                         row["name"] = name.toStdString();
                         row["volume"] = vol.toStdString();
                         row["type"] = type;
@@ -203,7 +204,7 @@ nlohmann::json CommandLineParser::parse(const QString &response, CmdCommand comm
                 return obj;
             }else
                 return {};
-        }else if(command == csptestContainerFnfo){
+        }else if(command == csptestContainerInfo){
             auto ind = response.indexOf("KP_CERTIFICATE:");
             if(ind > 0){
                 QString str = response.right(response.length() - ind);

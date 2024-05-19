@@ -65,7 +65,10 @@ set(PROJECT_SOURCES
         ui/mstscpage.ui
         src/mstscitemdialog.cpp
         include/mstscitemdialog.h
-        ui/mstscitemdialog.ui)
+        ui/mstscitemdialog.ui
+        include/certspage.h
+        src/certspage.cpp
+        ui/certspage.ui)
 
 qt_add_executable(ProfileManager
         MANUAL_FINALIZATION

@@ -8,6 +8,7 @@
 #include <QDebug>
 #include "../include/tableitemdelegate.h"
 #include "../include/treeitemvariant.h"
+#include "../include/treeitemcheckbox.h"
 #include <QFileDialog>
 #include <QMouseEvent>
 #include <QEvent>
@@ -41,6 +42,8 @@ void TableItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index)
     if(data.isValid() && data.typeId() == QMetaType::QByteArray){
         auto control = qobject_cast<TreeItemVariant*>(editor);
         if(control){
+            if(role == editor_inner_role::editorBoolean)
+                control->checkBox(true);
             control->setRole(role);
             control->setData(data);
             control->selectType(select_type);
@@ -70,13 +73,13 @@ void TableItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 
 void TableItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const {
 
-    if(m_current_index == std::make_pair(index.row(),index.column())){
-        auto item_subtype = (variant_subtype)index.data(TABLE_ITEM_SUBTYPE).toInt();
-        if(item_subtype == subtypeByte)
-            return;
-        else
-            return QStyledItemDelegate::paint(painter, option, index);
-    }
+//    if(m_current_index == std::make_pair(index.row(),index.column())){
+//        auto item_subtype = (variant_subtype)index.data(TABLE_ITEM_SUBTYPE).toInt();
+//        if(item_subtype == subtypeByte)
+//            return;
+//        else
+//            return QStyledItemDelegate::paint(painter, option, index);
+//    }
 
     QStyle* style = qApp->style();
     QStyleOptionViewItem opt = option;
@@ -101,14 +104,22 @@ void TableItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
         else
             QStyledItemDelegate::paint(painter, option, index);
     }else{
-        if(value.typeId() == QMetaType::Bool)
-            painter->drawText(textRect,  Qt::AlignVCenter | Qt::AlignLeft, value.toBool() ? "Истина" : "Ложь");
-        else if (value.typeId() == QMetaType::Int)
-            painter->drawText(textRect,  Qt::AlignVCenter | Qt::AlignLeft, value.toInt() > 0 ? "Истина" : "Ложь");
-        else if (value.typeId() == QMetaType::QString)
-            painter->drawText(textRect,  Qt::AlignVCenter | Qt::AlignLeft, value.toString());
-        else
-            QStyledItemDelegate::paint(painter, option, index);
+//        if(value.typeId() == QMetaType::Bool)
+//            painter->drawText(textRect,  Qt::AlignVCenter | Qt::AlignLeft, value.toBool() ? "Истина" : "Ложь");
+//        else if (value.typeId() == QMetaType::Int)
+//            painter->drawText(textRect,  Qt::AlignVCenter | Qt::AlignLeft, value.toInt() > 0 ? "Истина" : "Ложь");
+//        else if (value.typeId() == QMetaType::QString)
+//            painter->drawText(textRect,  Qt::AlignVCenter | Qt::AlignLeft, value.toString());
+//        else
+//            QStyledItemDelegate::paint(painter, option, index);
+        QStyleOptionButton chk;
+        QRect checkbox_rect = style->subElementRect(QStyle::SE_CheckBoxIndicator, &opt);
+        checkbox_rect.moveCenter(option.rect.center());
+        chk.rect = checkbox_rect;
+        auto b = value.toBool();
+        chk.state |= b ? QStyle::State_On : QStyle::State_Off;
+        chk.state |= QStyle::State_Enabled;
+        style->drawControl(QStyle::CE_CheckBox, &chk, painter, 0);
     }
 
 

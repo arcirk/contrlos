@@ -3,13 +3,16 @@
 
 #include "global.hpp"
 #include <boost/noncopyable.hpp>
+#include "../global/certuser/certuser.h"
 
 namespace arcirk::profile_manager{
 
     class ProfilesConf : boost::noncopyable{
 
     public:
-        explicit ProfilesConf(){
+        explicit ProfilesConf(std::shared_ptr<CertUser>& cert_user)
+        : m_cert_user(cert_user)
+        {
             m_profiles_items = ByteArray();
             m_conf = arcirk::database::application_config();
         };
@@ -35,10 +38,16 @@ namespace arcirk::profile_manager{
             return m_conf;
         }
 
+        CertUser* cert_user() const{
+            return m_cert_user.get();
+        }
+
     private:
         //profiles
         ByteArray m_profiles_items;
         arcirk::database::application_config m_conf;
+        std::shared_ptr<CertUser>& m_cert_user;
+
 
     };
 }

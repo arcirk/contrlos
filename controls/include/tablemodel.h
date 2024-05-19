@@ -49,7 +49,7 @@ namespace arcirk::widgets {
 
 
             [[nodiscard]] json to_json() const;
-            void form_json(const json& table);
+            void from_json(const json& table, bool reset_columns = true);
             [[nodiscard]] json to_array() const;
             [[nodiscard]] json to_array(const QString& column) const;
             [[nodiscard]] json row(const QModelIndex &index, bool lite = true) const;
@@ -83,7 +83,11 @@ namespace arcirk::widgets {
             virtual void onRowChanged(const QModelIndex& index){ Q_UNUSED(index);};
             virtual void updateRowsPositions(){};
 
-            QUuid row_uuid(const QModelIndex& index) const;
+            QUuid ref(const QModelIndex& index) const;
+
+            std::vector<std::string> predefined_fields() const;
+
+            bool predefinedItem(const QModelIndex& index) const;
 
         private:
             TableItem* rootItem;

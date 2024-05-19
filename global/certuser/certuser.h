@@ -35,6 +35,8 @@ public:
 
     void read_user_info(QObject* parent = nullptr);
 
+    QString sid() const;
+
 private:
     win_user_info user_info_;
     cert_users cert_user_;

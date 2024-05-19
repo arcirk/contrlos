@@ -16,12 +16,15 @@ namespace arcirk::widgets {
         Q_OBJECT
     public:
         explicit ArrayDialog(const json& data, QWidget *parent = nullptr);
-        explicit ArrayDialog(const BJson& data, QWidget *parent = nullptr);
+        //explicit ArrayDialog(const BJson& data, QWidget *parent = nullptr);
         ~ArrayDialog();
 
         json result() const;
 
         void accept() override;
+
+        void set_toolbar_visible(bool value);
+        void set_checked(bool value);
 
     private:
         Ui::ArrayDialog *ui;

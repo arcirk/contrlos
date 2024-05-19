@@ -11,6 +11,12 @@
 #include "tablewidget.h"
 #include "tablemodel.h"
 
+BOOST_FUSION_DEFINE_STRUCT(
+    (arcirk::widgets), table_list_item,
+    (bool, select)
+    (BJson, value)
+)
+
 namespace Ui {
     class TableListWidget;
 }
@@ -26,9 +32,12 @@ namespace arcirk::widgets {
             ~TableListWidget();
 
             [[nodiscard]] json to_array() const;
-            void set_array(const BJson& data);
+            void set_array(const json& data);
 
             void close_editor();
+
+            void set_toolbar_visible(bool value);
+            void set_checked(bool value);
 
         private:
             Ui::TableListWidget *ui;

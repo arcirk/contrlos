@@ -173,6 +173,8 @@ void TreeItem::set_object(const json &object) {
 
     m_data = object_to_map(m_conf->restructure_facility(object));
 
+    //std::cout << object.dump(4) << std::endl;
+
     auto m_fields = m_conf->predefined_list();
 
     for (const auto& key : m_fields) {

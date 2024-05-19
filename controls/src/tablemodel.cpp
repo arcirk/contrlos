@@ -78,15 +78,17 @@ QVariant TableModel::data(const QModelIndex &index, int role) const {
     return {};
 }
 
-void TableModel::form_json(const json &table) {
+void TableModel::from_json(const json &table, bool reset_columns) {
 
     Q_ASSERT(table.is_object());
     Q_ASSERT(table.find("columns")!=table.end());
     Q_ASSERT(table.find("rows")!=table.end());
 
-    beginResetModel();
-    m_conf->reset_columns(table["columns"]);
-    endResetModel();
+    if(reset_columns) {
+        beginResetModel();
+        m_conf->reset_columns(table["columns"]);
+        endResetModel();
+    }
 
     for (auto itr = table["rows"].begin(); itr != table["rows"].end(); ++itr) {
         const auto& object = *itr;
@@ -287,7 +289,7 @@ TableModel::TableModel(const json &rootData, QObject *parent) : QAbstractItemMod
     table["columns"] = columns;
     table["rows"] = json::array();
 
-    form_json(table);
+    from_json(table);
 }
 
 QList<QString> TableModel::columns() const {
@@ -419,7 +421,23 @@ QList<QString> TableModel::columns_order() const {
     return m_conf->columns_order();
 }
 
-QUuid TableModel::row_uuid(const QModelIndex &index) const {
+QUuid TableModel::ref(const QModelIndex &index) const {
     auto item = getItem(index);
     return item->ref();
 }
+
+std::vector<std::string> TableModel::predefined_fields() const {
+
+    auto f = std::vector<std::string>{
+            arcirk::enum_synonym(fRef),
+            arcirk::enum_synonym(fVersion)
+    };
+
+    return f;
+}
+
+bool TableModel::predefinedItem(const QModelIndex &index) const {
+    auto item = getItem(index);
+    return item->predefined();
+}
+
