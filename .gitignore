@@ -10,3 +10,5 @@
 /cmake-build-debug/
 /.idea/
 /query_builder/cmake-build-debug/
+/server/x64/
+/server/cmake-build-debug/

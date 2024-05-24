@@ -68,7 +68,8 @@ set(PROJECT_SOURCES
         ui/mstscitemdialog.ui
         include/certspage.h
         src/certspage.cpp
-        ui/certspage.ui)
+        ui/certspage.ui
+        ../global/sql/arcirk_metadata.hpp)
 
 qt_add_executable(ProfileManager
         MANUAL_FINALIZATION

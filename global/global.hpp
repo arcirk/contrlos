@@ -62,6 +62,8 @@ using json = nlohmann::json;
 #define NIL_STRING_UUID "00000000-0000-0000-0000-000000000000"
 #define WS_RESULT_SUCCESS "success"
 #define WS_RESULT_ERROR "error"
+#define DEFAULT_CHARSET_ "CP866"
+#define DEFAULT_CHARSET_WIN "CP1251"
 
 BOOST_FUSION_DEFINE_STRUCT(
     (arcirk::http), http_param,
@@ -344,6 +346,15 @@ namespace arcirk{
             return boost::uuids::nil_uuid();
         }
     }
+
+    inline std::string get_home(){
+#ifdef _WINDOWS
+        return getenv("APPDATA");
+#else
+        return getenv("HOME");
+#endif
+    }
+
 
     namespace widgets {
 

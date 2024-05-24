@@ -5,8 +5,8 @@
 #include "../global.hpp"
 #include <QProcess>
 
-#define DEFAULT_CHARSET_ "CP866"
-#define DEFAULT_CHARSET_WIN "CP1251"
+//#define DEFAULT_CHARSET_ "CP866"
+//#define DEFAULT_CHARSET_WIN "CP1251"
 
 using namespace  arcirk::command_line;
 

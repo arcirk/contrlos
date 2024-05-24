@@ -424,7 +424,7 @@ void MstscPage::editMstsc(const QString &fileName) {
 
     auto err = [&loop, &cmd](const QString& data, int command) -> void
     {
-        qDebug() << __FUNCTION__ << data << command;
+        //qDebug() << __FUNCTION__ << data << command;
         cmd.stop();
         loop.quit();
     };
