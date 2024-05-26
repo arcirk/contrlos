@@ -1,9 +1,11 @@
-#ifndef ITEM_DATA_H
-#define ITEM_DATA_H
+//
+// Created by admin on 25.05.2024.
+//
 
-#ifdef IS_USE_QT_LIB
+#ifndef CONTROLSPROG_ITEM_DATA_STD_H
+#define CONTROLSPROG_ITEM_DATA_STD_H
+#include "../../global/global.hpp"
 
-#include "../../controls/controls_global.h"
 #include <vector>
 #include <iostream>
 #include <boost/fusion/include/for_each.hpp>
@@ -13,13 +15,8 @@
 #include <pre/json/from_json.hpp>
 #include <pre/json/to_json.hpp>
 
-#include <QVariant>
-#include <QUuid>
-#include <QString>
-
-using json = nlohmann::json;
-
-typedef std::vector<std::uint8_t> BJson;
+using namespace boost::uuids;
+using namespace arcirk;
 
 BOOST_FUSION_DEFINE_STRUCT(
     (arcirk), variant_p,
@@ -44,10 +41,9 @@ namespace arcirk {
         return json::to_cbor(value.dump());
     }
 
-    inline json to_binary(const QUuid& value){
-        auto ba = value.toRfc4122();
-        auto ba_ = BJson(ba.size());
-        std::copy(ba.begin(), ba.end(), ba_.begin());
+    inline json to_binary(const uuid& value){
+        auto ba_ = BJson(value.size());
+        std::copy(value.begin(), value.end(), ba_.begin());
         return json::binary(ba_, subtypeRef);
     }
 
@@ -62,11 +58,11 @@ namespace arcirk {
     }
 
     inline BJson to_nil_uuid(){
-        return to_byte(to_binary(QUuid::fromString(NIL_STRING_UUID)));
+        return to_byte(to_binary(nil_uuid()));
     }
 
     inline BJson generate_uuid(){
-        return to_byte(to_binary(QUuid::createUuid()));
+        return to_byte(to_binary(arcirk::uuids::random_uuid()));
     }
 
     template<class T>
@@ -81,9 +77,9 @@ namespace arcirk {
                 auto str = data.get<std::string>();
                 if(json::accept(str)){
                     auto var = json::parse(str);
-                    if(typeid(T) == typeid(QString)){
+                    if(typeid(T) == typeid(std::string)){
                         if(var.is_string())
-                            return QString(var.get<std::string>().c_str());
+                            return var.get<std::string>();
                         else
                             return T();
                     }else{
@@ -100,14 +96,16 @@ namespace arcirk {
                 return T();
         }else if(subtype == subtypeRef){
             try {
-                if(typeid(T) == typeid(QUuid)){
-                    return QUuid::fromRfc4122(data.get<BJson>());
-                }else if(typeid(T) == typeid(QString)){
-                    auto var = QUuid::fromRfc4122(data.get<BJson>());
-                    return var.toString(QUuid::WithoutBraces);
+                if(typeid(T) == typeid(uuid)){
+                    auto ba = data.get<BJson>();
+                    auto uuid_ = boost::uuids::uuid();
+                    std::copy(uuid_.begin(), uuid_.end(), ba.begin());
+                    return uuid_;
                 }else if(typeid(T) == typeid(std::string)){
-                    auto var = QUuid::fromRfc4122(data.get<BJson>());
-                    return var.toString(QUuid::WithoutBraces).toStdString();
+                    auto ba = data.get<BJson>();
+                    auto uuid_ = boost::uuids::uuid();
+                    std::copy(uuid_.begin(), uuid_.end(), ba.begin());
+                    return boost::to_string(uuid_);
                 }else{
                     T result = data.get<T>();
                     return result;
@@ -210,171 +208,172 @@ namespace arcirk {
 
     }
 
-    inline QByteArray byte_to_qbyte(const BJson& value){
-        return {reinterpret_cast<const char*>(value.data()), (qsizetype)value.size()};
-    }
-
-    inline QVariant to_variant(const json& value){
-            if(value.is_string())
-                return value.get<std::string>().c_str();
-            else if(value.is_boolean())
-                return value.get<bool>();
-            else if(value.is_number_float())
-                return value.get<double>();
-            else if(value.is_number_integer())
-                return value.get<int>();
-            else if(value.is_array()){
-                auto val = value.get<BJson>();
-                return byte_to_qbyte(val);
-
-                //auto b = json::from_cbor(val);
-                //return QByteArray(reinterpret_cast<const char*>(val.data()), (qsizetype)val.size());
-            // else if(val.is_binary())
-            //     return QByteArray(reinterpret_cast<const char*>(value.data()), (qsizetype)value.size());
-            // else if(val.is_object())
-            //     return QByteArray(reinterpret_cast<const char*>(value.data()), (qsizetype)value.size());
-            }else
-                return {};
-    }
-
-    inline BJson qbyte_to_byte(const QByteArray& value){
-        auto ba = BJson(value.size());
-        std::copy(value.begin(), value.end(), ba.begin());
-        return ba;
-    }
-
-    inline json from_variant(const QVariant& value){
-        if(value.typeId() == QMetaType::QString){
-            return value.toString().toStdString();
-        }else if(value.typeId() == QMetaType::Int){
-            return value.toInt();
-        }else if(value.typeId() == QMetaType::Double){
-            return value.toDouble();
-        }else if(value.typeId() == QMetaType::QStringList){
-            return to_byte(to_binary(value.toStringList().join(",").toStdString(), subtypeArray));
-        }else if(value.typeId() == QMetaType::QByteArray){
-            return qbyte_to_byte(value.toByteArray());
-        }else if(value.typeId() == QMetaType::Bool){
-            return value.toBool();
-        }else{
-            return {};
-        }
-    }
-    inline json from_variant(const QVariant& value, nlohmann::json::value_t t){
-        if(t == json::value_t::null) return from_variant(value);
-        else if(t == json::value_t::boolean){
-            if(value.userType() == QMetaType::Double ||
-                    value.userType() == QMetaType::Int ||
-                    value.userType() == QMetaType::LongLong ||
-                    value.userType() == QMetaType::ULongLong ||
-                    value.userType() == QMetaType::Long ||
-                    value.userType() == QMetaType::Float){
-                return value.toInt() > 0;
-            }else if(value.userType() == QMetaType::Bool){
-                return value.toBool();
-            }else
-                return false;
-        }
-        else if(t == json::value_t::number_integer) return value.toInt();
-        else if(t == json::value_t::number_unsigned) return value.toUInt();
-        else if(t == json::value_t::number_float) return value.toFloat();
-        else if(t == json::value_t::object) return qbyte_to_byte(value.toByteArray());
-        else if(t == json::value_t::array) return qbyte_to_byte(value.toByteArray());
-        else if(t == json::value_t::string) return value.toString().toStdString();
-        else if(t == json::value_t::binary) return qbyte_to_byte(value.toByteArray());
-        else return {};
-    }
+//    inline QByteArray byte_to_qbyte(const BJson& value){
+//        return {reinterpret_cast<const char*>(value.data()), (qsizetype)value.size()};
+//    }
+//
+//    inline QVariant to_variant(const json& value){
+//        if(value.is_string())
+//            return value.get<std::string>().c_str();
+//        else if(value.is_boolean())
+//            return value.get<bool>();
+//        else if(value.is_number_float())
+//            return value.get<double>();
+//        else if(value.is_number_integer())
+//            return value.get<int>();
+//        else if(value.is_array()){
+//            auto val = value.get<BJson>();
+//            return byte_to_qbyte(val);
+//
+//            //auto b = json::from_cbor(val);
+//            //return QByteArray(reinterpret_cast<const char*>(val.data()), (qsizetype)val.size());
+//            // else if(val.is_binary())
+//            //     return QByteArray(reinterpret_cast<const char*>(value.data()), (qsizetype)value.size());
+//            // else if(val.is_object())
+//            //     return QByteArray(reinterpret_cast<const char*>(value.data()), (qsizetype)value.size());
+//        }else
+//            return {};
+//    }
+//
+//    inline BJson qbyte_to_byte(const QByteArray& value){
+//        auto ba = BJson(value.size());
+//        std::copy(value.begin(), value.end(), ba.begin());
+//        return ba;
+//    }
+//
+//    inline json from_variant(const QVariant& value){
+//        if(value.typeId() == QMetaType::QString){
+//            return value.toString().toStdString();
+//        }else if(value.typeId() == QMetaType::Int){
+//            return value.toInt();
+//        }else if(value.typeId() == QMetaType::Double){
+//            return value.toDouble();
+//        }else if(value.typeId() == QMetaType::QStringList){
+//            return to_byte(to_binary(value.toStringList().join(",").toStdString(), subtypeArray));
+//        }else if(value.typeId() == QMetaType::QByteArray){
+//            return qbyte_to_byte(value.toByteArray());
+//        }else if(value.typeId() == QMetaType::Bool){
+//            return value.toBool();
+//        }else{
+//            return {};
+//        }
+//    }
+//    inline json from_variant(const QVariant& value, nlohmann::json::value_t t){
+//        if(t == json::value_t::null) return from_variant(value);
+//        else if(t == json::value_t::boolean){
+//            if(value.userType() == QMetaType::Double ||
+//               value.userType() == QMetaType::Int ||
+//               value.userType() == QMetaType::LongLong ||
+//               value.userType() == QMetaType::ULongLong ||
+//               value.userType() == QMetaType::Long ||
+//               value.userType() == QMetaType::Float){
+//                return value.toInt() > 0;
+//            }else if(value.userType() == QMetaType::Bool){
+//                return value.toBool();
+//            }else
+//                return false;
+//        }
+//        else if(t == json::value_t::number_integer) return value.toInt();
+//        else if(t == json::value_t::number_unsigned) return value.toUInt();
+//        else if(t == json::value_t::number_float) return value.toFloat();
+//        else if(t == json::value_t::object) return qbyte_to_byte(value.toByteArray());
+//        else if(t == json::value_t::array) return qbyte_to_byte(value.toByteArray());
+//        else if(t == json::value_t::string) return value.toString().toStdString();
+//        else if(t == json::value_t::binary) return qbyte_to_byte(value.toByteArray());
+//        else return {};
+//    }
 
     namespace widgets {
-        struct CONTROLS_EXPORT binary_data{
-            BJson data;
-            variant_subtype subtype;
+        struct binary_data{
+                BJson data;
+                variant_subtype subtype;
 
-            [[nodiscard]] json to_json() const{
-                return json::binary(data, subtype);
-            }
-
-
-            [[nodiscard]] BJson to_byte() const{
-                return json::to_cbor(json::binary(data, subtype).dump());
-            }
-
-            [[nodiscard]] json to_json_value() const{
-                if(subtype != subtypeNull){
-                    if(subtype != subtypeRef && subtype != subtypeByte)
-                        return binary_to_json_value(json::binary(data, subtype));
-                    else
-                        return to_byte();
-                }else
-                    return {};
-            }
-
-            bool from_byte(const json& value){
-                try {
-                    auto v_ba = json::from_cbor(value.get<BJson>());
-                    auto str = v_ba.get<std::string>();
-                    if(json::accept(str)){
-                        auto bi_object = json::parse(v_ba.get<std::string>());
-                        data = bi_object["bytes"].get<BJson>();
-                        auto subtype_ = bi_object["subtype"].get<int>();
-                        subtype = (variant_subtype)subtype_;
-                        return true;
-                    }
-                } catch (const std::exception&) {
-                    //
+                [[nodiscard]] json to_json() const{
+                    return json::binary(data, subtype);
                 }
-                return false;
-            }
 
-            void from_json(const json& value){
-                if(value.is_null()){
-                    data = {};
-                    subtype = subtypeNull;
-                }else{
-                    if(!from_byte(value)){
-                        if(value.is_binary()){
-                            subtype = (variant_subtype)value.get_binary().subtype();
-                            data = value.get_binary();
-                        }else{
-                            data = json::to_cbor(value.dump());
-                            if(value.is_array()){
-                                subtype = subtypeArray;
-                            }else subtype = subtypeDump;
+
+                [[nodiscard]] BJson to_byte() const{
+                    return json::to_cbor(json::binary(data, subtype).dump());
+                }
+
+                [[nodiscard]] json to_json_value() const{
+                    if(subtype != subtypeNull){
+                        if(subtype != subtypeRef && subtype != subtypeByte)
+                            return binary_to_json_value(json::binary(data, subtype));
+                        else
+                            return to_byte();
+                    }else
+                        return {};
+                }
+
+                bool from_byte(const json& value){
+                    try {
+                        auto v_ba = json::from_cbor(value.get<BJson>());
+                        auto str = v_ba.get<std::string>();
+                        if(json::accept(str)){
+                            auto bi_object = json::parse(v_ba.get<std::string>());
+                            data = bi_object["bytes"].get<BJson>();
+                            auto subtype_ = bi_object["subtype"].get<int>();
+                            subtype = (variant_subtype)subtype_;
+                            return true;
+                        }
+                    } catch (const std::exception&) {
+                        //
+                    }
+                    return false;
+                }
+
+                void from_json(const json& value){
+                    if(value.is_null()){
+                        data = {};
+                        subtype = subtypeNull;
+                    }else{
+                        if(!from_byte(value)){
+                            if(value.is_binary()){
+                                subtype = (variant_subtype)value.get_binary().subtype();
+                                data = value.get_binary();
+                            }else{
+                                data = json::to_cbor(value.dump());
+                                if(value.is_array()){
+                                    subtype = subtypeArray;
+                                }else subtype = subtypeDump;
+                            }
                         }
                     }
                 }
-            }
         };
 
-        class CONTROLS_EXPORT item_data
+        class item_data
         {
-        public:
-            explicit item_data();
-            explicit item_data(const json& value);
-            ~item_data()= default;
+                public:
+                explicit item_data();
+                explicit item_data(const json& value);
+                ~item_data()= default;
 
-            [[nodiscard]] std::string representation() const;
-            [[nodiscard]] int role() const;
-            void set_role(const int& value);
-            [[nodiscard]] std::string table() const;
-            [[nodiscard]] binary_data * data() const;
-            [[nodiscard]] json json_value() const;
+                [[nodiscard]] std::string representation() const;
+                [[nodiscard]] int role() const;
+                void set_role(const int& value);
+                [[nodiscard]] std::string table() const;
+                [[nodiscard]] binary_data * data() const;
+                [[nodiscard]] json json_value() const;
 
-            [[nodiscard]] QVariant value() const;
-            void set_value(const json& value);
+                [[nodiscard]] json value() const;
+                void set_value(const json& value);
 
-            void from_json(const json& value);
-            [[nodiscard]] json to_json() const;
-            [[nodiscard]] BJson to_byte() const;
+                void from_json(const json& value);
+                [[nodiscard]] json to_json() const;
+                [[nodiscard]] BJson to_byte() const;
 
-        private:
-            std::shared_ptr<binary_data> m_data;
-            int m_role;
-            std::string m_table;
+                private:
+                std::shared_ptr<binary_data> m_data;
+                int m_role;
+                std::string m_table;
 
         };
 
     }
+
 }
 
 typedef std::pair<std::string, std::shared_ptr<arcirk::widgets::item_data>> value_pair;
@@ -430,5 +429,4 @@ inline T map_to_struct(const variant_map& value){
 
 }
 
-#endif
-#endif // ITEM_DATA_H
+#endif //CONTROLSPROG_ITEM_DATA_STD_H

@@ -1,6 +1,7 @@
-#ifdef IS_USE_QT_LIB
-
-#include "item_data.h"
+//
+// Created by admin on 25.05.2024.
+//
+#include "item_data_std.h"
 
 using namespace arcirk::widgets;
 
@@ -36,9 +37,11 @@ item_data::item_data(const json &value)
 
 std::string item_data::representation() const
 {
-    if(m_data->subtype == subtypeRef)
-        return QUuid::fromRfc4122(m_data->data).toString(QUuid::WithoutBraces).toStdString();
-    else if(m_data->subtype == subtypeByte)
+    if(m_data->subtype == subtypeRef){
+        auto uuid_ = uuid();
+        std::copy(uuid_.begin(), uuid_.end(), m_data->data.begin());
+        return boost::to_string(uuid_);
+    }else if(m_data->subtype == subtypeByte)
         return m_data->data.empty() ? "<null>" : "<binary>";
     else{
         return arcirk::representation(m_data->to_json_value());
@@ -65,9 +68,9 @@ json item_data::json_value() const
     return m_data->to_json_value();
 }
 
-QVariant item_data::value() const
+json item_data::value() const
 {
-    return arcirk::to_variant(m_data->to_json_value());
+    return m_data->to_json_value();
 }
 
 void item_data::set_value(const json &value)
@@ -114,5 +117,3 @@ BJson item_data::to_byte() const
 void item_data::set_role(const int &value) {
     m_role = value;
 }
-
-#endif

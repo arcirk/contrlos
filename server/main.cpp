@@ -11,6 +11,18 @@
 #include <server_conf.hpp>
 #include <crypt/cryptography.hpp>
 #include <fs/network.hpp>
+#include <sql/arcirk_metadata.hpp>
+
+#include <soci/soci.h>
+#include <soci/sqlite3/soci-sqlite3.h>
+#include <soci/boost-fusion.h>
+#include <soci/odbc/soci-odbc.h>
+
+#include <sql/query_builder.hpp>
+#include "include/datautils.h"
+#include <sql/verify_database.hpp>
+
+#include <memory>
 
 using namespace arcirk::strings;
 using namespace boost::filesystem;
@@ -221,7 +233,7 @@ void read_command_line(const command_line_parser::line_parser& parser, server::s
     if(parser.option_exists("-p")){
         const std::string &_port = parser.option("-p");
         if(!_port.empty())
-            conf.ServerPort = static_cast<unsigned short>(std::atoi(_port.c_str()));
+            conf.ServerPort = static_cast<unsigned short>(strtol(_port.c_str(), NULL, 0));
     }
     if(parser.option_exists("-wd")){
         conf.ServerWorkingDirectory= parser.option("-wd");
@@ -229,7 +241,7 @@ void read_command_line(const command_line_parser::line_parser& parser, server::s
     if(parser.option_exists("-t")){
         const std::string &_threads = parser.option("-t");
         if(!_threads.empty())
-            conf.ThreadsCount =  std::max<int>(1, static_cast<unsigned short>(std::atoi(_threads.c_str())));
+            conf.ThreadsCount =  std::max<int>(1, static_cast<unsigned short>(strtol(_threads.c_str(), NULL, 0)));
     }
     if(parser.option_exists("-usr")){
         conf.ServerUser = parser.option("-usr");
@@ -251,56 +263,91 @@ void read_command_line(const command_line_parser::line_parser& parser, server::s
         conf.AllowHistoryMessages = true; //разрешить хранение истории сообщений
 }
 
-void verify_database_structure(arcirk::DatabaseType type, const arcirk::server::server_config& sett){
+bool is_odbc_database(soci::session& sql){
+    using namespace soci;
+    using namespace arcirk::database;
+    try {
+        auto version = arcirk::server::get_version();
+        std::string db_name = str_sample("arcirk_v%1%%2%%3%", std::to_string(version.major), std::to_string(version.minor), std::to_string(version.path));
+        //Проверяем на существование базы данных
+        auto builder = builder::query_builder();
+        builder.row_count().from("sys.databases").where(nlohmann::json{{"name", db_name}}, true);
 
+        int count = -1;
+        sql << builder.prepare(), into(count);
+        if (count <= 0){
+            sql << str_sample("CREATE DATABASE %1%", db_name);
+            sql << builder.prepare(), into(count);
+            if (count > 0){
+                arcirk::log(__FUNCTION__, "База данных успешно создана!");
+                return true;
+            }else{
+                arcirk::fail(__FUNCTION__, "Ошибка создания базы данных!");
+                return false;
+            }
+        }
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+    }
+
+    return false;
+}
+
+void verify_database_structure(arcirk::DatabaseType type, const arcirk::server::server_config& sett){
 
     using namespace boost::filesystem;
     using namespace soci;
     using namespace arcirk::database;
-    //using namespace arcirk::cryptography;
 
     auto version = arcirk::server::get_version();
-//    std::string db_name = arcirk::str_sample("arcirk_v%1%%2%%3%", std::to_string(version.major), std::to_string(version.minor), std::to_string(version.path));
-
-    session sql;
+    std::string connection_string;
+    std::shared_ptr<session> sql = std::make_shared<session>();
     if(type == arcirk::DatabaseType::dbTypeSQLite){
         path data = m_root_conf /+ "data" /+ "arcirk.sqlite";
-        std::string connection_string = arcirk::str_sample("db=%1% timeout=2 shared_cache=true", data.string());
-        sql.open(soci::sqlite3, connection_string);
+        connection_string = str_sample("db=%1% timeout=2 shared_cache=true", data.string());
+        sql->open(soci::sqlite3, connection_string);
     }else{
         if(sett.SQLHost.empty())
-            throw native_exception("Не указан адрес SQL сервера!");
+            throw NativeException("Не указан адрес SQL сервера!");
 
         const std::string pwd = sett.SQLPassword;
-        std::string connection_string = arcirk::str_sample("DRIVER={SQL Server};"
+        connection_string = str_sample("DRIVER={SQL Server};"
                                                            "SERVER=%1%;Persist Security Info=true;"
-                                                           "uid=%2%;pwd=%3%", sett.SQLHost, sett.SQLUser, arcirk::crypt(pwd, CRYPT_KEY));
+                                                           "uid=%2%;pwd=%3%", sett.SQLHost, sett.SQLUser, crypt(pwd, CRYPT_KEY));
 //        std::string connection_string = arcirk::str_sample("DRIVER={SQL Server};"
 //                                                           "SERVER=%1%;Persist Security Info=true;"
 //                                                           "uid=%2%;pwd=%3%", sett.SQLHost, sett.SQLUser, crypt_utils().decrypt_string(pwd));
         try {
-            sql.open(soci::odbc, connection_string);
+            sql->open(soci::odbc, connection_string);
         } catch (const std::exception &e) {
             std::cerr << e.what() << std::endl;
         }
 
-        if(sql.is_connected())
-            is_odbc_database(sql);
+        if(sql->is_connected())
+            is_odbc_database(*sql);
         else
-            throw native_exception("Ошибка подключения к серверу баз данных!");
+            throw NativeException("Ошибка подключения к серверу баз данных!");
     }
 
-    if(!sql.is_connected()){
+    if(!sql->is_connected()){
         fail(__FUNCTION__, "Error connection database!");
         return;
     }
 
-    try {
-        verify_database(sql, type, pre::json::to_json(version));
-        sql.close();
-    }catch (std::exception &e) {
-        fail(__FUNCTION__, e.what());
+    sql->close();
+
+    auto db_utils = DataUtils(connection_string);
+    auto result = db_utils.verify();
+    if(result){
+        db_utils.verify_default_data();
     }
+
+//    try {
+//        verify_database(sql, type, pre::json::to_json(version));
+//        sql.close();
+//    }catch (std::exception &e) {
+//        fail(__FUNCTION__, e.what());
+//    }
 
 }
 

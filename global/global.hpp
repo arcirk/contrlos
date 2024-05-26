@@ -64,6 +64,7 @@ using json = nlohmann::json;
 #define WS_RESULT_ERROR "error"
 #define DEFAULT_CHARSET_ "CP866"
 #define DEFAULT_CHARSET_WIN "CP1251"
+#define CRYPT_KEY "my_key"
 
 BOOST_FUSION_DEFINE_STRUCT(
     (arcirk::http), http_param,
@@ -347,14 +348,6 @@ namespace arcirk{
         }
     }
 
-    inline std::string get_home(){
-#ifdef _WINDOWS
-        return getenv("APPDATA");
-#else
-        return getenv("HOME");
-#endif
-    }
-
 
     namespace widgets {
 
@@ -417,6 +410,9 @@ namespace arcirk{
 }
 
     namespace date{
+
+        static constexpr time_t const NULL_TIME = -1;
+
         inline tm current_date() {
             using namespace std;
             tm current{};
@@ -429,6 +425,54 @@ namespace arcirk{
             return current;
         }
 
+        inline long int tz_offset(time_t when = NULL_TIME)
+        {
+            if (when == NULL_TIME)
+                when = std::time(nullptr);
+            auto const tm = *std::localtime(&when);
+            std::ostringstream os;
+            os << std::put_time(&tm, "%z");
+            std::string s = os.str();
+            // s is in ISO 8601 format: "±HHMM"
+            int h = std::stoi(s.substr(0,3), nullptr, 10);
+            int m = std::stoi(s[0]+s.substr(3), nullptr, 10);
+
+            return (h-1) * 3600 + m * 60;
+        }
+
+        inline long int date_to_seconds(const tm& dt = {}, bool offset = false){
+
+            tm current = dt;
+            time_t t = time(nullptr);
+
+#ifdef _WIN32
+            localtime_s(&current, &t);
+#else
+            localtime_r(&t, &current);
+#endif
+
+            std::chrono::system_clock::time_point tp = std::chrono::system_clock::from_time_t(mktime(&current));
+
+            auto i_offset = offset ? tz_offset() : 0;
+
+            return
+                    (long int)std::chrono::duration_cast<std::chrono::seconds>(
+                            tp.time_since_epoch()).count() + i_offset;
+
+        }
+
+        inline long int add_day(const long int& dt, const int& quantity){
+            return dt + (quantity * (60*60*24));
+        }
+
+        inline long int start_day(const std::tm& d){
+            auto sec = d.tm_sec + (d.tm_min * 60) + (d.tm_hour * 60 * 60);
+            return date_to_seconds(d, false) - sec;
+        }
+        inline long int end_day(const std::tm& d){
+            auto sec = 60 * 60 * 24 - 1;
+            return start_day(d) + sec;
+        }
     }
 
     namespace strings{
@@ -758,7 +802,8 @@ namespace arcirk::widgets{
             wmicUsers,
             COMMAND_INVALID=-1,
         };
-}
+    }
+
     BOOST_FUSION_DEFINE_STRUCT(
         (arcirk::database), cert_users,
         (std::string, name)
@@ -773,7 +818,9 @@ namespace arcirk::widgets{
         (bool, is_group)
         (bool, deletion_mark)
         (int, version)
+        (arcirk::BJson, client_ref)
     );
+
     BOOST_FUSION_DEFINE_STRUCT(
         (arcirk::database), available_certificates,
         (std::string, name)
@@ -784,6 +831,7 @@ namespace arcirk::widgets{
         (bool, is_group)
         (bool, deletion_mark)
         (int, version)
+        (arcirk::BJson, client_ref)
     );
 
     BOOST_FUSION_DEFINE_STRUCT(
@@ -803,6 +851,7 @@ namespace arcirk::widgets{
         (bool, is_group)
         (bool, deletion_mark)
         (int, version)
+        (arcirk::BJson, client_ref)
     );
 
     BOOST_FUSION_DEFINE_STRUCT(
@@ -811,6 +860,7 @@ namespace arcirk::widgets{
         (std::string, name)
         (arcirk::BJson, ref)
         (int, version)
+        (arcirk::BJson, client_ref)
     );
 
     BOOST_FUSION_DEFINE_STRUCT(
@@ -821,6 +871,7 @@ namespace arcirk::widgets{
         (arcirk::BJson, ref)
         (arcirk::BJson, icon)
         (int, pos)
+        (arcirk::BJson, client_ref)
     );
 
     BOOST_FUSION_DEFINE_STRUCT(
@@ -838,6 +889,7 @@ namespace arcirk::widgets{
         (bool, allow_certificates)
         (bool, allow_mstsc)
         (bool, allow_mstsc_users)
+        (arcirk::BJson, client_ref)
     );
 
     BOOST_FUSION_DEFINE_STRUCT(
@@ -860,6 +912,7 @@ namespace arcirk::widgets{
         (bool, is_group)
         (bool, deletion_mark)
         (int, version)
+        (arcirk::BJson, client_ref)
     );
     BOOST_FUSION_DEFINE_STRUCT(
         (arcirk::database), mstsc_item,
@@ -879,6 +932,7 @@ namespace arcirk::widgets{
         (bool, predefined)
         (int, version)
         (int, pos)
+        (arcirk::BJson, client_ref)
     );
 
 namespace arcirk::cryptography{
@@ -934,35 +988,36 @@ namespace arcirk::cryptography{
 
 #endif
 
-    enum TypeOfStorgare{
-        storgareTypeRegistry,
-        storgareTypeLocalVolume,
-        storgareTypeDatabase,
-        storgareTypeRemoteBase,
-        storgareTypeUnknown = -1
+    enum TypeOfStorage{
+        storageTypeRegistry,
+        storageTypeLocalVolume,
+        storageTypeDatabase,
+        storageTypeRemoteBase,
+        storageTypeUnknown = -1
     };
 
-    NLOHMANN_JSON_SERIALIZE_ENUM(TypeOfStorgare, {
-        {storgareTypeRegistry, REGISTRY},
-        {storgareTypeLocalVolume, FAT12},
-        {storgareTypeDatabase, DATABASE},
-        {storgareTypeRemoteBase, REMOTEBASE},
+    NLOHMANN_JSON_SERIALIZE_ENUM(TypeOfStorage, {
+        {storageTypeUnknown, "UNKNOWN"},
+        {storageTypeRegistry, REGISTRY},
+        {storageTypeLocalVolume, FAT12},
+        {storageTypeDatabase, DATABASE},
+        {storageTypeRemoteBase, REMOTEBASE},
     })
 
-    inline TypeOfStorgare type_storage(const std::string& source){
+    inline TypeOfStorage type_storage(const std::string& source){
         if(source.empty())
-            return storgareTypeUnknown;
+            return storageTypeUnknown;
         else{
             if(index_of(source, FAT12) != -1 || index_of(source, HDIMAGE) != -1)
-                return storgareTypeLocalVolume;
+                return storageTypeLocalVolume;
             else if(index_of(source, REGISTRY) != -1)
-                return storgareTypeRegistry;
+                return storageTypeRegistry;
             else if(index_of(source, DATABASE) != -1)
-                return storgareTypeDatabase;
+                return storageTypeDatabase;
             else if(index_of(source, REMOTEBASE) != -1)
-                return storgareTypeDatabase;
+                return storageTypeDatabase;
             else{
-                return storgareTypeUnknown;
+                return storageTypeUnknown;
             }
         }
     }
@@ -999,5 +1054,6 @@ namespace arcirk::database {
 }
 
 #endif
+
 
 #endif //ARCIRK_GROUP_ARCIRK_HPP

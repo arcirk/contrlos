@@ -16,6 +16,8 @@
 #include <QSqlField>
 #include <QSqlError>
 #include "../variant/item_data.h"
+#else
+#include "../variant/item_data_std.h"
 #endif
 
 #ifdef _WINDOWS

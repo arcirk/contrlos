@@ -56,6 +56,7 @@ endif()
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 add_definitions (-DBOOST_ALL_STATIC_LINK=1)
 add_definitions (-DUSE_BOOST_LOCALE)
+add_definitions (-DUSE_SYSTEM_USER_DATA)
 
 if (MSVC)
     set (CMAKE_VERBOSE_MAKEFILE FALSE)
@@ -118,6 +119,16 @@ file(GLOB CPPS "src/*.cpp"
 
 add_executable(${TARGET}
         main.cpp
+        ../global/variant/item_data_std.h
+        ../global/variant/item_data_std.cpp
+        include/datautils.h
+        src/datautils.cpp
+        ../global/sql/arcirk_metadata.hpp
+        ../global/sql/query_builder.hpp
+        ../global/sql/verify_database.hpp
+        ../global/server_conf.hpp
+        ../global/global.hpp
+
 #        ${CPPS}
 #        ${CPPH}
         )
