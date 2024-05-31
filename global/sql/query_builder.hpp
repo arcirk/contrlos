@@ -552,6 +552,7 @@ using namespace soci;
             databaseType = sql_database_type::type_Sqlite3;
             queryType = Select;
             format_text_ = true;
+            parameters_by_field_name = false;
         };
         ~query_builder()= default;
 
@@ -1216,7 +1217,8 @@ using namespace soci;
 
             return *this;
         }
-        query_builder& insert(const std::string& table_name, std::vector<std::tuple<std::string, arcirk::ByteArray>>& blobs){
+
+        query_builder& insert(const std::string& table_name, std::vector<std::tuple<std::string, arcirk::BJson>>& blobs){
 
             queryType = Insert;
             table_name_ = table_name;
@@ -1250,7 +1252,7 @@ using namespace soci;
                         auto ba = val.get<ByteArray>();
                         blobs.emplace_back(f_name, ba);
                     } catch (const std::exception &) {
-                        blobs.emplace_back(f_name, ByteArray());
+                        blobs.emplace_back(f_name, BJson());
                     }
                     value = f_name;
                 }
@@ -1307,8 +1309,13 @@ using namespace soci;
                         string_values.append("''");
                     else
                         string_values.append(str_sample("'%1%'", value));
-                }else
-                    string_values.append("?");
+                }else{
+                    if(!parameters_by_field_name)
+                        string_values.append("?");
+                    else{
+                        string_values.append(std::string (":") + column);
+                    }
+                }
 
                 if(itr != (--m_list.cend())){
                     result.append(",\n");
@@ -1368,6 +1375,12 @@ using namespace soci;
             }
 
             return result;
+        }
+
+        std::string prepare(std::map<std::string, json>& values) const{
+            if(queryType == Insert){
+
+            }
         }
 
         sql_database_type database_type(){
@@ -1729,6 +1742,10 @@ using namespace soci;
             return *this;
         }
 
+        void set_parameters_by_field_name(bool value){
+            parameters_by_field_name = value;
+        }
+
     private:
         std::string result;
         sql_values m_list;
@@ -1736,6 +1753,7 @@ using namespace soci;
         sql_database_type databaseType;
         std::string table_name_;
         bool format_text_;
+        bool parameters_by_field_name;
 
         static std::string format_text(const std::string& text, bool format_){
             if(!format_){

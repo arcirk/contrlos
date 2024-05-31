@@ -12,3 +12,6 @@
 /query_builder/cmake-build-debug/
 /server/x64/
 /server/cmake-build-debug/
+/TestSql/x64/
+/TestSql/cmake-build-debug/
+/server/qt/project/build-wssrv-Desktop_Qt_6_5_2_MSVC2019_64bit-Debug/

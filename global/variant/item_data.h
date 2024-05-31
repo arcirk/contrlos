@@ -3,7 +3,13 @@
 
 #ifdef IS_USE_QT_LIB
 
+#ifdef CONTROLS_EXPORT_DLL
 #include "../../controls/controls_global.h"
+#else
+#define CONTROLS_EXPORT
+#include <global.hpp>
+#endif
+
 #include <vector>
 #include <iostream>
 #include <boost/fusion/include/for_each.hpp>
@@ -244,17 +250,17 @@ namespace arcirk {
     }
 
     inline json from_variant(const QVariant& value){
-        if(value.typeId() == QMetaType::QString){
+        if(value.userType() == QMetaType::QString){
             return value.toString().toStdString();
-        }else if(value.typeId() == QMetaType::Int){
+        }else if(value.userType() == QMetaType::Int){
             return value.toInt();
-        }else if(value.typeId() == QMetaType::Double){
+        }else if(value.userType() == QMetaType::Double){
             return value.toDouble();
-        }else if(value.typeId() == QMetaType::QStringList){
+        }else if(value.userType() == QMetaType::QStringList){
             return to_byte(to_binary(value.toStringList().join(",").toStdString(), subtypeArray));
-        }else if(value.typeId() == QMetaType::QByteArray){
+        }else if(value.userType() == QMetaType::QByteArray){
             return qbyte_to_byte(value.toByteArray());
-        }else if(value.typeId() == QMetaType::Bool){
+        }else if(value.userType() == QMetaType::Bool){
             return value.toBool();
         }else{
             return {};

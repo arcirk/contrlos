@@ -69,7 +69,7 @@ set(PROJECT_SOURCES
         include/certspage.h
         src/certspage.cpp
         ui/certspage.ui
-        ../global/sql/arcirk_metadata.hpp)
+        ../global/sql/arcirk_metadata.hpp ../global/sql/soci_conversion.hpp)
 
 qt_add_executable(ProfileManager
         MANUAL_FINALIZATION

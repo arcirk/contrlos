@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <global.hpp>
 #include <fs/standard_paths.hpp>
 #include <cl/command_line.hpp>
 #include <server_conf.hpp>
@@ -13,16 +14,19 @@
 #include <fs/network.hpp>
 #include <sql/arcirk_metadata.hpp>
 
-#include <soci/soci.h>
-#include <soci/sqlite3/soci-sqlite3.h>
-#include <soci/boost-fusion.h>
-#include <soci/odbc/soci-odbc.h>
+//#include <soci/soci.h>
+//#include <soci/sqlite3/soci-sqlite3.h>
+//#include <soci/boost-fusion.h>
+//#include <soci/odbc/soci-odbc.h>
+#include <QSqlDatabase>
 
 #include <sql/query_builder.hpp>
-#include "include/datautils.h"
+#include "include/serverdatautils.h"
 #include <sql/verify_database.hpp>
 
 #include <memory>
+
+#include <QCoreApplication>
 
 using namespace arcirk::strings;
 using namespace boost::filesystem;
@@ -263,97 +267,128 @@ void read_command_line(const command_line_parser::line_parser& parser, server::s
         conf.AllowHistoryMessages = true; //разрешить хранение истории сообщений
 }
 
-bool is_odbc_database(soci::session& sql){
-    using namespace soci;
-    using namespace arcirk::database;
-    try {
-        auto version = arcirk::server::get_version();
-        std::string db_name = str_sample("arcirk_v%1%%2%%3%", std::to_string(version.major), std::to_string(version.minor), std::to_string(version.path));
-        //Проверяем на существование базы данных
-        auto builder = builder::query_builder();
-        builder.row_count().from("sys.databases").where(nlohmann::json{{"name", db_name}}, true);
+//bool is_odbc_database(soci::session& sql){
+//    using namespace soci;
+//    using namespace arcirk::database;
+//    try {
+//        auto version = arcirk::server::get_version();
+//        std::string db_name = str_sample("arcirk_v%1%%2%%3%", std::to_string(version.major), std::to_string(version.minor), std::to_string(version.path));
+//        //Проверяем на существование базы данных
+//        auto builder = builder::query_builder();
+//        builder.row_count().from("sys.databases").where(nlohmann::json{{"name", db_name}}, true);
+//
+//        int count = -1;
+//        sql << builder.prepare(), into(count);
+//        if (count <= 0){
+//            sql << str_sample("CREATE DATABASE %1%", db_name);
+//            sql << builder.prepare(), into(count);
+//            if (count > 0){
+//                arcirk::log(__FUNCTION__, "База данных успешно создана!");
+//                return true;
+//            }else{
+//                arcirk::fail(__FUNCTION__, "Ошибка создания базы данных!");
+//                return false;
+//            }
+//        }
+//    } catch (const std::exception &e) {
+//        std::cerr << e.what() << std::endl;
+//    }
+//
+//    return false;
+//}
 
-        int count = -1;
-        sql << builder.prepare(), into(count);
-        if (count <= 0){
-            sql << str_sample("CREATE DATABASE %1%", db_name);
-            sql << builder.prepare(), into(count);
-            if (count > 0){
-                arcirk::log(__FUNCTION__, "База данных успешно создана!");
-                return true;
-            }else{
-                arcirk::fail(__FUNCTION__, "Ошибка создания базы данных!");
-                return false;
-            }
-        }
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-    }
-
-    return false;
-}
+//void verify_database_structure(arcirk::DatabaseType type, const arcirk::server::server_config& sett){
+//
+//    using namespace boost::filesystem;
+//    //using namespace soci;
+//    using namespace arcirk::database;
+//
+//    auto version = arcirk::server::get_version();
+//    std::string connection_string;
+//    std::shared_ptr<session> sql = std::make_shared<session>();
+//    if(type == arcirk::DatabaseType::dbTypeSQLite){
+//        path data = m_root_conf /+ "data" /+ "arcirk.sqlite";
+//        connection_string = str_sample("db=%1% timeout=2 shared_cache=true", data.string());
+//        sql->open(soci::sqlite3, connection_string);
+//    }else{
+//        if(sett.SQLHost.empty())
+//            throw NativeException("Не указан адрес SQL сервера!");
+//
+//        const std::string pwd = sett.SQLPassword;
+//        connection_string = str_sample("DRIVER={SQL Server};"
+//                                                           "SERVER=%1%;Persist Security Info=true;"
+//                                                           "uid=%2%;pwd=%3%", sett.SQLHost, sett.SQLUser, crypt(pwd, CRYPT_KEY));
+////        std::string connection_string = arcirk::str_sample("DRIVER={SQL Server};"
+////                                                           "SERVER=%1%;Persist Security Info=true;"
+////                                                           "uid=%2%;pwd=%3%", sett.SQLHost, sett.SQLUser, crypt_utils().decrypt_string(pwd));
+//        try {
+//            sql->open(soci::odbc, connection_string);
+//        } catch (const std::exception &e) {
+//            std::cerr << e.what() << std::endl;
+//        }
+//
+//        if(sql->is_connected())
+//            is_odbc_database(*sql);
+//        else
+//            throw NativeException("Ошибка подключения к серверу баз данных!");
+//    }
+//
+//    if(!sql->is_connected()){
+//        fail(__FUNCTION__, "Error connection database!");
+//        return;
+//    }
+//
+//    sql->close();
+//
+//    auto db_utils = DataUtils(connection_string);
+//    auto result = db_utils.verify();
+//    if(result){
+//        db_utils.verify_default_data();
+//    }
+//
+////    try {
+////        verify_database(sql, type, pre::json::to_json(version));
+////        sql.close();
+////    }catch (std::exception &e) {
+////        fail(__FUNCTION__, e.what());
+////    }
+//
+//}
 
 void verify_database_structure(arcirk::DatabaseType type, const arcirk::server::server_config& sett){
 
     using namespace boost::filesystem;
-    using namespace soci;
     using namespace arcirk::database;
 
     auto version = arcirk::server::get_version();
-    std::string connection_string;
-    std::shared_ptr<session> sql = std::make_shared<session>();
+    //std::string connection_string;
+
+    QSqlDatabase m_database;
+
     if(type == arcirk::DatabaseType::dbTypeSQLite){
-        path data = m_root_conf /+ "data" /+ "arcirk.sqlite";
-        connection_string = str_sample("db=%1% timeout=2 shared_cache=true", data.string());
-        sql->open(soci::sqlite3, connection_string);
-    }else{
-        if(sett.SQLHost.empty())
-            throw NativeException("Не указан адрес SQL сервера!");
-
-        const std::string pwd = sett.SQLPassword;
-        connection_string = str_sample("DRIVER={SQL Server};"
-                                                           "SERVER=%1%;Persist Security Info=true;"
-                                                           "uid=%2%;pwd=%3%", sett.SQLHost, sett.SQLUser, crypt(pwd, CRYPT_KEY));
-//        std::string connection_string = arcirk::str_sample("DRIVER={SQL Server};"
-//                                                           "SERVER=%1%;Persist Security Info=true;"
-//                                                           "uid=%2%;pwd=%3%", sett.SQLHost, sett.SQLUser, crypt_utils().decrypt_string(pwd));
-        try {
-            sql->open(soci::odbc, connection_string);
-        } catch (const std::exception &e) {
-            std::cerr << e.what() << std::endl;
+        path dir_name = m_root_conf /+ "data" /+ "arcirk.sqlite";
+        //connection_string = str_sample("db=%1% timeout=2 shared_cache=true", data.string());
+        m_database = QSqlDatabase::addDatabase("QSQLITE", "server_database");
+        m_database.setDatabaseName(dir_name.string().c_str());
+        if(!m_database.open()){
+            std::cerr << m_database.lastError().text().toStdString() << std::endl;
+        }else{
+            auto db_utils = ServerDataUtils(m_database);
+            auto result = db_utils.verify();
+            if(result){
+                db_utils.verify_default_data();
+            }
         }
-
-        if(sql->is_connected())
-            is_odbc_database(*sql);
-        else
-            throw NativeException("Ошибка подключения к серверу баз данных!");
+    }else{
+        //
     }
-
-    if(!sql->is_connected()){
-        fail(__FUNCTION__, "Error connection database!");
-        return;
-    }
-
-    sql->close();
-
-    auto db_utils = DataUtils(connection_string);
-    auto result = db_utils.verify();
-    if(result){
-        db_utils.verify_default_data();
-    }
-
-//    try {
-//        verify_database(sql, type, pre::json::to_json(version));
-//        sql.close();
-//    }catch (std::exception &e) {
-//        fail(__FUNCTION__, e.what());
-//    }
-
 }
 
 int
 main(int argc, char* argv[])
 {
+    QCoreApplication a(argc, argv);
+
     setlocale(LC_ALL, "Russian");
 
     command_line_parser::line_parser input(argc, argv);
@@ -390,4 +425,7 @@ main(int argc, char* argv[])
 
     save_conf(conf);
 
+    verify_database_structure(DatabaseType::dbTypeSQLite, conf);
+
+    return a.exec();
 }

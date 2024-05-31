@@ -1,17 +1,14 @@
 cmake_minimum_required(VERSION 3.21)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(wsServer)
 set(TARGET wsServer)
 
-#if (MSVC)
-#    set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "")
-#    include(C:/lib/vcpkg/scripts/buildsystems/vcpkg.cmake)
-#else()
-#    set(CMAKE_TOOLCHAIN_FILE "/home/arcady/lib/vcpkg/scripts/buildsystems/vcpkg.cmake"
-#            CACHE STRING "Vcpkg toolchain file")
-#endif()
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 if(MSVC)
     add_compile_options(
@@ -57,6 +54,8 @@ add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 add_definitions (-DBOOST_ALL_STATIC_LINK=1)
 add_definitions (-DUSE_BOOST_LOCALE)
 add_definitions (-DUSE_SYSTEM_USER_DATA)
+
+add_definitions(-DIS_USE_QT_LIB)
 
 if (MSVC)
     set (CMAKE_VERBOSE_MAKEFILE FALSE)
@@ -119,16 +118,15 @@ file(GLOB CPPS "src/*.cpp"
 
 add_executable(${TARGET}
         main.cpp
-        ../global/variant/item_data_std.h
-        ../global/variant/item_data_std.cpp
-        include/datautils.h
-        src/datautils.cpp
+        ../global/variant/item_data.h
+        ../global/variant/item_data.cpp
+        include/serverdatautils.h
+        src/serverdatautils.cpp
         ../global/sql/arcirk_metadata.hpp
         ../global/sql/query_builder.hpp
         ../global/sql/verify_database.hpp
         ../global/server_conf.hpp
         ../global/global.hpp
-
 #        ${CPPS}
 #        ${CPPH}
         )
@@ -140,9 +138,10 @@ target_include_directories(${TARGET} PRIVATE
 
 find_package(Boost COMPONENTS thread regex filesystem system locale REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(SOCI CONFIG REQUIRED)
+#find_package(SOCI CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(cryptopp CONFIG REQUIRED)
+find_package(Qt6 REQUIRED COMPONENTS Core Sql)
 
 target_link_libraries(${TARGET} PRIVATE
         Boost::filesystem
@@ -151,14 +150,22 @@ target_link_libraries(${TARGET} PRIVATE
         Boost::locale
         OpenSSL::SSL
         OpenSSL::Crypto
-        SOCI::soci_core_static
-        SOCI::soci_sqlite3_static
-        SOCI::soci_odbc_static
+#        SOCI::soci_core_static
+#        SOCI::soci_sqlite3_static
+#        SOCI::soci_odbc_static
         nlohmann_json::nlohmann_json
-        cryptopp::cryptopp
+#        cryptopp::cryptopp
+        Qt${QT_VERSION_MAJOR}::Sql
+        Qt${QT_VERSION_MAJOR}::Core
         )
 
 if (WIN32)
     target_link_libraries(${TARGET} PRIVATE
             bcrypt.lib)
 endif()
+
+include(GNUInstallDirs)
+install(TARGETS ${TARGET}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        )

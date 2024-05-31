@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+    <title>arcirk websockets</title>
+</head>
+<body>
+
+
+    WebSocket Server Is Run
+    <p>Файлы для загрузки:</p>
+    <div id='files_list'>
+
+
+    </div>
+
+    <script type="text/javascript">
+        let div = document.getElementById('files_list');
+
+
+        const Http = new XMLHttpRequest();
+        const url = '%1/api/files';
+        Http.open("GET", url);
+        Http.send();
+
+        function isArray(ob) {
+            return ob.constructor === Array;
+        }
+
+        Http.onreadystatechange = (e) => {
+            //console.log(Http.responseText);  // => получим массив данных в формате JSON
+            let resp = Http.responseText
+            if (resp.length === 0)
+                return
+            let arr = JSON.parse(resp)
+
+            //console.log(arr.length)
+
+            if (isArray(arr)) {
+                div.innerHTML = '';
+                arr.forEach(function (item, i, arr) {
+                    let mA = item.split('\\')
+                    mA.splice(0, 2)
+                    let val = mA.join('\\')
+                    const p = document.createElement('p')
+                    const a = document.createElement('a')
+                    a.href = val
+                    a.title = mA[mA.length - 1]
+                    a.text = mA[mA.length - 1]
+                    p.appendChild(a)
+                    files_list.appendChild(p)
+                })
+            } else
+                console.log("Ошибка получения списка файлов")
+
+
+        }
+    </script>
+
+
+
+</body>
+</html>

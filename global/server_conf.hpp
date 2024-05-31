@@ -53,6 +53,7 @@ BOOST_FUSION_DEFINE_STRUCT(
         (std::string, ServerProtocol)
         (bool, WriteJournal)
         (bool, AllowIdentificationByWINSID)
+        (arcirk::BJson, ref)
 );
 
 namespace arcirk{

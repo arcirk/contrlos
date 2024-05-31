@@ -65,15 +65,16 @@ using json = nlohmann::json;
 #define DEFAULT_CHARSET_ "CP866"
 #define DEFAULT_CHARSET_WIN "CP1251"
 #define CRYPT_KEY "my_key"
+#define UNDEFINED std::monostate()
 
 BOOST_FUSION_DEFINE_STRUCT(
-    (arcirk::http), http_param,
+    (arcirk::https), http_param,
     (std::string, command)
     (std::string, param)    //base64 строка
 )
 
 BOOST_FUSION_DEFINE_STRUCT(
-    (arcirk::http), http_conf,
+    (arcirk::https), http_conf,
     (std::string, host)
     (std::string, token)
     (std::string, table)
@@ -92,7 +93,7 @@ BOOST_FUSION_DEFINE_STRUCT(
 )
 
 namespace arcirk{
-//#ifdef USE_BOOST_UUIDS
+
     namespace uuids{
 
         inline bool is_valid_uuid(std::string const& maybe_uuid, boost::uuids::uuid& result) {
@@ -127,7 +128,7 @@ namespace arcirk{
                 return boost::uuids::random_generator()();
         }
     }
-//#endif
+
     typedef unsigned char BYTE;
     typedef std::vector<BYTE> ByteArray;
     typedef std::vector<std::uint8_t> BJson;
@@ -537,6 +538,17 @@ namespace arcirk{
 
     }
 
+#ifdef USE_BASE64_UTILS
+    namespace base64{
+        bool byte_is_base64(BYTE c);
+        std::string byte_to_base64(BYTE const* buf, unsigned int bufLen);
+        ByteArray base64_to_byte(std::string const& encoded_string);
+        std::string base64_encode(const std::string &s);
+        std::string base64_decode(const std::string &s);
+        bool is_base64(const std::string& source);
+    }
+#endif
+
 #ifdef USE_BOOST_LOG
 namespace log{
         enum log_level{
@@ -935,6 +947,22 @@ namespace arcirk::widgets{
         (arcirk::BJson, client_ref)
     );
 
+    BOOST_FUSION_DEFINE_STRUCT(
+        (arcirk::database), messages,
+        (arcirk::BJson, user_uuid)
+        (arcirk::BJson, receiver_uuid)
+        (arcirk::BJson, ref)
+        (std::string, message)
+        (std::string, token)
+        (int, date)
+        (std::string, content_type)
+        (int, unread_messages)
+        (arcirk::BJson, parent)
+        (bool, is_group)
+        (bool, deletion_mark)
+        (int, version)
+    );
+
 namespace arcirk::cryptography{
 
 #ifdef USE_BOOST_LOCALE
@@ -1025,6 +1053,51 @@ namespace arcirk::cryptography{
 }
 namespace arcirk::database {
 
+    enum roles{
+        dbUser,
+        dbAdministrator,
+        roles_INVALID=-1,
+    };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM(roles, {
+        {roles_INVALID, nullptr}    ,
+        {dbAdministrator, "admin"}  ,
+        {dbUser, "user"}  ,
+    })
+
+    enum text_type{
+        dbText,
+        dbHtmlText,
+        dbXmlText,
+        dbJsonText,
+        text_type_INVALID=-1,
+    };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM(text_type, {
+        {text_type_INVALID, nullptr}    ,
+        {dbText, "Text"}  ,
+        {dbHtmlText, "HtmlText"}  ,
+        {dbXmlText, "XmlText"}  ,
+        {dbJsonText, "JsonText"}  ,
+    })
+
+    enum devices_type{
+        devDesktop,
+        devServer,
+        devPhone,
+        devTablet,
+        devExtendedLib,
+        dev_INVALID=-1
+    };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM(devices_type, {
+        {dev_INVALID, nullptr},
+        {devDesktop, "Desktop"},
+        {devServer, "Server"},
+        {devPhone, "Phone"},
+        {devTablet, "Tablet"},
+        {devExtendedLib, "ExtendedLib"},
+    })
     enum tables {
         tbDatabaseConfig,
         tbHttpAddresses,
@@ -1033,6 +1106,7 @@ namespace arcirk::database {
         tbContainers,
         tbAvailableCertificates,
         tbMstscConnections,
+        tbServerConfig,
         tables_INVALID = -1,
     };
 
@@ -1045,6 +1119,7 @@ namespace arcirk::database {
         {tbContainers, "Containers" },
         {tbAvailableCertificates, "AvailableCertificates" },
         {tbMstscConnections, "MstscConnections" },
+        {tbServerConfig, "tbServerConfig" },
     })
 
     enum views{
