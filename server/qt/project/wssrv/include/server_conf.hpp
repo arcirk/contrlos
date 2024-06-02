@@ -275,19 +275,22 @@ namespace arcirk {
         }
     }
 
-    static inline void log(const QString& what, const QString& message, const QString& function = {}, bool save_log = false, const QString& error_log_dir = {}){
+    static inline void log(const std::string& what, const std::string& message, const std::string& function = {}, bool save_log = false, const QString& error_log_dir = {}){
 
-        QString result = QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss") + " ";
-        if(!function.isEmpty()){
-            result.append(function);
-            result.append(":");
+        std::string time = QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss").toStdString();
+
+        std::string _function;
+        if(!function.empty()){
+            _function.append(function);
+            _function.append(" : ");
         }
 
+        std::string result;
         result.append(what);
         result.append(": ");
         result.append(message);
 
-        qDebug() << result;
+        qDebug() << time.c_str() << _function.c_str() << result.c_str();
 
         if(!save_log)
             return;
@@ -307,8 +310,7 @@ namespace arcirk {
         auto file = QFile(dir.filePath(QString(ARCIRK_SERVER_NAME) + ".log"));
         if(file.open(QIODevice::Append | QIODevice::Text)){
             QTextStream writeStream(&file);
-            writeStream << '\n';
-            writeStream << result;
+            writeStream << '\n' << time.c_str() << '\t' << _function.c_str() << '\t' << result.c_str();
             file.close();
         }
     }

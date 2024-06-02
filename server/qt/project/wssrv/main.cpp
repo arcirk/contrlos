@@ -18,6 +18,8 @@ using namespace arcirk;
 
 void read_command_line(const command_line_parser::line_parser& parser, server::server_config& conf){
 
+    using namespace arcirk::cryptography;
+
     if(parser.option_exists("-h")){
         conf.ServerHost = parser.option("-h");
     }
@@ -78,11 +80,18 @@ void load_certs(boost::asio::ssl::context& ctx, const QString& cert, const QStri
 
 int main(int argc, char *argv[])
 {
+
+    using namespace arcirk::cryptography;
+
     QCoreApplication a(argc, argv);
 
     log("start server", "Проверка структуры каталогов", __FUNCTION__, true);
 
     auto conf = arcirk::server::server_config();
+    conf.ServerUser = "admin";
+    conf.ServerUserHash = get_hash("admin", "admin");
+    conf.ServerHost = "127.0.0.1";
+    conf.ServerPort = 8080;
 
     auto result = verify_application::verify_directorias<arcirk::server::server_config>(conf, ARCIRK_SERVER_CONF, ARCIRK_VERSION);
     if(!result){
@@ -101,6 +110,7 @@ int main(int argc, char *argv[])
     auto file = dir.to_file(ARCIRK_SERVER_CONF);
     if(!file.exists()){
         conf.ref = to_byte(to_binary(QUuid::createUuid()));
+        conf.ThreadsCount = 4;
         auto dump = pre::json::to_json(conf).dump(4);
         if(file.open(QIODevice::WriteOnly)){
             file.write(dump.c_str());
@@ -131,11 +141,11 @@ int main(int argc, char *argv[])
         ctx,
         tcp::endpoint{address, port},
         doc_root,
-        boost::make_shared<shared_state>())->run();
+        boost::make_shared<arcirk::shared_state>())->run();
 
     // Capture SIGINT and SIGTERM to perform a clean shutdown
-    net::signal_set signals(ioc, SIGINT, SIGTERM);
-    signals.async_wait(
+    net::signal_set boost_signals(ioc, SIGINT, SIGTERM);
+    boost_signals.async_wait(
         [&](beast::error_code const&, int)
         {
             // Stop the `io_context`. This will cause `run()`

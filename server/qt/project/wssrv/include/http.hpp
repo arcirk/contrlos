@@ -17,16 +17,20 @@
 #include <boost/asio/strand.hpp>
 #include <boost/make_unique.hpp>
 #include <boost/optional.hpp>
-#include <algorithm>
-#include <cstdlib>
-#include <functional>
+// #include <algorithm>
+// #include <cstdlib>
+// #include <functional>
 #include <iostream>
-#include <memory>
+//#include <memory>
 #include <string>
-#include <thread>
-#include <vector>
+// #include <thread>
+// #include <vector>
 #include <boost/variant.hpp>
 #include <boost/config.hpp>
+
+#ifdef IS_USE_QT_LIB
+#include <QDebug>
+#endif
 
 class shared_state;
 class plain_websocket_session;
@@ -190,15 +194,24 @@ handle_request(
     if(unauthorized)
         return send(server_authorization_error("Incorrect username or password"));
 
-    std::cout << static_cast<std::string>(req.target()) << std::endl;
+// #ifndef IS_USE_QT_LIB
+//     std::cout << static_cast<std::string>(req.target()) << std::endl;
+// #else
+//     qDebug() << static_cast<std::string>(req.target());
+// #endif
     // Make sure we can handle the method
     if( req.method() != http::verb::get &&
         req.method() != http::verb::head &&
         req.method() != http::verb::post)
         return send(bad_request("Unknown HTTP-method"));
 
+    // std::string path = path_cat(doc_root, "/");
+    // if(req.target().empty()){
+    //     path.append("index.html");
+    // }
+
     // Request path must be absolute and not contain "..".
-    if( req.target().empty() ||
+    if(req.target().empty() ||
         req.target()[0] != '/' ||
         req.target().find("..") != beast::string_view::npos)
         return send(bad_request("Illegal request-target"));
@@ -265,25 +278,33 @@ fail(beast::error_code ec, char const* what, bool conv = true)
 
     std::tm tm = arcirk::date::current_date();
     char cur_date[100];
-    std::strftime(cur_date, sizeof(cur_date), "%c", &tm);
+    std::strftime(cur_date, sizeof(cur_date), "%d.%m.%Y %T", &tm);
 
     int code = ec.value();
     std::string szCode = code != 0 ? " " + std::to_string(code) : "";
     std::string msg = code != 0 ? "::" + ec.message() : "";
     std::string what_ = conv ? arcirk::strings::from_utf(what) : what;
 
+#ifndef IS_USE_QT_LIB
     std::cerr << std::string(cur_date) << " Error" << szCode << ": " << what_ << msg << std::endl;
+#else
+    qCritical() << std::string(cur_date).c_str() << " Error" << szCode.c_str() << ": " << what_.c_str() << msg.c_str();
+#endif
 }
 
 static void info(const std::string& what, const std::string& message, bool conv = true){
     std::tm tm = arcirk::date::current_date();
     char cur_date[100];
-    std::strftime(cur_date, sizeof(cur_date), "%c", &tm);
+    std::strftime(cur_date, sizeof(cur_date), "%d.%m.%Y %T", &tm);
 
+#ifndef IS_USE_QT_LIB
     if(conv)
         std::cout << std::string(cur_date) << " " << what << ": " << arcirk::strings::from_utf(message) << std::endl;
     else
         std::cout << std::string(cur_date) << " " << what << ": " <<message << std::endl;
+#else
+    qDebug() << std::string(cur_date).c_str() << " " << what.c_str() << ": " << message.c_str();
+#endif
 }
 
 #endif

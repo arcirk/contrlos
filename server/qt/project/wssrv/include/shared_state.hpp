@@ -7,14 +7,16 @@
 
 #include <global.hpp>
 #include "server_conf.hpp"
+#include <fs.hpp>
+#include "directory_structure_check.hpp"
 
 #include <boost/smart_ptr.hpp>
-#include <memory>
+// #include <memory>
 #include <mutex>
 #include <string>
-#include <unordered_set>
+// #include <unordered_set>
 #include <map>
-#include <set>
+// #include <set>
 #include <variant>
 #include <vector>
 #include <ctime>
@@ -23,6 +25,11 @@
 //#include "http_sync_client.hpp"
 
 //#include <task.hpp>
+
+#ifdef IS_USE_QT_LIB
+#include <QFile>
+#include <QDir>
+#endif
 
 template<class Derived>
 class websocket_session;
@@ -62,32 +69,69 @@ namespace arcirk{
 //    return app_conf;
 //}
 
-//static inline boost::filesystem::path app_directory() {
+#ifndef IS_USE_QT_LIB
+static inline boost::filesystem::path app_directory() {
 
-//    return boost::filesystem::path(program_data()) /+ ARCIRK_VERSION;
+    return boost::filesystem::path(program_data()) /+ ARCIRK_VERSION;
 
-//}
+}
+#else
 
-//static inline void read_conf(server::server_config & result, const boost::filesystem::path& root_conf, const std::string& file_name){
+inline arcirk::filesystem::FSPath app_directory() {
+    using namespace arcirk::filesystem;
+    using namespace arcirk::verify_application;
+    FSPath dir(working_directory());
+    dir /= ARCIRK_VERSION;
+    return dir;
+}
 
-//    using namespace boost::filesystem;
-//    using json = nlohmann::json;
+#endif
 
-//    try {
-//        path conf = root_conf /+ file_name.c_str();
+#ifndef IS_USE_QT_LIB
+static inline void read_conf(server::server_config & result, const boost::filesystem::path& root_conf, const std::string& file_name){
 
-//        if(exists(conf)){
-//            std::ifstream file(conf.string(), std::ios_base::in);
-//            std::string str{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
-//            if(!str.empty()){
-//                result = arcirk::secure_serialization<server::server_config>(str);
-//            }
-//        }
-//    } catch (std::exception &e) {
-//        std::cerr << e.what() << std::endl;
-//    }
+   using namespace boost::filesystem;
+   using json = nlohmann::json;
 
-//}
+   try {
+       path conf = root_conf /+ file_name.c_str();
+
+       if(exists(conf)){
+           std::ifstream file(conf.string(), std::ios_base::in);
+           std::string str{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+           if(!str.empty()){
+               result = arcirk::secure_serialization<server::server_config>(str);
+           }
+       }
+   } catch (std::exception &e) {
+       std::cerr << e.what() << std::endl;
+   }
+
+}
+#else
+
+inline void read_conf(server::server_config & result, arcirk::filesystem::FSPath& root_conf, const QString& file_name){
+
+    using namespace arcirk::filesystem;
+
+    try {
+        QFile conf = root_conf.to_file(file_name);
+
+        if(conf.exists()){
+
+            if(conf.open(QIODevice::ReadOnly)){
+                auto data = conf.readAll().toStdString();
+                result = arcirk::secure_serialization<server::server_config>(json::parse(data));
+            }
+
+        }
+    } catch (std::exception &e) {
+        fail("Error", arcirk::strings::to_utf(e.what()).c_str(), __FUNCTION__, true);
+    }
+
+}
+
+#endif
 
 //static inline void write_conf(server::server_config & conf, const boost::filesystem::path& root_conf, const std::string& file_name) {
 //    using namespace boost::filesystem;
@@ -191,7 +235,7 @@ public:
 //    arcirk::server::server_command_result profile_directory_delete_directory(const variant_t& param, const variant_t& session_id);
 //    arcirk::server::server_command_result profile_directory_delete_file(const variant_t& param, const variant_t& session_id);
 
-    nlohmann::json get_file_list(const std::string target);
+    json get_file_list(const std::string target);
 
 //    static void native_exception_(const char* func, std::basic_string<char, std::char_traits<char>, std::allocator<char>> msg){
 //        std::string err(func);

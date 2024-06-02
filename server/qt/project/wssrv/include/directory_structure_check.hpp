@@ -12,7 +12,8 @@
 namespace arcirk::verify_application {
 
     inline QString working_directory(){
-        return QStandardPaths::standardLocations(QStandardPaths::AppConfigLocation).at(1);
+        auto m = QStandardPaths::standardLocations(QStandardPaths::AppConfigLocation);
+        return m.at(1);
     }
 
 
@@ -42,6 +43,8 @@ namespace arcirk::verify_application {
         result = v_dir.mkpath();
         if(!result)
             return false;
+
+        conf.ServerHttpRoot = v_dir.path().toStdString();
 
         QString current_address = "127.0.0.1:8080";
         if(!conf.ServerHost.empty())

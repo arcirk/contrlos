@@ -14,7 +14,7 @@ class listener : public std::enable_shared_from_this<listener>
     ssl::context& ctx_;
     tcp::acceptor acceptor_;
     std::shared_ptr<std::string const> doc_root_;
-    boost::shared_ptr<shared_state> state_;
+    boost::shared_ptr<arcirk::shared_state> state_;
 
 public:
     listener(
@@ -22,7 +22,7 @@ public:
         ssl::context& ctx,
         tcp::endpoint endpoint,
         std::shared_ptr<std::string const> const& doc_root,
-        boost::shared_ptr<shared_state> const& state)
+        boost::shared_ptr<arcirk::shared_state> const& state)
         : ioc_(ioc)
         , ctx_(ctx)
         , acceptor_(net::make_strand(ioc))
@@ -57,8 +57,12 @@ public:
             std::exit(0);
             //return;
         }
+        bool conv = true;
+#ifdef IS_USE_QT_LIB
+        conv = false;
+#endif
 
-        info(__FUNCTION__,  "start server listen " + endpoint.address().to_string() + " " + std::to_string(endpoint.port()) + " ...");
+        info(__FUNCTION__,  "start server listen " + endpoint.address().to_string() + " " + std::to_string(endpoint.port()) + " ...", conv);
 
         // Start listening for connections
         acceptor_.listen(

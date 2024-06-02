@@ -1,6 +1,10 @@
 #ifndef  BWEBSOCKETS_WEBSOCKETS_SESSION_HPP
 #define BWEBSOCKETS_WEBSOCKETS_SESSION_HPP
 
+#include <cstdlib>
+// #include <memory>
+#include <string>
+#include <vector>
 #include "http.hpp"
 
 #include "shared_state.hpp"
@@ -8,10 +12,7 @@
 #include <boost/pointer_cast.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <cstdlib>
-#include <memory>
-#include <string>
-#include <vector>
+
 #include <boost/asio/steady_timer.hpp>
 #include <boost/bind.hpp>
 
@@ -406,7 +407,7 @@ public:
     // Create the session
     explicit
     plain_websocket_session(
-            beast::tcp_stream&& stream, boost::shared_ptr<shared_state> sharedPtr, bool is_http_authorization)
+            beast::tcp_stream&& stream, boost::shared_ptr<arcirk::shared_state>&& sharedPtr, bool is_http_authorization)
         : ws_(std::move(stream))
         , state_(std::move(sharedPtr))
             , dead_line_(stream.socket().get_executor())
@@ -430,7 +431,7 @@ public:
         return ws_;
     }
 
-    boost::shared_ptr<shared_state>
+    boost::shared_ptr<arcirk::shared_state>
     state(){
         return state_;
     }
@@ -482,13 +483,13 @@ class ssl_websocket_session
 {
     websocket::stream<
     beast::ssl_stream<beast::tcp_stream>> ws_;
-    boost::shared_ptr<shared_state> state_;
+    boost::shared_ptr<arcirk::shared_state> state_;
     steady_timer dead_line_;
 public:
     // Create the ssl_websocket_session
     explicit
     ssl_websocket_session(
-            beast::ssl_stream<beast::tcp_stream>&& stream, boost::shared_ptr<shared_state> sharedPtr, bool is_http_authorization)
+            beast::ssl_stream<beast::tcp_stream>&& stream, boost::shared_ptr<arcirk::shared_state>&& sharedPtr, bool is_http_authorization)
             : ws_(std::move(stream))
             , state_(std::move(sharedPtr))
             , dead_line_(stream.next_layer().socket().get_executor())
@@ -512,13 +513,13 @@ public:
         return ws_;
     }
 
-    boost::shared_ptr<shared_state>
+    boost::shared_ptr<arcirk::shared_state>
     state(){
         return state_;
     }
 
     void join(){
-        start_date_ = arcirk::current_date();
+        start_date_ = arcirk::date::current_date();
         state_->join(this);
     }
 
@@ -554,7 +555,7 @@ template<class Body, class Allocator>
 void
 make_websocket_session(
         beast::tcp_stream stream,
-        http::request<Body, http::basic_fields<Allocator>> req, boost::shared_ptr<shared_state> sharedPtr, bool is_http_authorization)
+        http::request<Body, http::basic_fields<Allocator>> req, boost::shared_ptr<arcirk::shared_state> sharedPtr, bool is_http_authorization)
 {
     std::make_shared<plain_websocket_session>(
             std::move(stream), std::move(sharedPtr), is_http_authorization)->run(std::move(req));
@@ -564,7 +565,7 @@ template<class Body, class Allocator>
 void
 make_websocket_session(
         beast::ssl_stream<beast::tcp_stream> stream,
-        http::request<Body, http::basic_fields<Allocator>> req, boost::shared_ptr<shared_state> sharedPtr, bool is_http_authorization)
+        http::request<Body, http::basic_fields<Allocator>> req, boost::shared_ptr<arcirk::shared_state> sharedPtr, bool is_http_authorization)
 {
     std::make_shared<ssl_websocket_session>(
             std::move(stream), std::move(sharedPtr), is_http_authorization)->run(std::move(req));

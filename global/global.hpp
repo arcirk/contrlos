@@ -536,6 +536,34 @@ namespace arcirk{
     }
 #endif
 
+    // inline std::string get_sha1(const std::string& p_arg)
+    // {
+    //     boost::uuids::detail::sha1 sha1;
+    //     sha1.process_bytes(p_arg.data(), p_arg.size());
+    //     unsigned hash[5] = {0};
+    //     sha1.get_digest(hash);
+
+    //     // Back to string
+    //     char buf[41] = {0};
+
+    //     for (int i = 0; i < 5; i++)
+    //     {
+    //         std::sprintf(buf + (i << 3), "%08x", hash[i]);
+    //     }
+
+    //     return std::string(buf);
+    // }
+
+    // inline std::string get_hash(const std::string& first, const std::string& second){
+    //     std::string _usr(first);
+    //     const std::string& _pwd(second);
+
+    //     boost::trim(_usr);
+    //     boost::to_upper(_usr);
+
+    //     return get_sha1(_usr + _pwd);
+    // }
+
     }
 
 #ifdef USE_BASE64_UTILS
@@ -993,7 +1021,7 @@ namespace arcirk::cryptography{
             std::vector<char> key_(p.c_str(), p.c_str() + p.size() + 1);
             void* text = std::data(source_);
             void* pass = std::data(key_);
-            crypt_t(text, source_.size(), pass, (unsigned)key_.size());
+            crypt_t(text, (unsigned)source_.size(), pass, (unsigned)key_.size());
             std::string result(arcirk::strings::to_utf((char*)text));
             return result;
 #else

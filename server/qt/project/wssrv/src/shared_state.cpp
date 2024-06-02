@@ -8,7 +8,7 @@
 #include "../include/websocket_session.hpp"
 
 #include <algorithm>
-#include <locale>
+//#include <locale>
 
 //#include <query_builder.hpp>
 #include <boost/thread.hpp>
@@ -27,9 +27,11 @@ typedef std::vector<arcirk::database::tables> Tables_v;
 arcirk::shared_state::shared_state(){
 
     using namespace arcirk::server;
+    using namespace arcirk::filesystem;
 
     sett = server::server_config();
-    read_conf(sett, app_directory(), ARCIRK_SERVER_CONF);
+    auto dir =  app_directory();
+    read_conf(sett, dir, QString(ARCIRK_SERVER_CONF));
     if(sett.ServerUser.empty()){
         sett.ServerUser = "admin";
     }
@@ -92,8 +94,7 @@ void arcirk::shared_state::join(subscriber *session) {
     if(use_authorization())
         if(session->authorized())
             send_notify("Client Join", session, "ClientJoin");
-        else
-            send_notify("Client Join", session, "ClientJoin");
+
 }
 
 void arcirk::shared_state::send_notify(const std::string &message, subscriber *sender
@@ -1149,9 +1150,9 @@ arcirk::shared_state::get_sessions(const boost::uuids::uuid &user_uuid) {
 //    }
 //}
 
-//bool shared_state::allow_delayed_authorization() const {
-//    return sett.AllowDelayedAuthorization;
-//}
+bool arcirk::shared_state::allow_delayed_authorization() const {
+   return sett.AllowDelayedAuthorization;
+}
 
 //boost::filesystem::path shared_state::sqlite_database_path() const {
 //    using namespace boost::filesystem;
@@ -3392,12 +3393,12 @@ arcirk::shared_state::get_sessions(const boost::uuids::uuid &user_uuid) {
 
 //}
 
-//void shared_state::start_tasks() {
+// void arcirk::shared_state::start_tasks() {
 //    if(!task_manager->is_started()){
 //        task_manager->run();
 //        log(__FUNCTION__, "Все назначенные задания запущены.", true, sett.WriteJournal ? log_directory().string(): "");
 //    }
-//}
+// }
 
 //arcirk::server::server_command_result shared_state::profile_directory_file_list(const variant_t &param, const variant_t &session_id) {
 
@@ -3508,35 +3509,48 @@ arcirk::shared_state::get_sessions(const boost::uuids::uuid &user_uuid) {
 //    return result;
 //}
 
-//nlohmann::json shared_state::get_file_list(const std::string target) {
+json arcirk::shared_state::get_file_list(const std::string target) {
 
-//    using json = nlohmann::json;
-//    namespace fs = boost::filesystem;
+#ifndef IS_USE_QT_LIB
+   namespace fs = boost::filesystem;
 
-//    std::vector<fs::path> files;
+   std::vector<fs::path> files;
 
-//    fs::path dir(sett.ServerWorkingDirectory);
-//    dir /= sett.Version;
-//    //fs::path profile(dir);
-//    fs::path folder(dir);
-//    folder /= target;
+   fs::path dir(sett.ServerWorkingDirectory);
+   dir /= sett.Version;
+   //fs::path profile(dir);
+   fs::path folder(dir);
+   folder /= target;
 
-//    if(!exists(folder))
-//        return json{{"error", "Не верный каталог!"}};
+   if(!exists(folder))
+       return json{{"error", "Не верный каталог!"}};
 
-//    for (fs::directory_iterator it(folder), end; it != end; ++it) {
-//        if(!fs::is_directory(*it))
-//            files.push_back(*it);
-//    }
+   for (fs::directory_iterator it(folder), end; it != end; ++it) {
+       if(!fs::is_directory(*it))
+           files.push_back(*it);
+   }
 
-//    auto arr = json::array();
-//    for (auto it : files) {
-//        std::string p = it.string().substr(dir.string().length(), it.string().length() - dir.string().length());
-//        arr += p;
-//    }
+   auto arr = json::array();
+   for (auto it : files) {
+       std::string p = it.string().substr(dir.string().length(), it.string().length() - dir.string().length());
+       arr += p;
+   }
 
-//    return arr;
-//}
+   return arr;
+#else
+    auto p = app_directory() /= (QDir::separator() +  QString::fromStdString(target));
+    auto dir =  p.to_dir();
+    auto files = dir.entryInfoList(QDir::Files);
+    auto arr = json::array();
+    for(const auto& it : files){
+        //arr += it.fileName().toStdString();
+        //qDebug() << QDir::toNativeSeparators(it.absoluteFilePath());
+        arr += QDir::toNativeSeparators(it.absoluteFilePath()).toStdString();
+    }
+    return arr;
+#endif
+
+}
 
 //arcirk::server::server_command_result shared_state::delete_file(const variant_t &param, const variant_t &session_id) {
 
@@ -4005,9 +4019,9 @@ arcirk::shared_state::get_sessions(const boost::uuids::uuid &user_uuid) {
 
 //}
 
-//std::string arcirk::shared_state::log_directory() const {
-//    return {};
-//}
+std::string arcirk::shared_state::log_directory() const {
+   return {};
+}
 
 //arcirk::server::server_command_result shared_state::get_cert_user(const variant_t &param, const variant_t &session_id) {
 
@@ -4046,9 +4060,9 @@ arcirk::shared_state::get_sessions(const boost::uuids::uuid &user_uuid) {
 //    return result;
 //}
 
-//void shared_state::start() {
-//    run_server_tasks();
-//}
+void arcirk::shared_state::start() {
+   //run_server_tasks();
+}
 
 //arcirk::server::server_command_result shared_state::verify_administrator(const variant_t &param,
 //                                                                    const variant_t &session_id) {

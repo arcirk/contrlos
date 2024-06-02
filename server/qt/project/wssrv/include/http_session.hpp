@@ -121,14 +121,14 @@ class http_session
     boost::optional<http::request_parser<http::dynamic_body>> parser_;
 protected:
     beast::flat_buffer buffer_;
-    boost::shared_ptr<shared_state> state_;
+    boost::shared_ptr<arcirk::shared_state> state_;
 
 public:
     // Construct the session
     http_session(
         beast::flat_buffer buffer,
         std::shared_ptr<std::string const> const& doc_root,
-        boost::shared_ptr<shared_state> const& state)
+        boost::shared_ptr<arcirk::shared_state> const& state)
         : doc_root_(doc_root)
         , queue_(*this)
         , buffer_(std::move(buffer))
@@ -174,6 +174,7 @@ public:
             return fail(ec, __FUNCTION__);
 
         auto req = parser_->get();
+        const std::string target = static_cast<std::string>(req.target());
         bool http_authorization = false;
 
         if(state_->use_authorization()){
@@ -210,25 +211,38 @@ public:
             }
         }
 
-        auto req_ = parser_->release();
+        const auto m_type = static_cast<std::string>(mime_type(req.target()));
+        //qDebug() << static_cast<std::string>(m_type);
+        if (target.empty() || target == "/" || m_type == "text/css" || m_type == "image/jpeg")
+            return handle_request(*doc_root_, parser_->release(), queue_);
+
+        //auto req_ = parser_->release();
 
         if(!http_authorization){
-            const std::string target = static_cast<std::string>(req_.target());
-            if (target.empty() || target == "/" || target == "/favicon.ico") // откроем index.html
+            //const std::string target = static_cast<std::string>(req_.target());
+            if(!target.empty()){
+                const auto m_type = static_cast<std::string>(mime_type(req.target()));
+                //qDebug() << m_type.c_str();
+                if(m_type == "text/css"){
+                    return handle_request(*doc_root_, parser_->release(), queue_);
+                }
+            }
+
+            if (target.empty() || target == "/" || target == "/favicon.ico" || target == "/branding.css") // откроем index.html
                 return handle_request(*doc_root_, parser_->release(), queue_);
-            else if (target == "/api/files" && req_.method() == http::verb::get){
-                http::response<http::string_body> res{http::status::ok, req_.version()};
+            else if (target == "/api/files" && req.method() == http::verb::get){
+                http::response<http::string_body> res{http::status::ok, req.version()};
                 res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
                 res.set(http::field::content_type, "application/json");
-                res.keep_alive(req_.keep_alive());
-                res.body() = state_->get_file_list("html\\files").dump();
+                res.keep_alive(req.keep_alive());
+                res.body() = state_->get_file_list("html\\api\\files").dump();
                 res.prepare_payload();
                 return queue_(std::move(res));
             }else{
-                http::response<http::string_body> res{http::status::unauthorized, req_.version()};
+                http::response<http::string_body> res{http::status::unauthorized, req.version()};
                 res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
                 res.set(http::field::content_type, "text/html");
-                res.keep_alive(req_.keep_alive());
+                res.keep_alive(req.keep_alive());
                 res.body() = "An error occurred: Incorrect username or password.";
                 res.prepare_payload();
                 return queue_(std::move(res));
@@ -245,76 +259,75 @@ public:
                 res.prepare_payload();
                 return res;
             };
-            if(req_.method() == http::verb::post){
-                //const auto body = req_.body();
+            if(req.method() == http::verb::post){
 
-                std::string result;
-                try{
-                    //auto body_s = boost::beast::buffers_to_string(buffer_.data());
-                    std::string content_type = static_cast<std::string>(req[http::field::content_type]);
-                    std::string content_disp = static_cast<std::string>(req[http::field::content_disposition]);
-                    if(content_type == "multipart/form-data"){
-                        const auto data = req_.body().data();
-                        ByteArray bt(boost::asio::buffer_size(data));
-                        boost::asio::buffer_copy(boost::asio::buffer(bt), data);
-                        result = state_->save_file(content_disp, bt);
-                    }else{
-                        const auto body = boost::beast::buffers_to_string(req_.body().data());
-                        result = state_->handle_request(body, static_cast<std::string>(req_[http::field::authorization]));
-                    }
-                }catch (std::exception &e) {
-                    return queue_(bad_request(e.what()));
-                }
-                if(result.c_str() == "error")
-                    return queue_(bad_request("Ошибка в параметрах запроса"));
-                http::response<http::string_body> res{http::status::ok, req_.version()};
-                res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-                res.set(http::field::content_type, "application/json");
-                res.keep_alive(req_.keep_alive());
-                res.body() = result;
-                res.prepare_payload();
-                queue_(std::move(res));
+                // std::string result;
+                // try{
+                //     //auto body_s = boost::beast::buffers_to_string(buffer_.data());
+                //     std::string content_type = static_cast<std::string>(req[http::field::content_type]);
+                //     std::string content_disp = static_cast<std::string>(req[http::field::content_disposition]);
+                //     if(content_type == "multipart/form-data"){
+                //         const auto data = req_.body().data();
+                //         ByteArray bt(boost::asio::buffer_size(data));
+                //         boost::asio::buffer_copy(boost::asio::buffer(bt), data);
+                //         result = state_->save_file(content_disp, bt);
+                //     }else{
+                //         const auto body = boost::beast::buffers_to_string(req_.body().data());
+                //         result = state_->handle_request(body, static_cast<std::string>(req_[http::field::authorization]));
+                //     }
+                // }catch (std::exception &e) {
+                //     return queue_(bad_request(e.what()));
+                // }
+                // if(result.c_str() == "error")
+                //     return queue_(bad_request("Ошибка в параметрах запроса"));
+                // http::response<http::string_body> res{http::status::ok, req_.version()};
+                // res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+                // res.set(http::field::content_type, "application/json");
+                // res.keep_alive(req_.keep_alive());
+                // res.body() = result;
+                // res.prepare_payload();
+                // queue_(std::move(res));
             }else if(req.method() == http::verb::get)  {
-                std::string content_type = static_cast<std::string>(req[http::field::content_type]);
-                std::string content_disp = static_cast<std::string>(req[http::field::content_disposition]);
-                if (content_type == "multipart/form-data" && !content_disp.empty()) {
-                    auto temp_file = state_->handle_request_get_blob(content_disp);
-                    if(temp_file.empty())
-                        return queue_(bad_request("Ошибка получения бинарных данных!"));
-                    else{
-                        namespace fs = boost::filesystem;
-                        fs::path file(temp_file);
-                        if(!fs::exists(file))
-                            return queue_(bad_request("Ошибка получения бинарных данных!"));
+                // std::string content_type = static_cast<std::string>(req[http::field::content_type]);
+                // std::string content_disp = static_cast<std::string>(req[http::field::content_disposition]);
+                // if (content_type == "multipart/form-data" && !content_disp.empty()) {
+                //     auto temp_file = state_->handle_request_get_blob(content_disp);
+                //     if(temp_file.empty())
+                //         return queue_(bad_request("Ошибка получения бинарных данных!"));
+                //     else{
+                //         namespace fs = boost::filesystem;
+                //         fs::path file(temp_file);
+                //         if(!fs::exists(file))
+                //             return queue_(bad_request("Ошибка получения бинарных данных!"));
 
-                        beast::error_code ec;
-                        http::file_body::value_type body;
-                        body.open(temp_file.c_str(), beast::file_mode::scan, ec);
+                //         beast::error_code ec;
+                //         http::file_body::value_type body;
+                //         body.open(temp_file.c_str(), beast::file_mode::scan, ec);
 
-                        // Handle the case where the file doesn't exist
-                        if(ec == beast::errc::no_such_file_or_directory)
-                            return queue_(bad_request("Ошибка получения бинарных данных!"));
+                //         // Handle the case where the file doesn't exist
+                //         if(ec == beast::errc::no_such_file_or_directory)
+                //             return queue_(bad_request("Ошибка получения бинарных данных!"));
 
-                        // Handle an unknown error
-                        if(ec)
-                            return queue_(bad_request("Ошибка получения бинарных данных!"));
+                //         // Handle an unknown error
+                //         if(ec)
+                //             return queue_(bad_request("Ошибка получения бинарных данных!"));
 
-                        // Cache the size since we need it after the move
-                        auto const size = body.size();
+                //         // Cache the size since we need it after the move
+                //         auto const size = body.size();
 
-                        http::response<http::file_body> res{
-                                                            std::piecewise_construct,
-                                                            std::make_tuple(std::move(body)),
-                                                            std::make_tuple(http::status::ok, req.version())};
-                        res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-                        res.set(http::field::content_type, mime_type(temp_file));
-                        res.content_length(size);
-                        res.keep_alive(req.keep_alive());
-                        queue_(std::move(res));
+                //         http::response<http::file_body> res{
+                //                                             std::piecewise_construct,
+                //                                             std::make_tuple(std::move(body)),
+                //                                             std::make_tuple(http::status::ok, req.version())};
+                //         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+                //         res.set(http::field::content_type, mime_type(temp_file));
+                //         res.content_length(size);
+                //         res.keep_alive(req.keep_alive());
+                //         queue_(std::move(res));
 
-                    }
-                } else
-                    handle_request(*doc_root_, parser_->release(), queue_);
+                //     }
+                // } else
+                //     handle_request(*doc_root_, parser_->release(), queue_);
             }else
                 handle_request(*doc_root_, parser_->release(), queue_);
         }
@@ -362,7 +375,7 @@ public:
         beast::tcp_stream&& stream,
         beast::flat_buffer&& buffer,
         std::shared_ptr<std::string const> const& doc_root,
-        boost::shared_ptr<shared_state> const& state)
+        boost::shared_ptr<arcirk::shared_state> const& state)
         : http_session<plain_http_session>(
             std::move(buffer),
             doc_root, state)
@@ -420,7 +433,7 @@ public:
         ssl::context& ctx,
         beast::flat_buffer&& buffer,
         std::shared_ptr<std::string const> const& doc_root,
-        boost::shared_ptr<shared_state> const& state)
+        boost::shared_ptr<arcirk::shared_state> const& state)
         : http_session<ssl_http_session>(
             std::move(buffer),
             doc_root, state)
@@ -507,7 +520,7 @@ class detect_session : public std::enable_shared_from_this<detect_session>
     ssl::context& ctx_;
     std::shared_ptr<std::string const> doc_root_;
     beast::flat_buffer buffer_;
-    boost::shared_ptr<shared_state> state_;
+    boost::shared_ptr<arcirk::shared_state> state_;
 
 public:
     explicit
@@ -515,7 +528,7 @@ public:
             tcp::socket&& socket,
             ssl::context& ctx,
             std::shared_ptr<std::string const> const& doc_root,
-            boost::shared_ptr<shared_state> const& state)
+            boost::shared_ptr<arcirk::shared_state> const& state)
         : stream_(std::move(socket))
         , ctx_(ctx)
         , doc_root_(doc_root)
@@ -577,9 +590,10 @@ public:
             doc_root_,
             state_)->run();
     }
-};
 
 };
+
+
 
 
 #endif //UNTITLED1_HTTP_SESSION_HPP
