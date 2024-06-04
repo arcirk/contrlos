@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(server_manager VERSION 0.1 LANGUAGES CXX)
+set(TARGET server_manager)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -9,9 +10,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include_directories(${Boost_INCLUDE_DIRS}
-        ../global
-        )
+#include_directories(${Boost_INCLUDE_DIRS}
+#        ../global
+#        )
 
 LINK_DIRECTORIES(
         ../controls/cmake-build-debug
@@ -26,42 +27,51 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 find_package(Boost COMPONENTS thread regex filesystem system locale REQUIRED)
 
+set(ARCIRK_INCLUDE ../../../global)
+
 set(PROJECT_SOURCES
         main.cpp
-        maindialog.cpp
-        maindialog.h
-        maindialog.ui
+        src/maindialog.cpp
+        src/dialogseversettings.cpp
+        src/serverconfig.cpp
+        include/maindialog.h
+        include/dialogseversettings.h
+        include/serverconfig.h
+        ui/maindialog.ui
+        ui/dialogseversettings.ui
+        ui/serverconfig.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(server_manager
+    qt_add_executable(${TARGET}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
 # Define target properties for Android with Qt 6 as:
-#    set_property(TARGET server_manager APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+#    set_property(TARGET ${TARGET} APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
 # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
-        add_library(server_manager SHARED
+        add_library(${TARGET} SHARED
             ${PROJECT_SOURCES}
         )
 # Define properties for Android with Qt 5 after find_package() calls as:
 #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
-        add_executable(server_manager
+        add_executable(${TARGET}
             ${PROJECT_SOURCES}
         )
     endif()
 endif()
 
-target_include_directories(server_manager PRIVATE
+target_include_directories(${TARGET} PRIVATE
         ${Boost_INCLUDE_DIRS}
         ../controls/include
+        ${ARCIRK_INCLUDE}
         )
 
-target_link_libraries(server_manager PRIVATE
+target_link_libraries(${TARGET} PRIVATE
         Qt${QT_VERSION_MAJOR}::Widgets
         controls
         Boost::locale
@@ -71,9 +81,9 @@ target_link_libraries(server_manager PRIVATE
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
 if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.server_manager)
+  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.${TARGET})
 endif()
-set_target_properties(server_manager PROPERTIES
+set_target_properties(${TARGET} PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
@@ -82,12 +92,12 @@ set_target_properties(server_manager PROPERTIES
 )
 
 include(GNUInstallDirs)
-install(TARGETS server_manager
+install(TARGETS ${TARGET}
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(server_manager)
+    qt_finalize_executable(${TARGET})
 endif()

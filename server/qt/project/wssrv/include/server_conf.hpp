@@ -42,7 +42,7 @@ BOOST_FUSION_DEFINE_STRUCT(
     (std::string, WebDavPwd)
     (std::string, WebDavRoot)
     (bool, WebDavSSL)
-    (int, SQLFormat)
+    (std::string, SQLFormat)
     (std::string, SQLHost)
     (std::string, SQLUser)
     (std::string, SQLPassword)
@@ -59,7 +59,7 @@ BOOST_FUSION_DEFINE_STRUCT(
     (bool, ResponseTransferToBase64)
     (bool, AllowDelayedAuthorization)
     (bool, AllowHistoryMessages)
-    (std::string, ExchangePlan)
+    (arcirk::BJson, ExchangePlan)
     (std::string, ServerProtocol)
     (bool, WriteJournal)
     (bool, AllowIdentificationByWINSID)
@@ -337,6 +337,61 @@ namespace arcirk {
         [[nodiscard]] const char* uuid_form() const noexcept { return uuid_form_.c_str(); }
         [[nodiscard]] const char* command() const noexcept { return command_.c_str(); }
     };
+
+    inline  std::vector<std::tuple<std::string, std::string, json>> server_to_tuple(const arcirk::server::server_config& conf){
+
+        const std::map<std::string, std::string> m_aliases = {
+            std::make_pair("ServerHost", "IP адрес хоста"),
+            std::make_pair("ServerPort", "Порт сервера"),
+            std::make_pair("ServerUser", "Пользователь"),
+            std::make_pair("ServerUserHash", "Хеш пользователя"),
+            std::make_pair("ServerName", "Имя сервера"),
+            std::make_pair("ServerHttpRoot", "Путь к HTTP каталогу"),
+            std::make_pair("ServerWorkingDirectory", "Рабочая директория"),
+            std::make_pair("AutoConnect", "Автоматическое подключение"),
+            std::make_pair("UseLocalWebDavDirectory", "Использовать локальный WebDav каталог"),
+            std::make_pair("LocalWebDavDirectory", "Локальный WebDav каталог"),
+            std::make_pair("WebDavHost", "Адрес WebDav сервера"),
+            std::make_pair("WebDavUser", "Пользователь WebDav сервера"),
+            std::make_pair("WebDavPwd", "Пароль пользователя WebDav сервера"),
+            std::make_pair("WebDavRoot", "Коренвая директория WebDav сервера"),
+            std::make_pair("WebDavSSL", "Использование SSL на WebDav сервере"),
+            std::make_pair("SQLFormat", "Тип SQL сервера"),
+            std::make_pair("SQLHost", "Адрес SQL сервера"),
+            std::make_pair("SQLUser", "Пользователь SQL сервера"),
+            std::make_pair("SQLPassword", "Пароль пользователя SQL сервера"),
+            std::make_pair("SQLPassword", "Пароль пользователя SQL сервера"),
+            std::make_pair("HSHost", "Адрес веб сервиса"),
+            std::make_pair("HSUser", "Пользователь веб сервиса"),
+            std::make_pair("HSPassword", "Пароль пользователь веб сервиса"),
+            std::make_pair("ServerSSL", "Использование SSL на веб сервисе"),
+            std::make_pair("SSL_crt_file", "Имя файла сертификата"),
+            std::make_pair("SSL_key_file", "Имя файла ключа сертификата"),
+            std::make_pair("UseAuthorization", "Использовать авторизацию на сервере"),
+            std::make_pair("ApplicationProfile", "Профиль приложения"),
+            std::make_pair("ThreadsCount", "Количество потоков"),
+            std::make_pair("Version", "Версия"),
+            std::make_pair("ResponseTransferToBase64", "Конвертировать ответ свервера в base64"),
+            std::make_pair("AllowDelayedAuthorization", "Разрешить отложенную авторизацию"),
+            std::make_pair("AllowHistoryMessages", "Хранить историю сообщений"),
+            std::make_pair("ExchangePlan", "Идентификатор плана обмена"),
+            std::make_pair("ServerProtocol", "Протокол сервера"),
+            std::make_pair("WriteJournal", "Записывать журнал"),
+            std::make_pair("AllowIdentificationByWINSID", "Разрешить авторизацию по Win SID"),
+            std::make_pair("ref", "Идентификатор сервера"),
+        };
+
+        auto object = pre::json::to_json(conf);
+
+        std::vector<std::tuple<std::string, std::string, json>> result{};
+
+        for(auto itr = object.items().begin(); itr != object.items().end(); ++itr){
+            result.push_back(std::make_tuple(itr.key(), m_aliases.find(itr.key())->second, itr.value()));
+        }
+
+        return result;
+
+    }
 
 #endif // SERVER_CONF_HPP
 

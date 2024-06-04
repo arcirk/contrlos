@@ -1,5 +1,5 @@
-#include "maindialog.h"
-#include "./ui_maindialog.h"
+#include "../include/maindialog.h"
+#include "../ui/ui_maindialog.h"
 
 MainDialog::MainDialog(QWidget *parent)
     : QDialog(parent)
