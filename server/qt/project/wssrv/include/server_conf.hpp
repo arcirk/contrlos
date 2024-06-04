@@ -6,12 +6,15 @@
 #include <QUuid>
 #include <global.hpp>
 #include "directory_structure_check.hpp"
-
+#include <QString>
 
 #define ARCIRK_VERSION "1.2.0"
 #define ARCIRK_SERVER_CONF "server_conf.json"
 #define ARCIRK_SERVER_NAME "wssrv"
 #define CLIENT_VERSION 4
+
+#define ARCIRK_SERVER_UUID "539bdf4d-5663-48c7-bf8b-af6002d410ea"
+#define ARCIRK_DATABASAE_FILE  "arcirk.sqlite"
 
 using namespace arcirk::strings;
 
@@ -125,7 +128,7 @@ BOOST_FUSION_DEFINE_STRUCT(
     )
 
 inline QUuid uuid_to_quuid(const boost::uuids::uuid& value){
-    return QUuid::fromString(boost::to_string(value).c_str());
+    return QUuid::fromString(QString::fromStdString(boost::to_string(value)));
 }
 
 namespace arcirk {

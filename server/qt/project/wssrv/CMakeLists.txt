@@ -61,7 +61,7 @@ else()
 endif()
 
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Sql Network)
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Sql Network)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Sql Network)
 
 
@@ -86,9 +86,12 @@ add_executable(wssrv
     wssrv.qrc
     index_template.html
     ../../../../global/base64utils/base64.cpp
+    ../../../../global/variant/item_data.cpp
     ${CPPS}
     ${CPPH}
     ${CPPHC}
+    src/sql/datautils.cpp
+    include/sql/datautils.h
 )
 
 set(ARCIRK_INCLUDE ../../../../global)

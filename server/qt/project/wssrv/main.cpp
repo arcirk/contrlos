@@ -6,12 +6,15 @@
 #include <variant/item_data.h>
 #include <QDebug>
 #include <QUuid>
+#include <QSqlDatabase>
+#include <QSqlError>
 
 #include "include/net.hpp"
 #include "include/beast.hpp"
 #include "include/common/server_certificate.hpp"
 #include "include/shared_state.hpp"
 #include "include/listener.hpp"
+#include "include/sql/datautils.h"
 
 using namespace arcirk::strings;
 using namespace arcirk;
@@ -104,12 +107,13 @@ int main(int argc, char *argv[])
 
     using namespace arcirk::verify_application;
     using namespace arcirk::filesystem;
+    using namespace arcirk::database;
 
     FSPath dir(working_directory());
     dir /= ARCIRK_VERSION;
     auto file = dir.to_file(ARCIRK_SERVER_CONF);
     if(!file.exists()){
-        conf.ref = to_byte(to_binary(QUuid::createUuid()));
+        conf.ref = to_byte(to_binary(QUuid::fromString(ARCIRK_SERVER_UUID)));
         conf.ThreadsCount = 4;
         auto dump = pre::json::to_json(conf).dump(4);
         if(file.open(QIODevice::WriteOnly)){
@@ -117,6 +121,22 @@ int main(int argc, char *argv[])
             file.close();
         }
     }
+
+    auto m_db = QSqlDatabase::addDatabase("QSQLITE", "server_database");
+    FSPath data_path(dir.path());
+    data_path /= "data";
+    m_db.setDatabaseName(data_path.to_file(ARCIRK_DATABASAE_FILE).fileName());
+    if(!m_db.open()){
+        fail("Error", m_db.lastError().text(), __FUNCTION__, true);
+        return -1;
+    }
+
+    auto d_utils = DataUtils(m_db, conf);
+    if(!d_utils.verify()){
+        fail("Error", m_db.lastError().text(), __FUNCTION__, true);
+        return -1;
+    }else
+        d_utils.verify_default_data();
 
     auto const address = net::ip::make_address(conf.ServerHost);
     auto const port = static_cast<unsigned short>(conf.ServerPort);

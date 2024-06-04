@@ -3,11 +3,10 @@
 
 #include <global.hpp>
 #include <fs.hpp>
-
 #include <QStandardPaths>
 #include <QDir>
 
-//typedef FSPath path;
+#define ARCIRK_SERVER_NAME_ "winsrv"
 
 namespace arcirk::verify_application {
 
@@ -60,13 +59,41 @@ namespace arcirk::verify_application {
                     conf.ServerPort = 8080;
                 }
             }
-            auto file_tmp = QFile("://index_template.html");
+            auto file_tmp = QFile(":/http/index.html");
             if(file_tmp.open(QIODevice::ReadOnly)){
-                auto data = QString(file_tmp.readAll()).arg(current_address);
+                auto data = QString(file_tmp.readAll()).arg(ARCIRK_SERVER_NAME_);
                 file_tmp.close();
                 if(index_html.open(QIODevice::WriteOnly)){
                     index_html.write(data.toUtf8());
                     index_html.close();
+                }else
+                    return false;
+            }else
+                return false;
+        }
+        auto branding = v_dir.to_file("branding.cssl");
+        if(!branding.exists()){
+            auto file_tmp = QFile(":/http/branding.css");
+            if(file_tmp.open(QIODevice::ReadOnly)){
+                auto data = file_tmp.readAll();
+                file_tmp.close();
+                if(branding.open(QIODevice::WriteOnly)){
+                    branding.write(data);
+                    branding.close();
+                }else
+                    return false;
+            }else
+                return false;
+        }
+        auto bg_plain = v_dir.to_file("branding.cssl");
+        if(!branding.exists()){
+            auto file_tmp = QFile(":/http/bg-plain.jpg");
+            if(file_tmp.open(QIODevice::ReadOnly)){
+                auto data = file_tmp.readAll();
+                file_tmp.close();
+                if(bg_plain.open(QIODevice::WriteOnly)){
+                    bg_plain.write(data);
+                    bg_plain.close();
                 }else
                     return false;
             }else

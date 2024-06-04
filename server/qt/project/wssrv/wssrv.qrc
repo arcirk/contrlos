@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
-        <file>index_template.html</file>
+        <file>http/bg-plain.jpg</file>
+        <file>http/branding.css</file>
+        <file>http/index.html</file>
     </qresource>
 </RCC>

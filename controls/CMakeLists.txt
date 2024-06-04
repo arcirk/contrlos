@@ -13,7 +13,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Sql Network)
 find_package(nlohmann_json CONFIG REQUIRED)
 
-add_definitions(-DCONTROLS_EXPORT_DLL)
+add_definitions(-D_CONTROLS_EXPORT_DLL)
+add_definitions(-DIS_USE_QT_LIB)
 
 add_library(controls SHARED
           controls_global.h

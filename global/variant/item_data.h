@@ -3,7 +3,7 @@
 
 #ifdef IS_USE_QT_LIB
 
-#ifdef CONTROLS_EXPORT_DLL
+#ifdef _CONTROLS_EXPORT_DLL
 #include "../../controls/controls_global.h"
 #else
 #define CONTROLS_EXPORT
@@ -68,7 +68,8 @@ namespace arcirk {
     }
 
     inline BJson to_nil_uuid(){
-        return to_byte(to_binary(QUuid::fromString(NIL_STRING_UUID)));
+       // auto ref = QUuid::fromString(NIL_STRING_UUID);
+        return to_byte(to_binary(QUuid()));
     }
 
     inline BJson generate_uuid(){
@@ -217,7 +218,8 @@ namespace arcirk {
     }
 
     inline QByteArray byte_to_qbyte(const BJson& value){
-        return {reinterpret_cast<const char*>(value.data()), (qsizetype)value.size()};
+        const int size = (int)value.size();
+        return {reinterpret_cast<const char*>(value.data()), size};
     }
 
     inline QVariant to_variant(const json& value){

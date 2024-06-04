@@ -1147,7 +1147,7 @@ namespace arcirk::database {
         {tbContainers, "Containers" },
         {tbAvailableCertificates, "AvailableCertificates" },
         {tbMstscConnections, "MstscConnections" },
-        {tbServerConfig, "tbServerConfig" },
+        {tbServerConfig, "ServerConfig" },
     })
 
     enum views{
