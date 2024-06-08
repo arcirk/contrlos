@@ -6,7 +6,8 @@
 #define SERVER_SHARED_STATE_HPP
 
 #include <global.hpp>
-#include "server_conf.hpp"
+#include <server_conf.hpp>
+#include "server_conf_n.hpp"
 #include <fs.hpp>
 #include "directory_structure_check.hpp"
 
@@ -30,6 +31,8 @@
 #include <QFile>
 #include <QDir>
 #endif
+
+using namespace arcirk::server;
 
 template<class Derived>
 class websocket_session;
@@ -108,6 +111,26 @@ static inline void read_conf(server::server_config & result, const boost::filesy
    }
 
 }
+static inline void write_conf(server::server_config & conf, const boost::filesystem::path& root_conf, const std::string& file_name) {
+   using namespace boost::filesystem;
+
+   if (!exists(arcirk::local_8bit(root_conf.string())))
+       return;
+   try {
+       std::string result = to_string(pre::json::to_json(conf));
+       std::ofstream out;
+       path conf_file = root_conf /+ file_name.c_str();
+       out.open(arcirk::local_8bit(conf_file.string()));
+       if (out.is_open()) {
+           out << result;
+           out.close();
+       }
+   } catch (std::exception &e) {
+       std::cerr << e.what() << std::endl;
+   }
+
+}
+
 #else
 
 inline void read_conf(server::server_config & result, arcirk::filesystem::FSPath& root_conf, const QString& file_name){
@@ -131,28 +154,23 @@ inline void read_conf(server::server_config & result, arcirk::filesystem::FSPath
 
 }
 
+inline void write_conf(server::server_config & conf, arcirk::filesystem::FSPath& root_conf, const QString& file_name) {
+
+    using namespace arcirk::filesystem;
+
+    QFile m_conf = root_conf.to_file(file_name);
+
+
+    if(m_conf.open(QIODevice::WriteOnly)){
+        m_conf.write(pre::json::to_json(conf).dump(4).c_str());
+        m_conf.close();
+    }
+
+}
+
 #endif
 
-//static inline void write_conf(server::server_config & conf, const boost::filesystem::path& root_conf, const std::string& file_name) {
-//    using namespace boost::filesystem;
 
-//    if (!exists(arcirk::local_8bit(root_conf.string())))
-//        return;
-//    try {
-//        std::string result = to_string(pre::json::to_json(conf));
-//        std::ofstream out;
-//        path conf_file = root_conf /+ file_name.c_str();
-//        out.open(arcirk::local_8bit(conf_file.string()));
-//        if (out.is_open()) {
-//            out << result;
-//            out.close();
-//        }
-//    } catch (std::exception &e) {
-//        std::cerr << e.what() << std::endl;
-//    }
-
-//}
-//}
 
 class shared_state
 {
@@ -192,10 +210,10 @@ public:
 //    //команды сервера
 //    arcirk::server::server_command_result get_clients_list(const variant_t& param, const variant_t& session_id);
 //    arcirk::server::server_command_result get_users_list(const variant_t& param, const variant_t& session_id);
-//    arcirk::server::server_command_result server_version(const variant_t& session_id);
+    arcirk::server::server_command_result server_version(const variant_t& session_id);
     arcirk::server::server_command_result set_client_param(const variant_t& param, const variant_t& session_id);
-//    arcirk::server::server_command_result server_configuration(const variant_t& param, const variant_t& session_id);
-//    arcirk::server::server_command_result update_server_configuration(const variant_t& param, const variant_t& session_id);
+    arcirk::server::server_command_result server_configuration(const variant_t& param, const variant_t& session_id);
+    arcirk::server::server_command_result update_server_configuration(const variant_t& param, const variant_t& session_id);
 //    arcirk::server::server_command_result user_information(const variant_t& param, const variant_t& session_id);
 //    arcirk::server::server_command_result insert_or_update_user(const variant_t& param, const variant_t& session_id);
 //    arcirk::server::server_command_result command_to_client(const variant_t& param, const variant_t& session_id, const variant_t& session_id_receiver);
@@ -254,14 +272,12 @@ public:
 
 //    static std::string execute_random_sql_query(soci::session& sql, const std::string& query_text, bool add_line_number = false, bool add_empty_column = false) ;
 
-//    static nlohmann::json parse_json(const std::string& json_text, bool is_base64 = false);
-
     template<typename T, typename C, typename ... Ts>
     void add_method(const std::string &alias, C *c, T(C::*f)(Ts ...),
                     std::map<long, variant_t> &&def_args = {});
 
 //    //bool call_as_proc(const long& method_num, std::vector<variant_t> params);
-    void call_as_func(const long& method_num, arcirk::server::server_command_result *ret_value, std::vector<variant_t> params);
+    void call_as_func(const long& method_num, server_command_result *ret_value, std::vector<variant_t> params);
 
     long find_method(const std::string& method_name);
     [[nodiscard]] std::string get_method_name(const long& num) const;
@@ -379,7 +395,7 @@ private:
 //    [[nodiscard]] arcirk::database::user_info get_user_info(const std::string &hash);
 //    static void set_session_info(subscriber* session, const arcirk::database::user_info& info);
 
-//    bool is_operation_available(const boost::uuids::uuid &uuid, arcirk::database::roles level);
+    bool is_operation_available(const boost::uuids::uuid &uuid, arcirk::database::roles level);
 
 //    [[nodiscard]] boost::filesystem::path sqlite_database_path() const;
 //    std::string get_channel_token(soci::session& sql, const std::string &first, const std::string &second);
@@ -410,6 +426,9 @@ private:
     [[nodiscard]] long param_count(const long& method_num) const;
 
 //    nlohmann::json exec_http(const std::string& command, const nlohmann::json& param);
+
+    std::string error_text(const std::string& fun, const std::string& what) const;
+    json parse_json(const std::string& json_text, bool is_base64 = false);
 
 };
 
@@ -448,7 +467,7 @@ void shared_state::add_method(const std::string &alias, C *c, T(C::*f)(Ts ...),
     //                    }
     //    };
     MethodMeta meta{alias, sizeof...(Ts), !std::is_same<T, void>::value, std::move(def_args),
-        [f, c](std::vector<variant_t> &params) -> arcirk::server::server_command_result {
+        [f, c](std::vector<variant_t> &params) -> server_command_result {
             auto args = ref_tuple_gen(params, std::make_index_sequence<sizeof...(Ts)>());
             if constexpr (std::is_same<T, void>::value) {
                 std::apply(f, std::tuple_cat(std::make_tuple(c), args));

@@ -87,6 +87,8 @@ add_executable(wssrv
     index_template.html
     ../../../../global/base64utils/base64.cpp
     ../../../../global/variant/item_data.cpp
+    ../../../../global/server_conf.hpp
+    ../../../../global/global.hpp
     ${CPPS}
     ${CPPH}
     ${CPPHC}

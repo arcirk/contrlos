@@ -9,7 +9,7 @@
 #include <sql/query_builder.hpp>
 #include <QSqlDatabase>
 #include <QUuid>
-#include "../../include/server_conf.hpp"
+#include "../../include/server_conf_n.hpp"
 
 namespace arcirk::database{
 

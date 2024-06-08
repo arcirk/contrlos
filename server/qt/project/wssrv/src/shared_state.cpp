@@ -3,7 +3,7 @@
 
 #include <utility>
 //#include <global.hpp>
-#include "../include/server_conf.hpp"
+#include "../include/server_conf_n.hpp"
 
 #include "../include/websocket_session.hpp"
 
@@ -35,17 +35,17 @@ arcirk::shared_state::shared_state(){
     if(sett.ServerUser.empty()){
         sett.ServerUser = "admin";
     }
-//    add_method(enum_synonym(server::server_commands::ServerVersion), this, &shared_state::server_version);
+    add_method(enum_synonym(server::server_commands::ServerVersion), this, &shared_state::server_version);
 //    add_method(enum_synonym(server::server_commands::ServerOnlineClientsList), this, &shared_state::get_clients_list);
-//    add_method(enum_synonym(server::server_commands::SetClientParam), this, &shared_state::set_client_param);
-//    add_method(enum_synonym(server::server_commands::ServerConfiguration), this, &shared_state::server_configuration);
+    add_method(enum_synonym(server::server_commands::SetClientParam), this, &shared_state::set_client_param);
+    add_method(enum_synonym(server::server_commands::ServerConfiguration), this, &shared_state::server_configuration);
+    add_method(enum_synonym(server::server_commands::UpdateServerConfiguration), this, &shared_state::update_server_configuration);
 //    add_method(enum_synonym(server::server_commands::UserInfo), this, &shared_state::user_information);
 //    add_method(enum_synonym(server::server_commands::InsertOrUpdateUser), this, &shared_state::insert_or_update_user);
 //    add_method(enum_synonym(server::server_commands::CommandToClient), this, &shared_state::command_to_client);
 //    add_method(enum_synonym(server::server_commands::ServerUsersList), this, &shared_state::get_users_list);
 //    add_method(enum_synonym(server::server_commands::ExecuteSqlQuery), this, &shared_state::execute_sql_query);
-//    add_method(enum_synonym(server::server_commands::GetMessages), this, &shared_state::get_messages);
-//    add_method(enum_synonym(server::server_commands::UpdateServerConfiguration), this, &shared_state::update_server_configuration);
+//    add_method(enum_synonym(server::server_commands::GetMessages), this, &shared_state::get_messages);    
 //    add_method(enum_synonym(server::server_commands::HttpServiceConfiguration), this, &shared_state::get_http_service_configuration);
 //    add_method(enum_synonym(server::server_commands::WebDavServiceConfiguration), this, &shared_state::get_dav_service_configuration);
 //    add_method(enum_synonym(server::server_commands::InsertToDatabaseFromArray), this, &shared_state::insert_to_database_from_array);
@@ -747,27 +747,26 @@ bool arcirk::shared_state::verify_connection(const std::string &basic_auth) {
 
 //}
 
-//json arcirk::shared_state::parse_json(const std::string &json_text, bool is_base64) {
+json arcirk::shared_state::parse_json(const std::string &json_text, bool is_base64) {
 
-//    using n_json = nlohmann::json;
-//    std::string json_param;
+    std::string json_param;
 
-//    if(json_text.empty())
-//        throw native_exception(__FUNCTION__, "Не верный формат json!");
+    if(json_text.empty())
+        throw NativeException(error_text(__FUNCTION__, "Не верный формат json!").c_str());
 
-//    if(is_base64)
-//        json_param = arcirk::base64::base64_decode(json_text);
-//    else
-//        json_param = json_text;
+    if(is_base64)
+        json_param = arcirk::base64::base64_decode(json_text);
+    else
+        json_param = json_text;
 
-//    auto param_ = n_json::parse(json_param, nullptr, false);
-//    if(param_.is_discarded()){
-//        throw native_exception(__FUNCTION__, "Не верный формат json!");
-//    }
+    auto param_ = json::parse(json_param, nullptr, false); //выбросит исключение
+    if(param_.is_discarded()){
+        throw NativeException(error_text(__FUNCTION__, "Не верный формат json!").c_str());
+    }
 
-//    return param_;
+    return param_;
 
-//}
+}
 
 //arcirk::server::server_command_result arcirk::shared_state::command_to_client(const variant_t &param,
 //                                                                      const variant_t &session_id,
@@ -945,13 +944,13 @@ bool arcirk::shared_state::verify_connection(const std::string &basic_auth) {
 //    return result;
 //}
 
-//arcirk::server::server_command_result shared_state::server_version(const variant_t& session_id){
-//    using namespace arcirk::server;
-//    server::server_command_result result;
-//    result.command = enum_synonym(server::server_commands::ServerVersion);
-//    result.result = sett.Version;
-//    return result;
-//}
+arcirk::server::server_command_result arcirk::shared_state::server_version(const variant_t& session_id){
+    using namespace arcirk::server;
+    server::server_command_result result;
+    result.command = enum_synonym(server::server_commands::ServerVersion);
+    result.result = sett.Version;
+    return result;
+}
 
 //bool shared_state::call_as_proc(const long& method_num, std::vector<variant_t> params) {
 //
@@ -990,6 +989,11 @@ long arcirk::shared_state::find_method(const std::string &method_name) {
 
 long arcirk::shared_state::param_count(const long& method_num) const{
     return methods_meta[method_num].params_count;
+}
+
+std::string arcirk::shared_state::error_text(const std::string &fun, const std::string &what) const
+{
+    return fun + ":" + what;
 }
 
 std::string arcirk::shared_state::get_method_name(const long &num) const {
@@ -1263,85 +1267,80 @@ bool arcirk::shared_state::allow_delayed_authorization() const {
 //    session->set_user_uuid(arcirk::uuids::string_to_uuid(info.ref));
 //}
 
-//arcirk::server::server_command_result shared_state::update_server_configuration(const variant_t& param, const variant_t &session_id) {
+arcirk::server::server_command_result arcirk::shared_state::update_server_configuration(const variant_t& param, const variant_t &session_id) {
 
-//    using namespace arcirk::database;
-//    using n_json = nlohmann::json;
+    using namespace arcirk::database;
 
-//    boost::uuids::uuid uuid = arcirk::uuids::string_to_uuid(std::get<std::string>(session_id));
-//    bool operation_available = is_operation_available(uuid, roles::dbAdministrator);
-//    if (!operation_available)
-//        throw native_exception(__FUNCTION__, "Не достаточно прав доступа!");
+    boost::uuids::uuid uuid = arcirk::uuids::string_to_uuid(std::get<std::string>(session_id));
+    bool operation_available = is_operation_available(uuid, roles::dbAdministrator);
+    if (!operation_available)
+        throw NativeException(error_text(__FUNCTION__, "Не достаточно прав доступа!").c_str());
 
-//    auto param_ = parse_json(std::get<std::string>(param), true);
-//    auto p = param_.value("config", n_json::object());
-//    if(!p.empty()){
-//        sett = arcirk::secure_serialization<arcirk::server::server_config>(p);
-//        write_conf(sett, app_directory(), ARCIRK_SERVER_CONF);
-//    }
+    auto param_ = parse_json(std::get<std::string>(param), true);
+    auto p = param_.value("config", json::object());
+    if(!p.empty()){
+        sett = arcirk::secure_serialization<arcirk::server::server_config>(p);
+        auto dir =  app_directory();
+        write_conf(sett, dir, ARCIRK_SERVER_CONF);
+    }
 
-//    server::server_command_result result;
-//    result.result = "";
-//    result.command = enum_synonym(server::server_commands::UpdateServerConfiguration);
-//    result.message = "OK";
+    server::server_command_result result;
+    result.result = "";
+    result.command = enum_synonym(server::server_commands::UpdateServerConfiguration);
+    result.message = "OK";
 
-//    return result;
-//}
+    return result;
+}
 
-//arcirk::server::server_command_result shared_state::server_configuration(const variant_t& param, const variant_t &session_id) {
-//    using namespace arcirk::database;
-//    using n_json = nlohmann::json;
+arcirk::server::server_command_result arcirk::shared_state::server_configuration(const variant_t& param, const variant_t &session_id) {
+    using namespace arcirk::database;
 
-//    boost::uuids::uuid uuid = arcirk::uuids::string_to_uuid(std::get<std::string>(session_id));
-//    bool operation_available = is_operation_available(uuid, roles::dbAdministrator);
-////    if (!operation_available)
-////        throw native_exception("Не достаточно прав доступа!");
+    boost::uuids::uuid uuid = arcirk::uuids::string_to_uuid(std::get<std::string>(session_id));
+    bool operation_available = is_operation_available(uuid, roles::dbAdministrator);
 
-//    auto conf_copy = pre::json::to_json(sett);
-//    if(!operation_available){
-//        conf_copy["ServerUser"] = "Не достаточно прав доступа";
-//        conf_copy["ServerUserHash"] = "Не достаточно прав доступа";
-//        conf_copy["WebDavUser"] = "Не достаточно прав доступа";
-//        conf_copy["WebDavPwd"] = "Не достаточно прав доступа";
-//        conf_copy["SQLUser"] = "Не достаточно прав доступа";
-//        conf_copy["SQLPassword"] = "Не достаточно прав доступа";
-//        conf_copy["HSUser"] = "Не достаточно прав доступа";
-//        conf_copy["HSPassword"] = "Не достаточно прав доступа";
-//    }
-//    std::string conf_json = conf_copy.dump();
-//    server::server_command_result result;
-//    result.result = arcirk::base64::base64_encode(conf_json);
-//    result.command = enum_synonym(server::server_commands::ServerConfiguration);
-//    result.message = "OK";
-//    try {
-//        auto param_ = parse_json(std::get<std::string>(param), true);
-//        result.uuid_form = param_.value("uuid_form", arcirk::uuids::nil_string_uuid());
-//    } catch (std::exception &ex) {
-//        result.uuid_form = uuids::nil_string_uuid();
-//    }
-//    return result;
-//}
+    auto conf_copy = pre::json::to_json(sett);
+    if(!operation_available){
+        conf_copy["ServerUser"] = "Не достаточно прав доступа";
+        conf_copy["ServerUserHash"] = "Не достаточно прав доступа";
+        conf_copy["WebDavUser"] = "Не достаточно прав доступа";
+        conf_copy["WebDavPwd"] = "Не достаточно прав доступа";
+        conf_copy["SQLUser"] = "Не достаточно прав доступа";
+        conf_copy["SQLPassword"] = "Не достаточно прав доступа";
+        conf_copy["HSUser"] = "Не достаточно прав доступа";
+        conf_copy["HSPassword"] = "Не достаточно прав доступа";
+    }
+    std::string conf_json = conf_copy.dump();
+    server::server_command_result result;
+    result.result = arcirk::base64::base64_encode(conf_json);
+    result.command = enum_synonym(server::server_commands::ServerConfiguration);
+    result.message = "OK";
+    try {
+        auto param_ = parse_json(std::get<std::string>(param), true);
+        result.uuid_form = param_.value("uuid_form", to_nil_uuid());
+    } catch (std::exception &ex) {
+        result.uuid_form = to_nil_uuid();
+    }
+    return result;
+}
 
-//bool shared_state::is_operation_available(const boost::uuids::uuid &uuid, arcirk::database::roles level) {
+bool arcirk::shared_state::is_operation_available(const boost::uuids::uuid &uuid, arcirk::database::roles level) {
 
-//    using json = nlohmann::json;
-//    auto session = get_session(uuid);
-//    if(!session)
-//        return false;
-//    if(use_authorization() && !session->authorized())
-//        return false;
+    auto session = get_session(uuid);
+    if(!session)
+        return false;
+    if(use_authorization() && !session->authorized())
+        return false;
 
 
-//    json role_ = session->role();
-//    int u_role = (int)role_.get<arcirk::database::roles>();
-//    int d_role = (int)level;
+    json role_ = session->role();
+    int u_role = (int)role_.get<arcirk::database::roles>();
+    int d_role = (int)level;
 
-//    //return session->role() == enum_synonym(level);
-//    if(session->user_name() != "IIS_1C")
-//        return u_role >= d_role;
-//    else
-//        return true;
-//}
+    if(session->user_name() != "IIS_1C")
+        return u_role >= d_role;
+    else
+        return true;
+}
 
 //arcirk::server::server_command_result shared_state::user_information(const variant_t &param,
 //                                                                     const variant_t &session_id) {

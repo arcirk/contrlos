@@ -520,49 +520,21 @@ namespace arcirk{
         }
 
 #ifdef USE_BOOST_LOCALE
-    inline std::string to_utf(const std::string& source, const std::string& charset = "Windows-1251"){
-    #ifdef BOOST_WINDOWS
-        return boost::locale::conv::to_utf<char>(source, charset);
-    #else
-        return source;
-    #endif
-    }
-    inline std::string from_utf(const std::string& source, const std::string& charset = "Windows-1251"){
-    #ifdef BOOST_WINDOWS
-        return boost::locale::conv::from_utf(source, charset);
-    #else
-        return source;
-    #endif
-    }
+        inline std::string to_utf(const std::string& source, const std::string& charset = "Windows-1251"){
+        #ifdef BOOST_WINDOWS
+            return boost::locale::conv::to_utf<char>(source, charset);
+        #else
+            return source;
+        #endif
+        }
+        inline std::string from_utf(const std::string& source, const std::string& charset = "Windows-1251"){
+        #ifdef BOOST_WINDOWS
+            return boost::locale::conv::from_utf(source, charset);
+        #else
+            return source;
+        #endif
+        }
 #endif
-
-    // inline std::string get_sha1(const std::string& p_arg)
-    // {
-    //     boost::uuids::detail::sha1 sha1;
-    //     sha1.process_bytes(p_arg.data(), p_arg.size());
-    //     unsigned hash[5] = {0};
-    //     sha1.get_digest(hash);
-
-    //     // Back to string
-    //     char buf[41] = {0};
-
-    //     for (int i = 0; i < 5; i++)
-    //     {
-    //         std::sprintf(buf + (i << 3), "%08x", hash[i]);
-    //     }
-
-    //     return std::string(buf);
-    // }
-
-    // inline std::string get_hash(const std::string& first, const std::string& second){
-    //     std::string _usr(first);
-    //     const std::string& _pwd(second);
-
-    //     boost::trim(_usr);
-    //     boost::to_upper(_usr);
-
-    //     return get_sha1(_usr + _pwd);
-    // }
 
     }
 
@@ -991,6 +963,118 @@ namespace arcirk::widgets{
         (int, version)
     );
 
+    BOOST_FUSION_DEFINE_STRUCT(
+        (arcirk::database), servers,
+        (std::string, name)
+        (std::string, host)
+        (std::string, user)
+        (std::string, hash)
+        (arcirk::BJson, uuid)
+        (arcirk::BJson, ref)
+    );
+
+namespace arcirk::server{
+
+    enum server_commands{
+        ServerVersion, //Версия сервера
+        ServerOnlineClientsList, //Список активных пользователей
+        SetClientParam, //Параметры клиента
+        ServerConfiguration, //Конфигурация сервера
+        UserInfo, //Информация о пользователе (база данных)
+        InsertOrUpdateUser, //Обновить или добавить пользователя (база данных)
+        CommandToClient, //Команда клиенту (подписчику)
+        ServerUsersList, //Список пользователей (база данных)
+        ExecuteSqlQuery, //выполнить запрос к базе данных
+        GetMessages, //Список сообщений
+        UpdateServerConfiguration, //Обновить конфигурацию сервера
+        HttpServiceConfiguration, //Получить конфигурацию http сервиса 1С
+        InsertToDatabaseFromArray, //Добавить массив записей в базу //устарела удалить
+        SetNewDeviceId, //Явная установка идентификатора на устройствах где не возможно его получить
+        ObjectSetToDatabase, //Синхронизация объекта 1С с базой
+        ObjectGetFromDatabase, //Получить объект типа 1С из базы данных для десериализации
+        SyncGetDiscrepancyInData, //Получить расхождения в данных между базами на клиенте и на Сервере
+        SyncUpdateDataOnTheServer, //Обновляет данные на сервере по запросу клиента
+        WebDavServiceConfiguration, //Получить настройки WebDav
+        SyncUpdateBarcode, //синхронизирует на сервере штрихкод и номенклатуру по запросу клиента с сервером 1с
+        DownloadFile, //Загружает файл на сервер
+        GetInformationAboutFile, //получить информацию о файле
+        CheckForUpdates, //поиск фалов обрновления
+        UploadFile, //скачать файл
+        GetDatabaseTables,
+        FileToDatabase, //Загрузка таблицы базы данных из файла
+        ProfileDirFileList,
+        ProfileDeleteFile,
+        DeviceGetFullInfo,
+        GetTasks,
+        UpdateTaskOptions,
+        TasksRestart,
+        RunTask,
+        StopTask,
+        SendNotify,
+        GetCertUser,
+        VerifyAdministrator,
+        UserMessage,
+        GetChannelToken,
+        IsChannel,
+        GetDatabaseStructure,
+        Run1CScript,
+        CreateDirectories,
+        DeleteDirectory,
+        bDeleteFile,
+        CMD_INVALID=-1,
+    };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM(server_commands, {
+        {CMD_INVALID, nullptr}    ,
+        {ServerVersion, "ServerVersion"}  ,
+        {ServerOnlineClientsList, "ServerOnlineClientsList"}    ,
+        {SetClientParam, "SetClientParam"}    ,
+        {ServerConfiguration, "ServerConfiguration"}    ,
+        {UserInfo, "UserInfo"}    ,
+        {InsertOrUpdateUser, "InsertOrUpdateUser"}    ,
+        {CommandToClient, "CommandToClient"}    ,
+        {ServerUsersList, "ServerUsersList"}    ,
+        {ExecuteSqlQuery, "ExecuteSqlQuery"}    ,
+        {GetMessages, "GetMessages"}    ,
+        {UpdateServerConfiguration, "UpdateServerConfiguration"}    ,
+        {HttpServiceConfiguration, "HttpServiceConfiguration"}    ,
+        {InsertToDatabaseFromArray, "InsertToDatabaseFromArray"}    ,
+        {SetNewDeviceId, "SetNewDeviceId"}    ,
+        {ObjectSetToDatabase, "ObjectSetToDatabase"}    ,
+        {ObjectGetFromDatabase, "ObjectGetFromDatabase"}    ,
+        {SyncGetDiscrepancyInData, "SyncGetDiscrepancyInData"}    ,
+        {SyncUpdateDataOnTheServer, "SyncUpdateDataOnTheServer"}    ,
+        {WebDavServiceConfiguration, "WebDavServiceConfiguration"}    ,
+        {SyncUpdateBarcode, "SyncUpdateBarcode"}    ,
+        {DownloadFile, "DownloadFile"}    ,
+        {GetInformationAboutFile, "GetInformationAboutFile"}    ,
+        {CheckForUpdates, "CheckForUpdates"}    ,
+        {UploadFile, "UploadFile"}    ,
+        {GetDatabaseTables, "GetDatabaseTables"}    ,
+        {FileToDatabase, "FileToDatabase"}    ,
+        {ProfileDirFileList, "ProfileDirFileList"}    ,
+        {ProfileDeleteFile, "ProfileDeleteFile"}    ,
+        {DeviceGetFullInfo, "DeviceGetFullInfo"}    ,
+        {GetTasks, "GetTasks"}    ,
+        {UpdateTaskOptions, "UpdateTaskOptions"}    ,
+        {TasksRestart, "TasksRestart"}    ,
+        {RunTask, "RunTask"}    ,
+        {StopTask, "StopTask"}    ,
+        {SendNotify, "SendNotify"}    ,
+        {GetCertUser, "GetCertUser"}    ,
+        {VerifyAdministrator, "VerifyAdministrator"}    ,
+        {UserMessage, "UserMessage"}    ,
+        {GetChannelToken, "GetChannelToken"}    ,
+        {IsChannel, "IsChannel"}    ,
+        {GetDatabaseStructure, "GetDatabaseStructure"}    ,
+        {Run1CScript, "Run1CScript"}    ,
+        {CreateDirectories, "CreateDirectories"}    ,
+        {DeleteDirectory, "DeleteDirectory"}    ,
+        {bDeleteFile, "DeleteFile"}    ,
+    })
+
+}
+
 namespace arcirk::cryptography{
 
 #ifdef USE_BOOST_LOCALE
@@ -1135,6 +1219,7 @@ namespace arcirk::database {
         tbAvailableCertificates,
         tbMstscConnections,
         tbServerConfig,
+        tbServers,
         tables_INVALID = -1,
     };
 
@@ -1148,6 +1233,7 @@ namespace arcirk::database {
         {tbAvailableCertificates, "AvailableCertificates" },
         {tbMstscConnections, "MstscConnections" },
         {tbServerConfig, "ServerConfig" },
+        {tbServers, "Servers" },
     })
 
     enum views{

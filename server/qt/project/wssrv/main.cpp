@@ -2,7 +2,7 @@
 #include <global.hpp>
 #include <crypt/cryptography.hpp>
 #include <cl/command_line.hpp>
-#include "include/server_conf.hpp"
+#include "include/server_conf_n.hpp"
 #include <variant/item_data.h>
 #include <QDebug>
 #include <QUuid>
@@ -91,11 +91,6 @@ int main(int argc, char *argv[])
     log("start server", "Проверка структуры каталогов", __FUNCTION__, true);
 
     auto conf = arcirk::server::server_config();
-    conf.ServerUser = "admin";
-    conf.ServerUserHash = get_hash("admin", "admin");
-    conf.ServerHost = "127.0.0.1";
-    conf.ServerPort = 8080;
-
     auto result = verify_application::verify_directorias<arcirk::server::server_config>(conf, ARCIRK_SERVER_CONF, ARCIRK_VERSION);
     if(!result){
         fail("Ошибка", "Ошибка проверки структуры каталогов", __FUNCTION__, true);
@@ -125,7 +120,7 @@ int main(int argc, char *argv[])
     auto m_db = QSqlDatabase::addDatabase("QSQLITE", "server_database");
     FSPath data_path(dir.path());
     data_path /= "data";
-    m_db.setDatabaseName(data_path.to_file(ARCIRK_DATABASAE_FILE).fileName());
+    m_db.setDatabaseName(data_path.to_file(ARCIRK_DATABASE_FILE).fileName());
     if(!m_db.open()){
         fail("Error", m_db.lastError().text(), __FUNCTION__, true);
         return -1;

@@ -49,6 +49,7 @@ bool DataUtils::verify_default_data() {
     rs.exec();
     rs.next();
     int count = rs.value(0).toInt();
+
     builder.use(pre::json::to_json(m_conf));
 
     if(count == 0){

@@ -1,6 +1,6 @@
 #include "../include/dialogseversettings.h"
 #include "../ui/ui_dialogseversettings.h"
-//#include "websocketclient.h"
+#include <websocket/websocketclient.h>
 #include <QDir>
 #include <QFileDialog>
 #include <QToolButton>

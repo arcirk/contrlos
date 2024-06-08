@@ -23,24 +23,28 @@ add_definitions(-DIS_USE_QT_LIB)
 add_definitions(-DUSE_SYSTEM_USER_DATA)
 add_definitions(-DUSE_BOOST_LOCALE)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Sql Network WebSockets Svg)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql Network WebSockets Svg)
 find_package(Boost COMPONENTS thread regex filesystem system locale REQUIRED)
 
+file(GLOB CPPS "src/*.cpp"
+        CPPH "include/*.h"
+        CUI "ui/*.ui")
+
 set(ARCIRK_INCLUDE ../../../global)
+set(CONTROLS_INCLUDE ../../../controls/include)
 
 set(PROJECT_SOURCES
+        ${CPPS}
+        ${CPPH}
+        ${CUI}
+        ../../../global/websocket/websocketclient.h
+        ../../../global/websocket/websocketclient.cpp
         main.cpp
-        src/maindialog.cpp
-        src/dialogseversettings.cpp
-        src/serverconfig.cpp
-        include/maindialog.h
-        include/dialogseversettings.h
-        include/serverconfig.h
-        ui/maindialog.ui
-        ui/dialogseversettings.ui
-        ui/serverconfig.ui
-)
+        ba_resurses.qrc
+        include/manager_conf.hpp
+        include/sql/datautils.h
+        src/sql/datautils.cpp)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(${TARGET}
@@ -67,12 +71,16 @@ endif()
 
 target_include_directories(${TARGET} PRIVATE
         ${Boost_INCLUDE_DIRS}
-        ../controls/include
         ${ARCIRK_INCLUDE}
+        ${CONTROLS_INCLUDE}
         )
 
 target_link_libraries(${TARGET} PRIVATE
         Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Sql
+        Qt${QT_VERSION_MAJOR}::Network
+        Qt${QT_VERSION_MAJOR}::WebSockets
+        Qt${QT_VERSION_MAJOR}::Svg
         controls
         Boost::locale
         )

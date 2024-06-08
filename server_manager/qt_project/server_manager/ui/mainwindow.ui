@@ -1,0 +1,668 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>967</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Менеджер сервера</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../ba_resurses.qrc">
+    <normaloff>:/img/socket.ico</normaloff>:/img/socket.ico</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QWidget" name="widgetToolBar" native="true">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="minimumSize">
+          <size>
+           <width>2</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>2</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::VLine</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Sunken</enum>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnAdd">
+         <property name="toolTip">
+          <string>Доавить</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/itemAdd.png</normaloff>:/img/itemAdd.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnAddGroup">
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/addGroup.png</normaloff>:/img/addGroup.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnMoveTo">
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/move_to.png</normaloff>:/img/move_to.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnEdit">
+         <property name="toolTip">
+          <string>Изменить</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/itemEdit.png</normaloff>:/img/itemEdit.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnDelete">
+         <property name="toolTip">
+          <string>Удалить</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/itemDelete.png</normaloff>:/img/itemDelete.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnSendClientRelease">
+         <property name="toolTip">
+          <string>Загрузить новую версию мобильного приложения</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/save.png</normaloff>:/img/save.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="maximumSize">
+          <size>
+           <width>2</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::VLine</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Sunken</enum>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnInfo">
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/!.png</normaloff>:/img/!.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_6">
+         <property name="minimumSize">
+          <size>
+           <width>2</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::VLine</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Sunken</enum>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnRefresh">
+         <property name="toolTip">
+          <string>Обновить</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/update.png</normaloff>:/img/update.png</iconset>
+         </property>
+         <property name="popupMode">
+          <enum>QToolButton::DelayedPopup</enum>
+         </property>
+         <property name="toolButtonStyle">
+          <enum>Qt::ToolButtonIconOnly</enum>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="maximumSize">
+          <size>
+           <width>2</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::VLine</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Sunken</enum>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnDataImport">
+         <property name="toolTip">
+          <string>Импорт</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/importFromDatabase.png</normaloff>:/img/importFromDatabase.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnDataExport">
+         <property name="toolTip">
+          <string>Экспорт</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/exportKeysToDatabase.png</normaloff>:/img/exportKeysToDatabase.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="maximumSize">
+          <size>
+           <width>2</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::VLine</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Sunken</enum>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnSetLinkDevice">
+         <property name="toolTip">
+          <string>Привязать к устройству</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/link.png</normaloff>:/img/link.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnRegistryDevice">
+         <property name="toolTip">
+          <string>Зарегистрировать устройство</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/SqlDivaces.png</normaloff>:/img/SqlDivaces.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnRegistryUser">
+         <property name="toolTip">
+          <string>Зарегистрировать пользователя</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/certUsers.png</normaloff>:/img/certUsers.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnEditCache">
+         <property name="toolTip">
+          <string>Параметры пользователя</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/userOptions.ico</normaloff>:/img/userOptions.ico</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnSystemUsers">
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/userToDatabase.png</normaloff>:/img/userToDatabase.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="maximumSize">
+          <size>
+           <width>2</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::VLine</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Sunken</enum>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnTaskRestart">
+         <property name="statusTip">
+          <string>Перезапустить</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/move_end.png</normaloff>:/img/move_end.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnStartTask">
+         <property name="toolTip">
+          <string>Выполнить сейчас</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../ba_resurses.qrc">
+           <normaloff>:/img/startTask.png</normaloff>:/img/startTask.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+      <zorder>btnRegistryUser</zorder>
+      <zorder>label</zorder>
+      <zorder>btnAdd</zorder>
+      <zorder>btnAddGroup</zorder>
+      <zorder>btnEdit</zorder>
+      <zorder>btnDelete</zorder>
+      <zorder>btnSendClientRelease</zorder>
+      <zorder>label_2</zorder>
+      <zorder>btnInfo</zorder>
+      <zorder>label_6</zorder>
+      <zorder>btnRefresh</zorder>
+      <zorder>label_3</zorder>
+      <zorder>btnDataImport</zorder>
+      <zorder>btnDataExport</zorder>
+      <zorder>label_4</zorder>
+      <zorder>btnSetLinkDevice</zorder>
+      <zorder>btnRegistryDevice</zorder>
+      <zorder>btnTaskRestart</zorder>
+      <zorder>btnStartTask</zorder>
+      <zorder>btnEditCache</zorder>
+      <zorder>label_5</zorder>
+      <zorder>btnSystemUsers</zorder>
+      <zorder>btnMoveTo</zorder>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <layout class="QVBoxLayout" name="verticalLayoutTree"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>967</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>&amp;Файл</string>
+    </property>
+    <addaction name="mnuExit"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>&amp;Сервер</string>
+    </property>
+    <addaction name="mnuConnect"/>
+    <addaction name="mnuDisconnect"/>
+    <addaction name="mnuServerRestart"/>
+    <addaction name="separator"/>
+    <addaction name="mnuOptions"/>
+    <addaction name="separator"/>
+    <addaction name="mnuUpdatePriceChecker"/>
+    <addaction name="mnuDwnloadAnydesk"/>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>Помощь</string>
+    </property>
+    <addaction name="mnuAbout"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+   <addaction name="menu_3"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="mnuConnect"/>
+   <addaction name="mnuDisconnect"/>
+   <addaction name="separator"/>
+   <addaction name="mnuOptions"/>
+   <addaction name="separator"/>
+   <addaction name="mnuMessaneger"/>
+   <addaction name="separator"/>
+   <addaction name="actionmnuQueryConsole"/>
+  </widget>
+  <widget class="QDockWidget" name="dockWidgetObjects">
+   <property name="windowTitle">
+    <string>Объекты севрвера</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="0">
+      <widget class="QWidget" name="dockWidgetMainTree" native="true">
+       <layout class="QGridLayout" name="gridLayoutTree">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <property name="spacing">
+         <number>0</number>
+        </property>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <action name="mnuConnect">
+   <property name="icon">
+    <iconset resource="../ba_resurses.qrc">
+     <normaloff>:/img/connect.png</normaloff>:/img/connect.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Подключиться</string>
+   </property>
+   <property name="toolTip">
+    <string>Открыть соединение</string>
+   </property>
+  </action>
+  <action name="mnuExit">
+   <property name="text">
+    <string>&amp;Закрыть</string>
+   </property>
+  </action>
+  <action name="mnuDisconnect">
+   <property name="icon">
+    <iconset resource="../ba_resurses.qrc">
+     <normaloff>:/img/disconnect.png</normaloff>:/img/disconnect.png</iconset>
+   </property>
+   <property name="text">
+    <string>Отключится</string>
+   </property>
+   <property name="toolTip">
+    <string>Закрыть соединение</string>
+   </property>
+  </action>
+  <action name="mnuAbout">
+   <property name="text">
+    <string>&amp;О программе ...</string>
+   </property>
+  </action>
+  <action name="mnuOptions">
+   <property name="icon">
+    <iconset resource="../ba_resurses.qrc">
+     <normaloff>:/img/settings.ico</normaloff>:/img/settings.ico</iconset>
+   </property>
+   <property name="text">
+    <string>Параметры</string>
+   </property>
+  </action>
+  <action name="mnuServerRestart">
+   <property name="text">
+    <string>Перезапустить</string>
+   </property>
+  </action>
+  <action name="mnuUpdatePriceChecker">
+   <property name="text">
+    <string>Обновить версию мобильного приложения</string>
+   </property>
+  </action>
+  <action name="mnuMessaneger">
+   <property name="icon">
+    <iconset resource="../ba_resurses.qrc">
+     <normaloff>:/img/messaneger.svg</normaloff>:/img/messaneger.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Grinda Messenger</string>
+   </property>
+   <property name="toolTip">
+    <string>Открыть мессенеджер</string>
+   </property>
+  </action>
+  <action name="actionmnuQueryConsole">
+   <property name="icon">
+    <iconset resource="../ba_resurses.qrc">
+     <normaloff>:/img/sql.png</normaloff>:/img/sql.png</iconset>
+   </property>
+   <property name="text">
+    <string>mnuQueryConsole</string>
+   </property>
+   <property name="toolTip">
+    <string>Открыть консоль запросов</string>
+   </property>
+  </action>
+  <action name="mnuDwnloadAnydesk">
+   <property name="text">
+    <string>Загрузить anydesk.apk</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../ba_resurses.qrc"/>
+ </resources>
+ <connections/>
+</ui>

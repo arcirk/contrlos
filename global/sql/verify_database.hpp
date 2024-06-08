@@ -262,7 +262,7 @@ namespace arcirk::database{
 
         bool verify_structure(QSqlDatabase& sql){
 
-            qDebug() << __FUNCTION__;
+            //qDebug() << __FUNCTION__;
             if(m_initial_data_table.empty())
                 return false;
             auto release_table_versions = get_release_tables_versions(); //Текущие версии релиза

@@ -3,8 +3,10 @@
 #include "global.hpp"
 #include <boost/filesystem.hpp>
 
+
 #define ARCIRK_VERSION "1.2.0"
-#define ARCIRK_SERVER_CONF "server_conf.json"
+#define CLIENT_VERSION 4
+//#define ARCIRK_SERVER_CONF "server_conf.json"
 
 using namespace arcirk::strings;
 
@@ -14,50 +16,126 @@ BOOST_FUSION_DEFINE_STRUCT(
     (int, minor)
     (int, path)
 )
-
 BOOST_FUSION_DEFINE_STRUCT(
-        (arcirk::server), server_config,
-        (std::string, ServerHost)
-        (int, ServerPort)
-        (std::string, ServerUser)
-        (std::string, ServerUserHash)
-        (std::string, ServerName)
-        (std::string, ServerHttpRoot)
-        (std::string, ServerWorkingDirectory)
-        (bool, AutoConnect)
-        (bool, UseLocalWebDavDirectory)
-        (std::string, LocalWebDavDirectory)
-        (std::string, WebDavHost)
-        (std::string, WebDavUser)
-        (std::string, WebDavPwd)
-        (std::string, WebDavRoot)
-        (bool, WebDavSSL)
-        (int, SQLFormat)
-        (std::string, SQLHost)
-        (std::string, SQLUser)
-        (std::string, SQLPassword)
-        (std::string, HSHost)
-        (std::string, HSUser)
-        (std::string, HSPassword)
-        (bool, ServerSSL)
-        (std::string, SSL_crt_file)
-        (std::string, SSL_key_file)
-        (bool, UseAuthorization)
-        (std::string, ApplicationProfile)
-        (int, ThreadsCount)
-        (std::string, Version)
-        (bool, ResponseTransferToBase64)
-        (bool, AllowDelayedAuthorization)
-        (bool, AllowHistoryMessages)
-        (std::string, ExchangePlan)
-        (std::string, ServerProtocol)
-        (bool, WriteJournal)
-        (bool, AllowIdentificationByWINSID)
-        (arcirk::BJson, ref)
+    (arcirk::client), client_conf,
+    (std::string, app_name)
+    (bool, is_auto_connect)
+    (std::string, server_host)
+    (std::string, user_name)
+    (std::string, hash)
+    (arcirk::BJson, device_id)
+    (arcirk::BJson, servers)
+    (std::string, price_checker_repo)
+    (std::string, server_repo)
+    (std::string, system_user)
+    (std::string, firefox)
+    (bool, use_sid)
 );
 
+BOOST_FUSION_DEFINE_STRUCT(
+    (arcirk::client), session_info,
+    (arcirk::BJson, session_uuid)
+    (std::string, user_name)
+    (arcirk::BJson, user_uuid)
+    (std::string, start_date)
+    (std::string, app_name)
+    (std::string, role)
+    (arcirk::BJson, device_id)
+    (std::string, address)
+    (std::string, info_base)
+    (std::string, host_name)
+    (std::string, product)
+    (std::string, system_user)
+    (std::string, sid)
+)
+
+BOOST_FUSION_DEFINE_STRUCT(
+    (arcirk::client), client_param,
+    (std::string, app_name)
+    (arcirk::BJson, user_uuid)
+    (std::string, user_name)
+    (std::string, hash)
+    (std::string, host_name)
+    (std::string, password)
+    (arcirk::BJson, session_uuid)
+    (std::string, system_user)
+    (arcirk::BJson, device_id)
+    (std::string, info_base)
+    (std::string, product)
+    (std::string, sid)
+    (int, version)
+)
+
+BOOST_FUSION_DEFINE_STRUCT(
+    (arcirk::server), server_response,
+    (std::string, command)
+    (std::string, message)
+    (std::string, param)
+    (std::string, result)
+    (std::string, sender)
+    (std::string, receiver)
+    (std::string, uuid_form)
+    (std::string, app_name)
+    (arcirk::BJson, sender_uuid)
+    (arcirk::BJson, receiver_uuid)
+    (std::string, version)
+    (arcirk::BJson, data)
+)
+
+BOOST_FUSION_DEFINE_STRUCT(
+    (arcirk::server), server_config,
+    (std::string, ServerHost)
+    (int, ServerPort)
+    (std::string, ServerUser)
+    (std::string, ServerUserHash)
+    (std::string, ServerName)
+    (std::string, ServerHttpRoot)
+    (std::string, ServerWorkingDirectory)
+    (bool, AutoConnect)
+    (bool, UseLocalWebDavDirectory)
+    (std::string, LocalWebDavDirectory)
+    (std::string, WebDavHost)
+    (std::string, WebDavUser)
+    (std::string, WebDavPwd)
+    (std::string, WebDavRoot)
+    (bool, WebDavSSL)
+    (int, SQLFormat)
+    (std::string, SQLHost)
+    (std::string, SQLUser)
+    (std::string, SQLPassword)
+    (std::string, HSHost)
+    (std::string, HSUser)
+    (std::string, HSPassword)
+    (bool, ServerSSL)
+    (std::string, SSL_crt_file)
+    (std::string, SSL_key_file)
+    (bool, UseAuthorization)
+    (std::string, ApplicationProfile)
+    (int, ThreadsCount)
+    (std::string, Version)
+    (bool, ResponseTransferToBase64)
+    (bool, AllowDelayedAuthorization)
+    (bool, AllowHistoryMessages)
+    (std::string, ExchangePlan)
+    (std::string, ServerProtocol)
+    (bool, WriteJournal)
+    (bool, AllowIdentificationByWINSID)
+    (arcirk::BJson, ref)
+)
+
+BOOST_FUSION_DEFINE_STRUCT(
+    (arcirk::server), server_command_result,
+    (std::string, command)
+    (arcirk::BJson, uuid_form)
+    (std::string, result)
+    (std::string, message)
+    (std::string, error_description)
+    (arcirk::BJson, param)
+    (arcirk::BJson, data)
+)
 namespace arcirk{
 
+#ifndef IS_USE_QT_LIB
     static inline void fail(const std::string& what, const std::string& error, bool conv = true, const std::string& log_folder = "logs"){
         const std::tm tm = arcirk::date::current_date();
         char cur_date[100];
@@ -144,6 +222,8 @@ namespace arcirk{
 
     };
 
+#endif
+
     static inline void* _crypt(void* data, unsigned data_size, void* key, unsigned key_size)
     {
         assert(data && data_size);
@@ -185,7 +265,8 @@ namespace arcirk{
             return result;
 #endif
         } catch (const std::exception &e) {
-            fail(__FUNCTION__, e.what());
+            //fail(__FUNCTION__, e.what());
+            std::cerr << __FUNCTION__ << "  " << e.what() << std::endl;
         }
 
         return {};
@@ -205,5 +286,51 @@ namespace arcirk::server {
         return ver;
     }
 
+    enum server_objects{
+        OnlineUsers,
+        Root,
+        Services,
+        Database,
+        DatabaseTables,
+        Devices,
+        DatabaseUsers,
+        ProfileDirectory,
+        CertManager,
+        Containers,
+        Certificates,
+        CertUsers,
+        LocalhostUser,
+        LocalhostUserCertificates,
+        LocalhostUserContainers,
+        LocalhostUserContainersRegistry,
+        LocalhostUserContainersVolume,
+        AvailableCertificates,
+        QueryBuilderStructure,
+        QueryBuilderTables,
+        QueryBuilderJnners,
+        OBJ_INVALID=-1,
+    };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM(server_objects, {
+        {OBJ_INVALID, nullptr} ,
+        {OnlineUsers, "OnlineUsers"} ,
+        {Root, "Root"} ,
+        {Services, "Services"} ,
+        {Database, "Database"} ,
+        {DatabaseTables, "DatabaseTables"},
+        {Devices, "Devices"},
+        {DatabaseUsers, "DatabaseUsers"},
+        {ProfileDirectory, "ProfileDirectory"},
+        {CertManager, "CertManager"},
+        {Containers, "Containers"},
+        {Certificates, "Certificates"},
+        {CertUsers, "CertUsers"},
+        {LocalhostUser, "LocalhostUser"},
+        {LocalhostUserCertificates, "LocalhostUserCertificates"},
+        {LocalhostUserContainers, "LocalhostUserContainers"},
+        {LocalhostUserContainersRegistry, "LocalhostUserContainersRegistry"},
+        {LocalhostUserContainersVolume, "LocalhostUserContainersVolume"},
+        {AvailableCertificates, "AvailableCertificates"},
+    });
 }
 #endif

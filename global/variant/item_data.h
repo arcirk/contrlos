@@ -76,6 +76,8 @@ namespace arcirk {
         return to_byte(to_binary(QUuid::createUuid()));
     }
 
+
+
     template<class T>
     inline T from_binary(const json& value){
         if(!value.is_binary())
@@ -268,6 +270,7 @@ namespace arcirk {
             return {};
         }
     }
+
     inline json from_variant(const QVariant& value, nlohmann::json::value_t t){
         if(t == json::value_t::null) return from_variant(value);
         else if(t == json::value_t::boolean){
@@ -294,6 +297,7 @@ namespace arcirk {
     }
 
     namespace widgets {
+
         struct CONTROLS_EXPORT binary_data{
             BJson data;
             variant_subtype subtype;
@@ -382,6 +386,15 @@ namespace arcirk {
 
         };
 
+    }
+
+    inline QUuid to_qt_uuid(const json& value){
+        if(value.empty())
+            return {};
+
+        auto ref = widgets::item_data(value);
+        auto uuid = QUuid::fromRfc4122(ref.data()->data);
+        return uuid;
     }
 }
 

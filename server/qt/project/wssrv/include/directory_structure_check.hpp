@@ -5,6 +5,7 @@
 #include <fs.hpp>
 #include <QStandardPaths>
 #include <QDir>
+#include <crypt/cryptography.hpp>
 
 #define ARCIRK_SERVER_NAME_ "winsrv"
 
@@ -36,6 +37,15 @@ namespace arcirk::verify_application {
                 file.close();
             }
         }
+
+        if(conf.ServerUser.empty())
+            conf.ServerUser = "admin";
+        if(conf.ServerUserHash.empty())
+            conf.ServerUserHash = cryptography::get_hash("admin", "admin");
+        if(conf.ServerHost.empty())
+            conf.ServerHost = "127.0.0.1";
+        if(conf.ServerPort == 0)
+            conf.ServerPort = 8080;
 
         FSPath v_dir;
         v_dir << dir.path() /= "html";

@@ -1746,6 +1746,18 @@ using namespace soci;
             parameters_by_field_name = value;
         }
 
+#ifdef  IS_USE_QT_LIB
+        template<typename T, typename E>
+        std::vector<T> get_table_rows(QSqlDatabase& db, const E& table, const json& where = {}) {
+            std::string table_name = arcirk::enum_synonym(table);
+            if(!where.empty())
+                select().from(table_name).where(where);
+            else
+                select().from(table_name);
+            return rows_to_array<T>(db);
+        }
+#endif
+
     private:
         std::string result;
         sql_values m_list;

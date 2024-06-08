@@ -56,7 +56,11 @@ namespace arcirk::widgets {
             return vec_projection;
         }
 
-
+        void set_rows(const std::vector<T>& rows){
+            for(auto itr : rows){
+                add_struct(itr);
+            }
+        }
     };
 }
 #endif //CONTROLSPROG_ITABLE_HPP
