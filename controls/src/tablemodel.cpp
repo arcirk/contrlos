@@ -113,7 +113,7 @@ QVariant TableModel::headerData(int section, Qt::Orientation orientation, int ro
 QString TableModel::column_name(int index) const {
     Q_ASSERT(m_conf->columns().size() > index);
     Q_ASSERT(index>=0);
-    return m_conf->columns()[index].name.c_str();
+    return m_conf->columns()[index]->name.c_str();
 }
 
 QModelIndex TableModel::index(int row, int column, const QModelIndex &parent) const {
@@ -162,7 +162,7 @@ void TableModel::clear()
 json TableModel::to_json() const {
     auto columns_j = json::array();
     for (const auto& itr: m_conf->columns()) {
-        columns_j += itr.name;
+        columns_j += itr->name;
     }
     auto rows = to_array();
 
@@ -261,7 +261,7 @@ TableModel::TableModel(const json &rootData, QObject *parent) : QAbstractItemMod
     column.name = "ref";
     column.default_type = editor_inner_role::editorText;
     column.default_value = to_byte(arcirk::to_binary(QUuid::fromString(NIL_STRING_UUID)));//to_data(json{NIL_STRING_UUID}, subtypeUUID);
-    columns += pre::json::to_json(column);
+    columns += column.to_json();
     for (auto itr = rootData.items().begin(); itr != rootData.items().end(); ++itr) {
         if(itr.key() == "ref")
             continue;
@@ -284,7 +284,7 @@ TableModel::TableModel(const json &rootData, QObject *parent) : QAbstractItemMod
             column.default_type = editor_inner_role::editorByteArray;
             column.default_value = to_byte(itr.value());//to_data(itr.value(), subtypeByte);
         }
-        columns += pre::json::to_json(column); //itr.key();
+        columns += column.to_json(); //itr.key();
     }
     table["columns"] = columns;
     table["rows"] = json::array();
@@ -295,7 +295,7 @@ TableModel::TableModel(const json &rootData, QObject *parent) : QAbstractItemMod
 QList<QString> TableModel::columns() const {
     QList<QString> cols;
     for(const auto& itr: m_conf->columns()){
-        cols.append(itr.name.c_str());
+        cols.append(itr->name.c_str());
     }
     return cols;
 }
@@ -364,9 +364,9 @@ json TableModel::empty_data() {
     auto object = json::object();
     for(const auto& val : m_conf->columns()){
         auto var = item_data();
-        var.set_role(val.default_type);
-        var.set_value(val.default_value);
-        object[val.name] = var.json_value();
+        var.set_role(val->default_type);
+        var.set_value(val->default_value);
+        object[val->name] = var.json_value();
     }
     return object;
 }

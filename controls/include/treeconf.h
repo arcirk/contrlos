@@ -13,7 +13,8 @@ namespace arcirk::widgets {
         explicit TreeConf();
 
         [[nodiscard]] QSize size() const override;
-        [[nodiscard]] std::vector<header_item>& columns() override;
+        [[nodiscard]] HeaderItems& columns() override;
+        HeaderItem& column(const QString& name) override;
         [[nodiscard]] QString column_name(int index, bool alias = false) const override;
         int column_index(const QString& name) override;
         void set_columns_aliases(const QMap<QString, QString> &aliases) override;

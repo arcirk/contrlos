@@ -8,7 +8,9 @@
 #include <QToolButton>
 #include "../include/treeitemcombobox.h"
 #include "../include/texteditdialog.h"
+#include "../include/treeitemipaddress.h"
 #include <QCheckBox>
+#include <QHostAddress>
 
 using namespace arcirk::widgets;
 
@@ -33,7 +35,7 @@ void TreeItemVariant::init()
 
 void TreeItemVariant::setText(const QString &text)
 {
-    if(m_raw->role() == editorText || m_raw->role() == editorMultiText){
+    if(m_raw->role() == editorText || m_raw->role() == editorMultiText || m_raw->role() == editorIpAddress){
         m_value = text;
         m_raw->set_value(text.toStdString());
     }
@@ -61,11 +63,11 @@ void TreeItemVariant::setFrame(bool value)
 //        return;
     m_frame = value;
 
-    QWidget* widget = qobject_cast<QWidget*>(m_current_widget);
-    if(!widget)
+    //QWidget* widget = qobject_cast<QWidget*>(m_current_widget);
+    if(!m_current_widget)
         return;
 
-    if(widget->objectName() == "label"){
+    if(m_current_widget->objectName() == "label"){
         auto m_label = qobject_cast<QLabel*>(m_current_widget);
         if(!m_label)
             return;
@@ -79,13 +81,18 @@ void TreeItemVariant::setFrame(bool value)
         }else
             m_label->setStyleSheet("");//"QLabel{background-color: rgba(255, 85, 127, 80);}");
 
-    }else if(widget->objectName() == "TextEdit" || m_current_widget->objectName() == "LineEdit" || m_current_widget->objectName() == "SpinBox"){
+    }else if(m_current_widget->objectName() == "TextEdit" || m_current_widget->objectName() == "LineEdit" || m_current_widget->objectName() == "SpinBox"){
         if(!value)
-            widget->setStyleSheet("border: 1px  solid rgb(255, 255, 255); border-radius: 0px;");
+            m_current_widget->setStyleSheet("border: 1px  solid rgb(255, 255, 255); border-radius: 0px;");
         else
-            widget->setStyleSheet("");
+            m_current_widget->setStyleSheet("");
+    }else if( m_current_widget->objectName() == "IPLineEdit"){
+        QString textColor = isValid() ? "" : "color: rgb(255, 0, 0);";
+        if(!value)
+            m_current_widget->setStyleSheet(QString("border: 1px  solid rgb(255, 255, 255); border-radius: 0px; %1").arg(textColor));
+        else
+            m_current_widget->setStyleSheet(QString("%1").arg(textColor));
     }
-
 }
 
 void TreeItemVariant::updateControl()
@@ -182,6 +189,17 @@ void TreeItemVariant::updateControl()
                 m_check->setChecked(val);
             }
 
+        }if(role == editorIpAddress){
+            if(m_selection_list.empty()){
+                auto m_text = qobject_cast<TreeItemIPEdit*>(m_current_widget);
+                if(m_text){
+                    if(jval.is_string()){
+                        m_text->setText(jval.get<std::string>().c_str());
+                    }else{
+                        m_text->setText("");
+                    }
+                }
+            }
         }
     }else if(type == subtypeByte){
         if(role == editorByteArray){
@@ -221,10 +239,13 @@ void TreeItemVariant::createEditor()
         m_current_widget = createEditorNull();
     }else if(m_raw->role() == editor_inner_role::editorArray || m_raw->role() == editor_inner_role::editorByteArray){
         m_current_widget = createEditorLabel(m_raw->role() == editor_inner_role::editorByteArray);
-    }else if(m_raw->role() == editor_inner_role::editorText){
-        if(m_selection_list.empty())
-            m_current_widget = createEditorTextLine();
-        else{
+    }else if(m_raw->role() == editor_inner_role::editorText || m_raw->role() == editor_inner_role::editorIpAddress){
+        if(m_selection_list.empty()) {
+            if(m_raw->role() == editor_inner_role::editorText)
+                m_current_widget = createEditorTextLine();
+            else
+                m_current_widget = createEditorIPEdit();
+        }else{
             m_current_widget = createComboBox();
             setComboData();
         }
@@ -352,7 +373,7 @@ void TreeItemVariant::onSelectClicked()
                 }
             }
         }
-    }else if(m_raw->role()  == editorText || m_raw->role()  == editorMultiText){
+    }else if(m_raw->role()  == editorText || m_raw->role()  == editorMultiText || m_raw->role()  == editorIpAddress){
         auto dlg = TextEditDialog(this);
         dlg.setText(text());
         if(dlg.exec()){
@@ -464,6 +485,83 @@ void TreeItemVariant::setComboData() {
 
 void TreeItemVariant::checkBox(bool value) {
     m_check_box = true;
+}
+
+void TreeItemVariant::setReadOnly(bool value) {
+
+    auto widget = qobject_cast<LineEdit*>(m_current_widget);
+    if(widget)
+        widget->setReadOnly(value);
+    else{
+        auto widget_t = qobject_cast<TextEdit*>(m_current_widget);
+        if(widget_t)
+            widget_t->setReadOnly(value);
+        else
+            TreeItemWidget::setReadOnly(value);
+    }
+}
+
+void TreeItemVariant::setAutoMarkIncomplete(bool value) {
+
+    auto m_text_line = qobject_cast<LineEdit*>(m_current_widget);
+    if(m_text_line){
+        m_auto_mark = value;
+        m_text_line->setAutoMarkIncomplete(value);
+        setFrame(m_frame);
+        m_text_line->update();
+    }else
+        TreeItemWidget::setAutoMarkIncomplete(value);
+}
+
+void TreeItemVariant::setValue(const QVariant &value) {
+    auto m_text_line = qobject_cast<LineEdit*>(m_current_widget);
+    if(m_text_line){
+        m_value = value.toString();
+    }else
+        TreeItemWidget::setValue(value);
+}
+
+bool TreeItemVariant::isValid() const {
+    return _isValid;
+}
+
+bool TreeItemVariant::ipValidator(QString ip) {
+
+    static QRegularExpression ipPattern("^((25[0-5]|2[0-4][0-9]|[01]?[0-9]{1,2})\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9]{1,2})$");
+    QRegularExpressionMatch match = ipPattern.match(ip);
+    if(!match.hasMatch())
+        return false;
+
+    QStringList parts = ip.split('.');
+
+    for (int i = 0; i < parts.size(); ++i)
+    {
+        const QString &part = parts.at(i);
+        bool ok;
+        int num = part.toInt(&ok);
+        if (!ok || num < 0 || num > 255 || (part.length() > 1 && part.startsWith("0") && !part.startsWith("0.")))
+            return false;
+    }
+
+    //if you wish, you could end immediately simply here
+    //return true;
+
+
+    //If you want to add one more control at the end you can add this
+    QHostAddress ipAddress(ip);
+    if(ipAddress.protocol() == QAbstractSocket::IPv4Protocol)
+        return true;
+    else
+        return false;
+}
+
+void TreeItemVariant::onTextChanged(const QString &value) {
+    auto m_text_line = qobject_cast<LineEdit*>(m_current_widget);
+    if(m_text_line){
+        _isValid = ipValidator(value);
+        setFrame(m_frame);
+    }
+    return TreeItemWidget::onTextChanged(value);
 }
 
 #endif

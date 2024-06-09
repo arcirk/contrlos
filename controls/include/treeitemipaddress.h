@@ -35,7 +35,7 @@ namespace arcirk::widgets {
 
         QVariant value() const override;
 
-        bool isValid();
+        bool isValid() const;
 
     private:
         LineEdit* m_text_line;
@@ -52,6 +52,9 @@ namespace arcirk::widgets {
 
     private slots:
         void onTextChanged(const QString &text);
+
+    signals:
+        void textChanged(const QString &text);
     };
 
 }

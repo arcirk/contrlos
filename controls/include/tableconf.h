@@ -4,13 +4,6 @@
 #ifndef CONTROLSPROG_TABLECONF_H
 #define CONTROLSPROG_TABLECONF_H
 
-//#include "../controls_global.h"
-//#include <boost/noncopyable.hpp>
-//#include <QSize>
-//#include <QList>
-//#include <QMap>
-//#include <QIcon>
-//#include <QVariant>
 #include "iconf.hpp"
 
 namespace arcirk::widgets {
@@ -21,7 +14,8 @@ namespace arcirk::widgets {
         explicit TableConf();
 
         [[nodiscard]] QSize size() const override;
-        [[nodiscard]] std::vector<header_item>& columns() override;
+        [[nodiscard]] HeaderItems& columns() override;
+        HeaderItem& column(const QString& name) override;
         [[nodiscard]] QString column_name(int index, bool alias = false) const override;
         int column_index(const QString& name) override;
         void set_columns_aliases(const QMap<QString, QString> &aliases) override;
@@ -39,7 +33,7 @@ namespace arcirk::widgets {
         [[nodiscard]] bool is_display_icons() const override;
         [[nodiscard]] QIcon default_icon() const;
         void set_default_icon(const QIcon& ico);
-        QList<QString> predefined_list() const override;
+        [[nodiscard]] QList<QString> predefined_list() const override;
 
     protected:
         void set_columns_order(const QList<QString>& names) override;

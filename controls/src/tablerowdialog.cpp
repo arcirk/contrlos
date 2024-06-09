@@ -86,17 +86,17 @@ void TableRowDialog::createControls(const QList<QString>& ordered) {
         auto lbl = new QLabel(this);
         auto h_data = find_element_for_name(control.first.toStdString(), m_conf->columns());
         if(h_data != m_conf->columns().end()){
-            if(h_data->alias.empty())
+            if(h_data->get()->alias.empty())
                 lbl->setText(control.first + ":");
             else
-                lbl->setText(QString(h_data->alias.c_str()) + ":");
-            control.second->selectType(h_data->select_type);
+                lbl->setText(QString(h_data->get()->alias.c_str()) + ":");
+            control.second->selectType(h_data->get()->select_type);
         }else
             lbl->setText(control.first + ":");
         ui->gridLayout->addWidget(lbl, row, 0);
         ui->gridLayout->addWidget(control.second, row, 1);
         if(h_data != m_conf->columns().end()) {
-            if (h_data->default_type == editorDirectoryPath || h_data->default_type == editorFilePath || h_data->default_type == editorMultiText) {
+            if (h_data->get()->default_type == editorDirectoryPath || h_data->get()->default_type == editorFilePath || h_data->get()->default_type == editorMultiText) {
                 ui->gridLayout->setAlignment(lbl, Qt::AlignLeft | Qt::AlignTop);
             } else {
                 ui->gridLayout->setAlignment(lbl, Qt::AlignLeft | Qt::AlignCenter);
@@ -111,7 +111,7 @@ QPair<QString, TreeItemVariant *> TableRowDialog::createEditor(const std::string
     control->setObjectName(key.c_str());
     auto itr = find_element_for_name(key, m_conf->columns());
     if(itr != m_conf->columns().end()){
-        control->setSelectionList(itr->selection_list);
+        control->setSelectionList(itr->get()->selection_list);
     }
     return qMakePair(key.c_str(), control);
 }
@@ -133,7 +133,7 @@ void TableRowDialog::setEditorData(const QString &key, TreeItemVariant* control,
     control->setFrame(true);
     auto itr = find_element_for_name(key.toStdString(), m_conf->columns());
     if(itr != m_conf->columns().end()){
-        control->setRole((editor_inner_role)itr->default_type);
+        control->setRole((editor_inner_role)itr->get()->default_type);
     }
 
 }
@@ -173,10 +173,10 @@ void TableRowDialog::hideNotPublicControls() {
                     if(itr != m_conf->columns().end()){
                         bool is_visible = false;
                         if(is_group){
-                            is_visible = itr->use == 0 || itr->use == 2;
+                            is_visible = itr->get()->use == 0 || itr->get()->use == 2;
                         }else
-                            is_visible = itr->use == 0 || itr->use == 1;
-                        if(itr->not_public || !is_visible){
+                            is_visible = itr->get()->use == 0 || itr->get()->use == 1;
+                        if(itr->get()->not_public || !is_visible){
                             control->setVisible(false);
                             auto lbl = layout->itemAtPosition(i,0)->widget();
                             if(lbl){

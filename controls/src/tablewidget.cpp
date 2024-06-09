@@ -56,8 +56,8 @@ void TableWidget::setModel(QAbstractItemModel* model) {
             hideColumn(inner_model->column_index("ref"));
         }
         for (auto itr = inner_model->get_conf()->columns().begin(); itr != inner_model->get_conf()->columns().end() ; ++itr) {
-            if(itr->not_public){
-                hideColumn(inner_model->column_index(itr->name.c_str()));
+            if(itr->get()->not_public){
+                hideColumn(inner_model->column_index(itr->get()->name.c_str()));
             }
         }
     }
@@ -429,8 +429,8 @@ void TableWidget::hide_not_ordered_columns() {
         return;
     const auto& columns_ordered = model->get_conf()->columns_order();
     for (auto column = model->get_conf()->columns().begin(); column != model->get_conf()->columns().end(); ++column) {
-        if(columns_ordered.indexOf(column->name.c_str()) == -1)
-            hideColumn(model->column_index(column->name.c_str()));
+        if(columns_ordered.indexOf(column->get()->name.c_str()) == -1)
+            hideColumn(model->column_index(column->get()->name.c_str()));
     }
 }
 
@@ -441,8 +441,8 @@ void TableWidget::open_table_options_dialog() {
     json rows = json::array();
     for (auto itr = columns.begin(); itr != columns.end(); ++itr) {
         auto row = json::object();
-        row["select"] = !isColumnHidden(model->column_index(itr->name.c_str()));
-        row["value"] = itr->alias.empty() ? itr->name : itr->alias;
+        row["select"] = !isColumnHidden(model->column_index(itr->get()->name.c_str()));
+        row["value"] = itr->get()->alias.empty() ? itr->get()->name : itr->get()->alias;
         rows += row;
     }
     auto result = json::object();

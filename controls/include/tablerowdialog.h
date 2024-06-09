@@ -38,7 +38,6 @@ namespace arcirk::widgets {
         IViewsConf* m_conf;
         bool is_group;
         bool is_tree_model;
-       // std::vector<std::pair<std::string ,json>> ordered_data;
 
         void createControls(const QList<QString>& ordered);
         QPair<QString, TreeItemVariant*> createEditor(const std::string& key);
@@ -49,8 +48,6 @@ namespace arcirk::widgets {
         static bool is_object_empty(const json& object);
 
         std::vector<std::pair<std::string ,json>> reordered_object(const QList<QString>& ordered);
-
-        //QList<std::string>
 
     private slots:
         void onButtonBoxClicked(QAbstractButton* button);

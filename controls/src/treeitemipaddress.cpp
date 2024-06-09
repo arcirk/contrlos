@@ -29,7 +29,7 @@ void TreeItemIPEdit::init()
 {
     m_raw->set_role(editorIpAddress);
     m_raw->set_value("0.0.0.0");
-    m_text_line = qobject_cast<LineEdit*>(createEditorTextLine());
+    m_text_line = qobject_cast<LineEdit*>(createEditorIPEdit());
     m_frame = false;
     m_text_line->setStyleSheet("border: 1px  solid rgb(255, 255, 255); border-radius: 0px;");
 }
@@ -128,8 +128,9 @@ bool TreeItemIPEdit::ipValidator(QString ip)
 void TreeItemIPEdit::onTextChanged(const QString &text) {
     _isValid = ipValidator(text);
     setFrame(m_frame);
+    emit textChanged(text);
 }
 
-bool TreeItemIPEdit::isValid() {
+bool TreeItemIPEdit::isValid() const {
     return _isValid;
 }

@@ -12,7 +12,7 @@
 #include <QCheckBox>
 #include <QMenu>
 #include <QComboBox>
-#include "../../global/global.hpp"
+#include "../include/treeitemipaddress.h"
 
 using namespace arcirk::widgets;
 
@@ -143,6 +143,20 @@ QWidget *TreeItemWidget::createEditorTextLine()
     m_select_type_button = false;
     auto widget = new LineEdit(this);
     widget->setObjectName("LineEdit");
+    this->layout()->addWidget(widget);
+    connect(widget, &LineEdit::textChanged, this, &TreeItemWidget::onTextChanged);
+    widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    return widget;
+}
+
+QWidget *TreeItemWidget::createEditorIPEdit()
+{
+    m_select_button = true;
+    m_save_button = false;
+    m_erase_button = false;
+    m_select_type_button = false;
+    auto widget = new LineEdit(this);
+    widget->setObjectName("IPLineEdit");
     this->layout()->addWidget(widget);
     connect(widget, &LineEdit::textChanged, this, &TreeItemWidget::onTextChanged);
     widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -307,8 +321,6 @@ void TreeItemWidget::onTextChanged(const QString &value)
 {
     m_value = value;
     m_raw->set_value(value.toStdString());
-//    m_raw.data = to_byte(to_binary(value.toStdString(), subtypeDump));
-//    m_raw.representation = value.toStdString();
     emit valueChanged(row(), column(), m_value);
 }
 
@@ -318,8 +330,6 @@ void TreeItemWidget::onTextEditChanged()
     if(control){
         m_raw->set_value(control->toPlainText().toStdString());
         m_value = control->toPlainText();
-//        m_raw.data = to_byte(to_binary(m_value.toString().toStdString(), subtypeDump));
-//        m_raw.representation = m_value.toString().toStdString();
         emit valueChanged(row(), column(), m_value);
     }
 
@@ -329,9 +339,6 @@ void TreeItemWidget::onSpinChanged(int value)
 {
     m_value = value;
     m_raw->set_value(value);
-    //variant_p_set_data(m_value, m_raw);
-//    m_raw.data = to_byte(to_binary(m_value.toInt(), subtypeDump)); //to_data(m_value);
-//    m_raw.representation = QString::number(value).toStdString();
     emit valueChanged(row(), column(), m_value);
 }
 

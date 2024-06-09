@@ -168,8 +168,8 @@ void TreeViewWidget::setModel(QAbstractItemModel *model)
             }
         }
         for (auto itr = model_->get_conf()->columns().begin(); itr != model_->get_conf()->columns().end() ; ++itr) {
-            if(itr->not_public){
-                hideColumn(model_->column_index(itr->name.c_str()));
+            if(itr->get()->not_public){
+                hideColumn(model_->column_index(itr->get()->name.c_str()));
             }
         }
         connect(model_, &TreeModel::fetch, this, &TreeViewWidget::onTreeFetch);
@@ -763,8 +763,8 @@ void TreeViewWidget::hide_not_ordered_columns() {
         return;
     const auto& columns_ordered = model->get_conf()->columns_order();
     for (auto column = model->get_conf()->columns().begin(); column != model->get_conf()->columns().end(); ++column) {
-        if(columns_ordered.indexOf(column->name.c_str()) == -1)
-            hideColumn(model->column_index(column->name.c_str()));
+        if(columns_ordered.indexOf(column->get()->name.c_str()) == -1)
+            hideColumn(model->column_index(column->get()->name.c_str()));
     }
 }
 

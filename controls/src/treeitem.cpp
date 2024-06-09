@@ -63,7 +63,7 @@ QVariant TreeItem::data(int column, int role) const {
     }else if(role == TABLE_ITEM_SUBTYPE){
         return itr->second->data()->subtype;
     }else if(role == TABLE_ITEM_SELECT_TYPE){
-        return m_conf->columns()[m_conf->column_index(column_name)].select_type;
+        return m_conf->columns()[m_conf->column_index(column_name)]->select_type;
     }else if(role == Qt::DisplayRole){
         if(itr->second->role() == editorBoolean){
             auto value = itr->second->json_value();

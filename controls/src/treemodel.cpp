@@ -35,7 +35,7 @@ TreeModel::TreeModel(const json &rootData, QObject *parent) : QAbstractItemModel
     column.name = "ref";
     column.default_type = editor_inner_role::editorText;
     column.default_value = to_nil_uuid();
-    columns += pre::json::to_json(column);
+    columns += column.to_json();
     for (auto itr = _root.items().begin(); itr != _root.items().end(); ++itr) {
         if(itr.key() == "ref")
             continue;
@@ -58,7 +58,7 @@ TreeModel::TreeModel(const json &rootData, QObject *parent) : QAbstractItemModel
             column.default_type = editor_inner_role::editorByteArray;
             column.default_value = to_byte(itr.value());//to_data(itr.value(), subtypeByte);
         }
-        columns += pre::json::to_json(column); //itr.key();
+        columns += column.to_json(); //itr.key();
     }
     table["columns"] = columns;
     table["rows"] = json::array();
@@ -184,7 +184,7 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int rol
 QString TreeModel::column_name(int index) const {
     Q_ASSERT(m_conf->columns().size() > index);
     Q_ASSERT(index>=0);
-    return m_conf->columns()[index].name.c_str();
+    return m_conf->columns()[index]->name.c_str();
 }
 
 QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) const {
@@ -331,7 +331,7 @@ int TreeModel::column_index(const QString &name) const {
 QList<QString> TreeModel::columns() const {
     QList<QString> cols;
     for(const auto& itr: m_conf->columns()){
-        cols.append(itr.name.c_str());
+        cols.append(itr->name.c_str());
     }
     return cols;
 }
@@ -400,9 +400,9 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const {
     auto object = json::object();
     for(const auto& val : m_conf->columns()){
         auto var = item_data();
-        var.set_role(val.default_type);
-        var.set_value(val.default_value);
-        object[val.name] = var.json_value();
+        var.set_role(val->default_type);
+        var.set_value(val->default_value);
+        object[val->name] = var.json_value();
     }
     return object;
 }
@@ -614,7 +614,7 @@ json TreeModel::to_table_model(const QModelIndex &parent, bool group_only, bool 
 
     auto columns_j = json::array();
     for (auto& key : m_conf->columns()) {
-        columns_j += key.name;
+        columns_j += key->name;
     }
 
     auto rows = json::array();

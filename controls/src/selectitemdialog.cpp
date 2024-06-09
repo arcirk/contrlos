@@ -1,6 +1,8 @@
 #include "../include/selectitemdialog.h"
 #include "../ui/ui_selectitemdialog.h"
 
+#include "../include/iconf.hpp"
+
 using namespace arcirk::widgets;
 
 SelectItemDialog::SelectItemDialog(TreeModel* model, QWidget *parent) :

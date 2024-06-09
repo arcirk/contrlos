@@ -21,7 +21,6 @@ TreeItemTextLine::TreeItemTextLine(QWidget *parent) :
 
 void TreeItemTextLine::init()
 {
-    //m_raw.data = to_byte(to_binary("", subtypeDump));
     m_raw->set_role(editorText);
     m_raw->set_value("");
     m_text_line = qobject_cast<LineEdit*>(createEditorTextLine());

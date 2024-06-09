@@ -10,6 +10,7 @@
 #include <tuple>
 #include <type_traits>
 #include <cassert>
+#include <memory>
 
 #ifdef USE_BOOST_ASIO
 #ifdef WIN32
@@ -634,7 +635,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(task_script_type, {
 #endif
 
 BOOST_FUSION_DEFINE_STRUCT(
-    (arcirk::widgets), header_item,
+    (arcirk::widgets), header_item_wrapper,
     (std::string, name)
     (std::string, alias)
     (std::string, format)
@@ -646,6 +647,7 @@ BOOST_FUSION_DEFINE_STRUCT(
     (bool, override_buttons)
     (bool, select_type)
     (int, use)
+    (std::string, validate_text)
 )
 
 namespace arcirk::widgets{
@@ -656,79 +658,83 @@ namespace arcirk::widgets{
         for_group
     };
 
-    struct header_item_wrapper{
-        std::string name;
-        std::string alias;
-        std::string format;
-        arcirk::BJson selection_list{};
-        int default_type = -1;
-        arcirk::BJson default_value{};
-        bool marked = false;
-        bool not_public = false;
-        bool override_buttons = false;
-        bool select_type = false;
-        int use = 0;
-    };
-
-    inline header_item_wrapper h_item_wrapper(){
-        auto item = header_item_wrapper();
-        item.name = "";
-        item.alias = "";
-        item.format = "";
-        item.selection_list = {};
-        item.default_type = -1;
-        item.default_value = {};
-        item.marked = false;
-        item.not_public = false;
-        item.override_buttons = false;
-        item.use = 0;
-        return item;
-    }
-
-    inline header_item_wrapper h_item_wrapper(const header_item& source){
-        auto item = header_item_wrapper();
-        item.name = source.name;
-        item.alias = source.alias;
-        item.format = source.format;
-        item.selection_list = source.selection_list;
-        item.default_type = source.default_type;
-        item.default_value = source.default_value;
-        item.marked = source.marked;
-        item.not_public = source.not_public;
-        item.override_buttons = source.override_buttons;
-        item.select_type = source.select_type;
-        item.use = source.use;
-        return item;
-    }
-
-    inline header_item to_header_item(const header_item_wrapper& item){
-        return header_item(item.name,
-                           item.alias,
-                           item.format,
-                           item.selection_list,
-                           item.default_type,
-                           item.default_value,
-                           item.marked,
-                           item.not_public,
-                           item.override_buttons,
-                           item.select_type,
-                           item.use
-                           );
-    }
-
-    inline header_item header_item_def(const std::string& name, const std::string& alias = {}){
-        return header_item(name, alias, "", {}, -1, {}, false, false, false, true, 0);
-    }
+//    struct header_item_wrapper{
+//        std::string name;
+//        std::string alias;
+//        std::string format;
+//        arcirk::BJson selection_list{};
+//        int default_type = -1;
+//        arcirk::BJson default_value{};
+//        bool marked = false;
+//        bool not_public = false;
+//        bool override_buttons = false;
+//        bool select_type = false;
+//        int use = 0;
+//        std::string validate_text;
+//    };
+//
+//    inline header_item_wrapper h_item_wrapper(){
+//        auto item = header_item_wrapper();
+//        item.name = "";
+//        item.alias = "";
+//        item.format = "";
+//        item.selection_list = {};
+//        item.default_type = -1;
+//        item.default_value = {};
+//        item.marked = false;
+//        item.not_public = false;
+//        item.override_buttons = false;
+//        item.use = 0;
+//        item.validate_text = "";
+//        return item;
+//    }
+//
+//    inline header_item_wrapper h_item_wrapper(const header_item& source){
+//        auto item = header_item_wrapper();
+//        item.name = source.name;
+//        item.alias = source.alias;
+//        item.format = source.format;
+//        item.selection_list = source.selection_list;
+//        item.default_type = source.default_type;
+//        item.default_value = source.default_value;
+//        item.marked = source.marked;
+//        item.not_public = source.not_public;
+//        item.override_buttons = source.override_buttons;
+//        item.select_type = source.select_type;
+//        item.use = source.use;
+//        item.validate_text = source.validate_text;
+//        return item;
+//    }
+//
+//    inline header_item to_header_item(const header_item_wrapper& item){
+//        return header_item(item.name,
+//                           item.alias,
+//                           item.format,
+//                           item.selection_list,
+//                           item.default_type,
+//                           item.default_value,
+//                           item.marked,
+//                           item.not_public,
+//                           item.override_buttons,
+//                           item.select_type,
+//                           item.use,
+//                           item.validate_text
+//                           );
+//    }
+//
+//    inline header_item header_item_def(const std::string& name, const std::string& alias = {}){
+//        return header_item(name, alias, "", {}, -1, {}, false, false, false, true, 0, "");
+//    }
 
     template<class T>
-    inline auto find_element_for_name(const std::string& name, const std::vector<T>& array){
-        return std::find_if(array.begin(), array.end(), [name](const T& itr){
-            return itr.name == name;
+    inline auto find_element_for_name(const std::string& name, const std::vector<std::shared_ptr<T>>& array){
+        return std::find_if(array.begin(), array.end(), [name](const std::shared_ptr<T>& itr){
+            return itr->name == name;
         });
     }
 
     template <class T>
-    inline size_t index_of_for_name(const std::string& name, const std::vector<T>& array)
+    inline size_t index_of_for_name(const std::string& name, const std::vector<std::shared_ptr<T>>& array)
     {
         auto it = find_element_for_name(name, array);
         if (it == array.end())

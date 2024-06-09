@@ -163,7 +163,7 @@ namespace arcirk::widgets {
 
         virtual void selectType(bool value);
 
-        variant_subtype subtype() const;
+        [[nodiscard]] variant_subtype subtype() const;
 
     private:
         int m_row;
@@ -198,6 +198,7 @@ namespace arcirk::widgets {
         virtual QWidget *createEditorNull();
         virtual QWidget *createEditorLabel(bool save);
         virtual QWidget *createEditorTextLine();
+        virtual QWidget *createEditorIPEdit();
         virtual QWidget *createEditorTextBox();
         virtual QWidget *createEditorNumber();
         virtual QWidget *createBooleanBox();
@@ -232,7 +233,7 @@ namespace arcirk::widgets {
         void erase(int row, int column);
 
     private slots:
-        void onTextChanged(const QString& value);
+
         void onTextEditChanged();
         void onSpinChanged(int value);
 
@@ -244,7 +245,7 @@ namespace arcirk::widgets {
         virtual void onCheckBoxClicked(bool state) = 0;
         virtual void onMenuItemClicked(){};
         virtual void onComboIndexChanged(int index){};
-
+        virtual void onTextChanged(const QString& value);
     };
 }
 #endif

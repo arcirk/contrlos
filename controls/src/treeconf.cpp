@@ -12,12 +12,12 @@ TreeConf::TreeConf()
 {
     Q_INIT_RESOURCE(controls_resource);
     m_size                  = QSize(22, 22);
-    m_columns               = std::vector<header_item>{
-        header_item_def("ref", "Ссылка"),
-        header_item_def("parent", "Родитель"),
-        header_item_def("row_state", "Статус строки"),
-        header_item_def("predefined", "Предопределенный"),
-        header_item_def("is_group", "Это группа")};
+    m_columns               = HeaderItems{
+            std::make_shared<header_item>("ref", "Ссылка"),
+            std::make_shared<header_item>("parent", "Родитель"),
+            std::make_shared<header_item>("row_state", "Статус строки"),
+            std::make_shared<header_item>("predefined", "Предопределенный"),
+            std::make_shared<header_item>("is_group", "Это группа")};
     m_enable_rows_icons     = true;
     m_read_only             = true;
     m_fetch_expand          = false;
@@ -29,7 +29,7 @@ QSize TreeConf::size() const {
     return m_size;
 }
 
-std::vector<header_item>& TreeConf::columns() {
+HeaderItems& TreeConf::columns() {
     return m_columns;
 }
 
@@ -40,42 +40,43 @@ void TreeConf::reset_columns(const json& arr){
     for (auto itr = arr.begin(); itr != arr.end(); ++itr) {
         const auto& item = *itr;
         if(item.is_string())
-            m_columns.push_back(header_item_def(item.get<std::string>()));
+            m_columns.push_back(std::make_shared<header_item>(item.get<std::string>(), ""));
         else if(item.is_object()){
-            m_columns.push_back(pre::json::from_json<header_item>(item));
-        }else if(item.is_array()){
-            auto ba = item.get<ByteArray>();
-            std::error_code ec;
-            auto m_raw = alpaca::deserialize<header_item_wrapper>(ba, ec);
-            if (!ec) {
-                m_columns.push_back(to_header_item(m_raw));
-            }else
-                throw arcirk::NativeException(ec.message().c_str());
+            m_columns.push_back(std::make_shared<header_item>(item));
         }else
+//            if(item.is_array()){
+//            auto ba = item.get<ByteArray>();
+//            std::error_code ec;
+//            auto m_raw = alpaca::deserialize<header_item_wrapper>(ba, ec);
+//            if (!ec) {
+//                m_columns.push_back(to_header_item(m_raw));
+//            }else
+//                throw arcirk::NativeException(ec.message().c_str());
+//        }else
             throw arcirk::NativeException("Не верный формат данных!");
     }
     if(index_of_for_name("ref", m_columns) == -1)
-        m_columns.push_back(header_item_def("ref", "Ссылка"));
+        m_columns.push_back(std::make_shared<header_item>("ref", "Ссылка"));
     if(index_of_for_name("parent", m_columns) == -1)
-        m_columns.push_back(header_item_def("parent", "Родитель"));
+        m_columns.push_back(std::make_shared<header_item>("parent", "Родитель"));
     if(index_of_for_name("row_state", m_columns) == -1)
-        m_columns.push_back(header_item_def("row_state", "Статус строки"));
+        m_columns.push_back(std::make_shared<header_item>("row_state", "Статус строки"));
     if(index_of_for_name("is_group", m_columns) == -1)
-        m_columns.push_back(header_item_def("is_group", "Это группа"));
+        m_columns.push_back(std::make_shared<header_item>("is_group", "Это группа"));
     if(index_of_for_name("predefined", m_columns) == -1)
-        m_columns.push_back(header_item_def("predefined", "Предопределенный"));
+        m_columns.push_back(std::make_shared<header_item>("predefined", "Предопределенный"));
 }
 
 QString TreeConf::column_name(int index, bool alias) const {
     Q_ASSERT(m_columns.size() > index);
     Q_ASSERT(index>=0);
     if(!alias)
-        return m_columns[index].name.c_str();
+        return m_columns[index]->name.c_str();
     else{
-        if(!m_columns[index].alias.empty())
-            return m_columns[index].alias.c_str();
+        if(!m_columns[index]->alias.empty())
+            return m_columns[index]->alias.c_str();
         else
-            return m_columns[index].name.c_str();
+            return m_columns[index]->name.c_str();
     }
 }
 
@@ -88,7 +89,7 @@ void TreeConf::set_columns_aliases(const QMap<QString, QString> &aliases) {
     for(auto itr = aliases.begin(); itr != aliases.end(); ++itr){
         auto index = index_of_for_name(itr.key().toStdString(), m_columns);
         if(index != -1){
-            m_columns[index].alias = itr.value().toStdString();
+            m_columns[index]->alias = itr.value().toStdString();
         }
     }
 }
@@ -139,7 +140,7 @@ void TreeConf::set_column_role(const QString &column, editor_inner_role role) {
 
     auto index = index_of_for_name(column.toStdString(), m_columns);
     if(index != -1){
-        m_columns[index].default_type = role;
+        m_columns[index]->default_type = role;
     }
 
 }
@@ -147,14 +148,14 @@ void TreeConf::set_column_role(const QString &column, editor_inner_role role) {
 void TreeConf::set_column_not_public(const QString &column, bool value) {
     auto index = index_of_for_name(column.toStdString(), m_columns);
     if(index != -1){
-        m_columns[index].not_public = value;
+        m_columns[index]->not_public = value;
     }
 }
 
 void TreeConf::set_column_select_type(const QString &column, bool value) {
     auto index = index_of_for_name(column.toStdString(), m_columns);
     if(index != -1){
-        m_columns[index].select_type = value;
+        m_columns[index]->select_type = value;
     }
 }
 
@@ -204,7 +205,7 @@ void TreeConf::set_attribute_use(const QString &column, attribute_use value) {
 
     int col = column_index(column);
     if(m_columns.size() > col && col != -1){
-        m_columns[col].use = (int)value;
+        m_columns[col]->use = (int)value;
     }
 
 }
@@ -260,7 +261,7 @@ json TreeConf::unload_conf() const {
     };
     auto _columns = json::array();
     for(const auto& item : m_columns){
-        _columns += pre::json::to_json(item);
+        _columns += item->to_json();
     }
     result["columns"] = _columns;
     auto aliases = json::object();
@@ -298,7 +299,7 @@ void TreeConf::load_conf(const json& data) {
     auto _columns = data.value("columns", json::array());
     for (auto itr = _columns.begin(); itr != _columns.end(); ++itr) {
         auto object = *itr;
-        m_columns.push_back(pre::json::from_json<header_item>(object));
+        m_columns.push_back(std::make_shared<header_item>(object));
     }
     m_column_aliases.clear();
     auto aliases = data.value("aliases", json::object());
@@ -326,4 +327,10 @@ void TreeConf::load_conf(const json& data) {
         auto icon = icon_from_bytearray(&byte);
         m_row_icon.insert(key, icon);
     };
+}
+
+HeaderItem &TreeConf::column(const QString &name) {
+    auto index = index_of_for_name(name.toStdString(), m_columns);
+    Q_ASSERT(index != -1);
+    return m_columns[index];
 };

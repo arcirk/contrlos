@@ -11,6 +11,8 @@
 #include <global.hpp>
 #include <sql/query_builder.hpp>
 #include <QObject>
+#include <QDialogButtonBox>
+#include <QPushButton>
 
 using namespace arcirk::widgets;
 using namespace arcirk::database;
@@ -28,8 +30,6 @@ DialogServers::DialogServers(QSqlDatabase& db, QWidget *parent) :
     ui->verticalLayout->addWidget(m_tool_bar);
     ui->verticalLayout->addWidget(m_table);
 
-    фгещш
-
     auto model = new ITable<servers>(this);
     AliasesMap aliases = {
             qMakePair("name", "Имя сервера"),
@@ -46,11 +46,15 @@ DialogServers::DialogServers(QSqlDatabase& db, QWidget *parent) :
         "user"
     }));
 
+    model->get_conf()->set_column_role("host", editor_inner_role::editorIpAddress);
+
     m_table->setModel(model);
     m_table->hide_not_ordered_columns();
     m_table->set_inners_dialogs(true);
 
     init_model();
+
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Отмена");
 }
 
 DialogServers::~DialogServers() {
@@ -69,4 +73,16 @@ void DialogServers::init_model() {
         model->set_rows(rows);
     }
 
+}
+
+void DialogServers::buttonBoxClicked(QAbstractButton *button) {
+    if(button == ui->buttonBox->button(QDialogButtonBox::Ok)){
+        accept();
+    }else if(button == ui->buttonBox->button(QDialogButtonBox::Cancel)){
+        QDialog::close();
+    }
+}
+
+void DialogServers::accept() {
+    QDialog::accept();
 }

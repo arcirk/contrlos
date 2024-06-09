@@ -9,6 +9,7 @@
 #include <tablewidget.h>
 #include <tabletoolbar.h>
 #include <QSqlDatabase>
+#include <QAbstractButton>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class DialogServers; }
@@ -24,6 +25,8 @@ public:
 
     ~DialogServers() override;
 
+    void accept() override;
+
 private:
     Ui::DialogServers *ui;
     TableWidget* m_table;
@@ -31,6 +34,9 @@ private:
     QSqlDatabase& m_db;
 
     void init_model();
+
+private slots:
+    void buttonBoxClicked(QAbstractButton *button);
 };
 
 
