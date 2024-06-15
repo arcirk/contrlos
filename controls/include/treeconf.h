@@ -14,7 +14,7 @@ namespace arcirk::widgets {
 
         [[nodiscard]] QSize size() const override;
         [[nodiscard]] HeaderItems& columns() override;
-        HeaderItem& column(const QString& name) override;
+        header_item * header_column(const QString& name) override;
         [[nodiscard]] QString column_name(int index, bool alias = false) const override;
         int column_index(const QString& name) override;
         void set_columns_aliases(const QMap<QString, QString> &aliases) override;

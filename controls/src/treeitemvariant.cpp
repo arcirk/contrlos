@@ -191,7 +191,7 @@ void TreeItemVariant::updateControl()
 
         }if(role == editorIpAddress){
             if(m_selection_list.empty()){
-                auto m_text = qobject_cast<TreeItemIPEdit*>(m_current_widget);
+                auto m_text = qobject_cast<LineEdit*>(m_current_widget);
                 if(m_text){
                     if(jval.is_string()){
                         m_text->setText(jval.get<std::string>().c_str());
@@ -469,7 +469,7 @@ void TreeItemVariant::setComboData() {
     auto control = qobject_cast<QComboBox*>(m_current_widget);
     if(!control)
         return;
-    if(m_selection_list.empty())
+    if(m_selection_list.empty());
         control->clear();
 
     QByteArray qba = QByteArray(reinterpret_cast<char*>(m_selection_list.data()), (qsizetype)m_selection_list.size());

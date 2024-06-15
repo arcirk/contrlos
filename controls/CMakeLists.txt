@@ -88,7 +88,9 @@ add_library(controls SHARED
         src/treeitemipaddress.cpp
         include/selectitemdialog.h
         src/selectitemdialog.cpp
-        ui/selectitemdialog.ui)
+        ui/selectitemdialog.ui
+        src/header_item.cpp
+        include/header_item.h)
 
 target_link_libraries(controls PRIVATE
     Qt${QT_VERSION_MAJOR}::Core

@@ -30,7 +30,11 @@ DialogServers::DialogServers(QSqlDatabase& db, QWidget *parent) :
     ui->verticalLayout->addWidget(m_tool_bar);
     ui->verticalLayout->addWidget(m_table);
 
-    auto model = new ITable<servers>(this);
+    auto empty = servers();
+    empty.ref = to_byte(to_binary(QUuid()));
+    empty.uuid = to_byte(to_binary(QUuid()));
+
+    auto model = new ITable<servers>(empty, this);
     AliasesMap aliases = {
             qMakePair("name", "Имя сервера"),
             qMakePair("host", "Адрес сервера"),
@@ -47,6 +51,7 @@ DialogServers::DialogServers(QSqlDatabase& db, QWidget *parent) :
     }));
 
     model->get_conf()->set_column_role("host", editor_inner_role::editorIpAddress);
+    model->get_conf()->header_column("name")->select_type = false;
 
     m_table->setModel(model);
     m_table->hide_not_ordered_columns();
@@ -55,6 +60,9 @@ DialogServers::DialogServers(QSqlDatabase& db, QWidget *parent) :
     init_model();
 
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Отмена");
+
+    connect(ui->buttonBox, &QDialogButtonBox::clicked, this, &DialogServers::buttonBoxClicked);
+
 }
 
 DialogServers::~DialogServers() {

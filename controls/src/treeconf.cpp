@@ -329,8 +329,8 @@ void TreeConf::load_conf(const json& data) {
     };
 }
 
-HeaderItem &TreeConf::column(const QString &name) {
+header_item * TreeConf::header_column(const QString &name) {
     auto index = index_of_for_name(name.toStdString(), m_columns);
     Q_ASSERT(index != -1);
-    return m_columns[index];
+    return m_columns[index].get();
 };

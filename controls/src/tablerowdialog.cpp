@@ -128,12 +128,14 @@ void TableRowDialog::setEditorData(const QString &key, TreeItemVariant* control,
             control->setEnabled(false);
         }
     }
+    std::cout << value.dump(4) << std::endl;
     auto raw = arcirk::widgets::item_data(value);
     control->setData(raw.to_byte());
     control->setFrame(true);
     auto itr = find_element_for_name(key.toStdString(), m_conf->columns());
     if(itr != m_conf->columns().end()){
         control->setRole((editor_inner_role)itr->get()->default_type);
+        control->selectType(itr->get()->select_type);
     }
 
 }

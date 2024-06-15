@@ -1,6 +1,7 @@
 #ifndef TREEITEMVARIANT_H
 #define TREEITEMVARIANT_H
 #ifndef IS_OS_ANDROID
+
 #include "treeitemwidget.h"
 #include <QWidget>
 

@@ -365,7 +365,8 @@ json TableModel::empty_data() {
     for(const auto& val : m_conf->columns()){
         auto var = item_data();
         var.set_role(val->default_type);
-        var.set_value(val->default_value);
+        //var.set_value(val->default_value);
+        var.from_json(val->default_value);
         object[val->name] = var.json_value();
     }
     return object;

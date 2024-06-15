@@ -349,6 +349,7 @@ namespace arcirk {
                             data = value.get_binary();
                         }else{
                             data = json::to_cbor(value.dump());
+                            //std::cout << value.dump(4) << std::endl;
                             if(value.is_array()){
                                 subtype = subtypeArray;
                             }else subtype = subtypeDump;
