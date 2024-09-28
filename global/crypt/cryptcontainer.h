@@ -46,8 +46,8 @@ public:
 
     bool delete_container_registry(const QString& sid = "", const QString& name = "");
 
-    bool install(const TypeOfStorgare& dest);
-    void remove(const TypeOfStorgare& dest);
+    bool install(const TypeOfStorage& dest);
+    void remove(const TypeOfStorage& dest);
 
     arcirk::ByteArray to_byte_array();
 

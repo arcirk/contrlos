@@ -469,7 +469,7 @@ void TreeItemVariant::setComboData() {
     auto control = qobject_cast<QComboBox*>(m_current_widget);
     if(!control)
         return;
-    if(m_selection_list.empty());
+    if(m_selection_list.empty())
         control->clear();
 
     QByteArray qba = QByteArray(reinterpret_cast<char*>(m_selection_list.data()), (qsizetype)m_selection_list.size());

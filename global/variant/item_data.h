@@ -83,7 +83,7 @@ namespace arcirk {
         if(!value.is_binary())
             return T();
 
-        variant_subtype subtype = (variant_subtype)value.get_binary().subtype();
+        auto subtype = (variant_subtype)value.get_binary().subtype();
         json data = json::from_cbor(value.get_binary());
         if(subtype == subtypeDump){
             if(data.is_string()){
@@ -299,8 +299,8 @@ namespace arcirk {
     namespace widgets {
 
         struct CONTROLS_EXPORT binary_data{
-            BJson data;
-            variant_subtype subtype;
+            BJson data{};
+            variant_subtype subtype{};
 
             [[nodiscard]] json to_json() const{
                 return json::binary(data, subtype);

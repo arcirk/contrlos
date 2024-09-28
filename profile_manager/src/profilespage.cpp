@@ -172,8 +172,8 @@ void ProfilesPage::set_firefox_path(const QString &path) {
 
 void ProfilesPage::set_firefox_profiles(const ByteArray &ba) {
     auto model = (ITable<profile_item>*)m_table->model();
-    model->get_conf()->columns()[model->column_index("profile")].selection_list = ba;
-    model->get_conf()->columns()[model->column_index("profile")].default_type = editor_inner_role::editorText;
+    model->get_conf()->columns()[model->column_index("profile")]->selection_list = ba;
+    model->get_conf()->columns()[model->column_index("profile")]->default_type = editor_inner_role::editorText;
 }
 
 void ProfilesPage::update_database(const arcirk::database::profile_item &object) {

@@ -14,83 +14,32 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Sql Network)
 find_package(nlohmann_json CONFIG REQUIRED)
 
 add_definitions(-D_CONTROLS_EXPORT_DLL)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 add_definitions(-DIS_USE_QT_LIB)
+
+file(
+        GLOB
+        CPPH "include/*.h", "include/*.hpp"
+        CPPC "src/*.cpp"
+        CPPUI "ui/*.ui"
+        CPPGL "../global/*.hpp"
+        CPPVARIANT "../global/variant/item_data.h", "../global/variant/item_data.cpp"
+        GLOBAL_HPP "../global/global.hpp"
+        RES "res/controls_resource.qrc"
+)
 
 add_library(controls SHARED
           controls_global.h
           controls.cpp
           controls.h
-          include/treeitemwidget.h
-          include/treeitemcheckbox.h
-          include/treeitemcombobox.h
-          include/treeitemnumber.h
-          include/treeitemtextedit.h
-          include/treeitemtextline.h
-          include/treeitemvariant.h
-        include/arraydialog.h
-          include/texteditdialog.h
-          src/treeitemwidget.cpp
-          src/treeitemcombobox.cpp
-          src/treeitemnumber.cpp
-          src/treeitemtextedit.cpp
-          src/treeitemtextline.cpp
-          src/treeitemvariant.cpp
-          src/treeitemcheckbox.cpp
-        src/arraydialog.cpp
-          src/texteditdialog.cpp
-          ui/araydialog.ui
-          ui/texteditdialog.ui
-          ../global/global.hpp
-          ../global/variant/item_data.cpp
-          ../global/variant/item_data.h
-          include/pairmodel.h
-          src/pairmodel.cpp
-          res/controls_resource.qrc
-          include/tablemodel.h
-          include/tableitem.h
-          src/tablemodel.cpp
-          include/tableconf.h
-          src/tableitem.cpp
-          src/tableconf.cpp
-          include/tablewidget.h
-          src/tablewidget.cpp
-          include/itable.hpp
-          include/tableitemdelegate.h
-          src/tableitemdelegate.cpp
-          src/tablelistwidget.cpp
-          include/tablelistwidget.h
-          ui/tablelistwidget.ui
-          include/tabletoolbar.h
-          src/tabletoolbar.cpp
-          include/tablerowdialog.h
-          src/tablerowdialog.cpp
-          ui/tablerowdialog.ui
-            include/itabledatabasemodel.h
-            src/itabledatabasemodel.cpp
-            include/treemodel.h
-        include/treeitem.h
-        include/treeconf.h
-        src/treeconf.cpp
-        src/treeitem.cpp
-        src/treemodel.cpp
-        include/treewidget.h
-        src/treewidget.cpp
-        include/treesortmodel.h
-        src/treesortmodel.cpp
-        include/treeitemdelegate.h
-        src/treeitemdelegate.cpp
-        include/treeitemswidget.h
-        src/treeitemswidget.cpp
-        ui/treeitemswidget.ui
-        include/itree.hpp
-        include/iconf.hpp
-        include/treeitemipaddress.h
-        src/treeitemipaddress.cpp
-        include/selectitemdialog.h
-        src/selectitemdialog.cpp
-        ui/selectitemdialog.ui
-        src/header_item.cpp
-        include/header_item.h)
+        ${CPPH}
+        ${CPPC}
+        ${CPPUI}
+        ${CPPGL}
+        ${CPPVARIANT}
+        ${GLOBAL_HPP}
+        ${RES}
+)
 
 target_link_libraries(controls PRIVATE
     Qt${QT_VERSION_MAJOR}::Core

@@ -317,10 +317,10 @@ bool CryptContainer::delete_container_registry(const QString &sid, const QString
     return true;
 }
 
-bool CryptContainer::install(const arcirk::cryptography::TypeOfStorgare& dest)
+bool CryptContainer::install(const TypeOfStorage& dest)
 {
     using namespace arcirk::cryptography;
-    if(dest == storgareTypeRegistry)
+    if(dest == storageTypeRegistry)
         return to_registry();
 
 //    switch (dest) {
@@ -338,10 +338,10 @@ bool CryptContainer::install(const arcirk::cryptography::TypeOfStorgare& dest)
     return false;
 }
 
-void CryptContainer::remove(const TypeOfStorgare &dest)
+void CryptContainer::remove(const TypeOfStorage &dest)
 {
     using namespace arcirk::cryptography;
-    if(dest == storgareTypeRegistry)
+    if(dest == storageTypeRegistry)
         to_registry();
 
 //    switch (dest) {

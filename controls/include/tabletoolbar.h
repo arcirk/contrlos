@@ -6,6 +6,7 @@
 #include <QWidget>
 #include <QMenu>
 #include <QAction>
+#include <QToolButton>
 
 namespace Ui {
 class TableToolBar;
