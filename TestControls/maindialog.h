@@ -6,14 +6,15 @@
 #include <treeitemtextline.h>
 #include <treeitemcombobox.h>
 #include <treeitemvariant.h>
-#include <ui/treeviewwidget.h>
+//#include <ui/treeviewwidget.h>
 #include <tablewidget.h>
+#include <treewidget.h>
 #include <itable.hpp>
 #include <tablelistwidget.h>
 #include "../global/variant/item_data.h"
 
 using namespace arcirk::widgets;
-using namespace arcirk::tree_widget;
+//using namespace arcirk::widgets::;
 
 BOOST_FUSION_DEFINE_STRUCT(
     (arcirk::widgets), test_table_struct,

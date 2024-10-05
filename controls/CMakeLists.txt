@@ -19,11 +19,11 @@ add_definitions(-DIS_USE_QT_LIB)
 
 file(
         GLOB
-        CPPH "include/*.h", "include/*.hpp"
+        CPPH "include/*.h" "include/*.hpp"
         CPPC "src/*.cpp"
         CPPUI "ui/*.ui"
         CPPGL "../global/*.hpp"
-        CPPVARIANT "../global/variant/item_data.h", "../global/variant/item_data.cpp"
+        CPPVARIANT "../global/variant/item_data.h" "../global/variant/item_data.cpp"
         GLOBAL_HPP "../global/global.hpp"
         RES "res/controls_resource.qrc"
 )

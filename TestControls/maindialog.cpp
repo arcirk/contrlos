@@ -1,12 +1,14 @@
 #include "maindialog.h"
 #include "./ui_maindialog.h"
+#include "itree.hpp"
 #include <treeitemcheckbox.h>
 #include <QLabel>
 #include <QList>
 #include <QTabWidget>
 #include <QSpacerItem>
-#include <iface/iface.hpp>
+//#include <iface/iface.hpp>
 #include <tablemodel.h>
+#include <pairmodel.h>
 
 using namespace arcirk::tasks;
 
@@ -91,7 +93,7 @@ MainDialog::MainDialog(QWidget *parent)
     variant->selectType(true);
     ui->gridLayoutCtrl->addWidget(variant, 8,1);
 
-    auto tb = new TreeToolBar(this);
+    auto tb = new TableToolBar(this);
     ui->verticalLayout->addWidget(tb);
     treeView = new TreeViewWidget(this);
     treeView->setTableToolBar(tb);

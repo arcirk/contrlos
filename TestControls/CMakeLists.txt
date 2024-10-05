@@ -18,11 +18,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(alpaca CONFIG REQUIRED)
 
+add_definitions(-DIS_USE_QT_LIB)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
-include_directories(${Boost_INCLUDE_DIRS})
+set(ARCIRK_INCLUDE ../global)
+
+include_directories(
+        ${Boost_INCLUDE_DIRS}
+        ${ARCIRK_INCLUDE}
+)
+
 LINK_DIRECTORIES(
         ../controls/cmake-build-debug
-        ../arhive/tree_model/cmake-build-debug
+#        ../arhive/tree_model/cmake-build-debug
 )
 
 set(PROJECT_SOURCES
@@ -59,13 +67,13 @@ set(PROJECT_SOURCES
 target_include_directories(TestControls PRIVATE
         ${Boost_INCLUDE_DIRS}
         ../controls/include
-        ../arhive/tree_model
+#        ../arhive/tree_model
         )
 
 target_link_libraries(TestControls PRIVATE
         Qt${QT_VERSION_MAJOR}::Widgets
         controls
-        tree_model
+#        tree_model
         alpaca::alpaca)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
